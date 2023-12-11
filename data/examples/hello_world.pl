@@ -6,7 +6,7 @@
 		      ,parent/2
 		      ]).
 
-/** <module> A simple introduction to learning logic programs with Poker
+/** <module> A simple example of MIL for Poker and Metagol.
 
 ==
 ?- poker:experiment_data(ancestor/2,_,_Neg,_BK,_MS), learn([ancestor(stathis,stassa)],_Neg,_BK,_MS,_Ps), auxiliaries:print_clauses(_Ps).

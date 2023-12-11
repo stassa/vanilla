@@ -23,7 +23,7 @@ clause_limit(2).
 %
 %	The Path and Module name of an experiment file.
 %
-experiment_file(lib('poker/examples/hello_world.pl'),hello_world).
+experiment_file(data('examples/hello_world.pl'),hello_world).
 
 
 %!	max_invented(?Number) is semidet.
