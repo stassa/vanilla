@@ -259,9 +259,7 @@ learn(Pos,Neg,BK,MS,Ps):-
         ,setup_call_cleanup(S,G,C)
         ,Ps_ \= []
         ,examples_targets(Pos,Ts)
-        ,excapsulated_clauses(Ts,Ps_,Ps)
-        %,!
-        .
+        ,excapsulated_clauses(Ts,Ps_,Ps).
 learn(_Pos,_Neg,_BK,_MS,[]).
 
 
