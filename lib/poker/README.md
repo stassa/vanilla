@@ -22,10 +22,17 @@ An example of learning the `ancestor` relation, using the training data in
 `data/examples/hello_world.pl` follows:
 
 ```prolog
-% Make sure to load poker!
+% Don't forget to start up Vanilla first!
+?- [load_project].
+Global stack limit 1,073,741,824
+Table space 2,147,483,648
+true.
+
+% Load Poker into memory:
 ?- use_module(lib(poker/poker)).
 true.
 
+% The hello_world.pl file should be loaded by default.
 ?- learn(ancestor/2).
 ancestor(A,B):-ancestor(A,B).
 ancestor(A,B):-parent(A,B).
@@ -106,7 +113,6 @@ ancestor(A,B):-ancestor(A,C),ancestor(C,B).
 true ;
 []
 true.
-
 ```
 
 What is a "good example", you ask? Ooh boy, that's a can of worms...
