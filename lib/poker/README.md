@@ -21,7 +21,7 @@ Poker](https://en.wikipedia.org/wiki/Wittgenstein%27s_Poker).
 An example of learning the `ancestor` relation, using the training data in
 `data/examples/hello_world.pl` follows:
 
-```
+```prolog
 % Make sure to load poker!
 ?- use_module(lib(poker/poker)).true.
 
@@ -95,7 +95,7 @@ output of `learn/1` above.
 To avoid this over-generation we can hand-pick a "good" example and give only
 that example to Poker. We show how to do this below:
 
-```
+```prolog
 ?- poker:experiment_data(ancestor/2,_,_Neg,_BK,_MS), learn([ancestor(stathis,stassa)],_Neg,_BK,_MS,_Ps), auxiliaries:print_clauses(_Ps).
 ancestor(A,B):-parent(A,B).
 ancestor(A,B):-parent(A,C),ancestor(C,B).

@@ -34,7 +34,7 @@ The following is an example of learning a logic program for the `ancestor`
 relation with Metagol. Training data is taken from
 `data/examples/hello_world.pl`:
 
-```
+```prolog
 % Remember to load metagol first!
 ?- use_module(lib(metagol/metagol)).true.
 
@@ -52,7 +52,7 @@ knowledge and without breaking the order constraints defined for the metarules
 in the learning problem, and the ordering of predicate symbols in
 `hello_world.pl`. The order constraints are defined as follows:
 
-```
+```prolog
 % Order constraints for the two metarules in hello_world.pl:
 order_constraints(identity,[P,Q],_Fs,[P>Q],[]).
 order_constraints(tailrec,[P,Q],[X,Y,Z],[P>Q],[X>Z,Z>Y]).
@@ -71,13 +71,13 @@ way, left-recursive clauses are eliminated.
 Suppose we remove the lexicographic constraints from the `tailrec` metarule,
 like this:
 
-```
+```prolog
 order_constraints(tailrec,_,_,[],[]).
 ```
 
 Now, let's see what happens when we try to learn with Metagol:
 
-```
+```prolog
 ?- learn(ancestor/2).
 ancestor(A,B):-parent(A,B).
 ancestor(A,B):-parent(A,C),ancestor(C,B).
