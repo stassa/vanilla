@@ -3,13 +3,14 @@ Metagol - search-based Meta-Interpretive Learning
 
 This README file is a Work-In-Progress.
 
-Metagol is the original implementation of MIL. 
+[Metagol] is the original implementation of MIL [(Muggleton et al.  2014)],
+[(Muggleton et al. 2015)]. 
 
 It uses an SLD-refutation proof of its positive examples to construct clauses
 but bolts-on at the top of it a Depth-First Search of the space of logic
-programs with Iterative Deepening over their cardinalities for a program that
-entails the conjunction of its positive examples, and none of its negative
-examples, with respect to first-order background knowledge.
+programs with Iterative Deepening over their cardinalities. The search is for a
+program that entails the conjunction of its positive examples, and none of its
+negative examples, with respect to first-order background knowledge.
 
 The iterative depeening search in Metagol will first visit all the one-clause
 hypotheses that can be constructed from the positive examples, then all the
@@ -96,3 +97,15 @@ Ooops. We've run out of stack space. After a first set of clauses is constructed
 that is not left-recursive, the missing constraint allows a left-recursive
 hypothesis to be constructed, and the Depth-First Search in SLD-Resolution goes
 into an infinite recursion and blows up the stack.
+
+
+Bibliography
+------------
+
+1. S.H. Muggleton, D. Lin, N. Pahlavi, and A. Tamaddoni-Nezhad. _Meta-interpretive learning: application to grammatical inference_. [Machine Learning, 94:25-49, 2014](https://link.springer.com/article/10.1007/s10994-013-5358-3)
+
+2. S.H. Muggleton, D. Lin, and A. Tamaddoni-Nezhad. _Meta-interpretive learning of higher-order dyadic datalog: Predicate invention revisited_. [Machine Learning, 100(1):49-73, 2015](https://link.springer.com/content/pdf/10.1007%2Fs10994-014-5471-y.pdf)
+
+[(Muggleton et al. 2014)]: https://link.springer.com/article/10.1007/s10994-013-5358-3 "Meta-interpretive learning: application to grammatical inference"
+[(Muggleton et al. 2015)]: https://link.springer.com/content/pdf/10.1007%2Fs10994-014-5471-y.pdf "Meta Interpretive Learning of higher-order dyadic datalog: predicate invention revisited"
+[Metagol]: https://github.com/metagol/metagol "Metagol"
