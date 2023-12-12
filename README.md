@@ -5,9 +5,9 @@ This README is a work in progress
 =================================
 
 Vanilla is an inductive, second-order Prolog meta-interpreter for
-Meta-Interpretive Learning (MIL). Like a Prolog meta-interpreter is used for deduction
-or reasoning, so an inductive meta-interpreter is used for induction or
-learning. In the second order of logic where Vanilla operates, deduction and
+Meta-Interpretive Learning (MIL). Like a Prolog meta-interpreter is used for
+deduction or reasoning, so an inductive meta-interpreter is used for induction
+or learning. In the second order of logic where Vanilla operates, deduction and
 induction, reasoning and learning, are one.
 
 All this is to say, in more formal terminology, that Vanilla is an engine for
@@ -46,40 +46,41 @@ First- and Second-Order Logic
 A First-Order Logic (FOL) language consists of formulae relating terms composed
 of symbols in an alphabet.
 
-A FOL alphabet consists of a set of predicate symbols, Π = {P, Q, R ... }, a set
-of function symbols, Φ = {f, g, h, ... }, a set of constants C = {a, b, c, ...}
-subset of Φ, a set of variables V = {x, y, z, ...}, the logical connectives ¬
-(negation), ∧ (conjunction), ∨ (disjunction), → (implication) and ↔
-(equivalence) and, finally, two quantifier symbols, the existential quantifier,
-∃ ("exists") and the universal quantifier ∀. Each predicate and function symbol
-is associated with a number, called the symbol's arity. Constants have arity 0.
+A FOL alphabet consists of a set of predicate symbols, `Π = {P, Q, R ... }`, a
+set of function symbols, `Φ = {f, g, h, ... }`, a set of constants `C = {a, b,
+c, ...}` subset of `Φ`, a set of variables `V = {x, y, z, ...}`, the logical
+connectives `¬` (negation), `∧` (conjunction), `∨` (disjunction), `→`
+(implication) and `≡` (equivalence) and, finally, two quantifier symbols, the
+existential quantifier, `∃` ("exists") and the universal quantifier `∀`. Each
+predicate and function symbol is associated with a number, called the symbol's
+arity. Constants have arity 0.
 
 Terms are defined inductively as follows: a variable is a term; a constant is a
-term; a function symbol f of arity n, followed by n comma-separated terms in
-parentheses, is a term.
+term; a function symbol `f` of arity `n`, followed by `n` comma-separated terms
+in parentheses, is a term.
 
 Formulae are defined inductively as follows: An atomic formula, or atom, is a
-predicate symbol, P, of arity m, followed by m comma-separated terms in
-parentheses. If φ is a formula, then ¬φ is a formula. If φ, χ, are formulae,
-then φ ∧ χ, φ ∨ χ, φ → χ, φ ↔ χ, are all formulae.
+predicate symbol, `P`, of arity `m`, followed by `m` comma-separated terms in
+parentheses. If `φ` is a formula, then `¬φ` is a formula. If `φ, χ`, are
+formulae, then `φ ∧ χ, φ ∨ χ, φ → χ, φ ≡ χ`, are all formulae.
 
-The variables in a formula may be quantified. If φ is a formula then ∃ x,y,z:
-φ is a formula where variables x, y and z are existentially quantified.
-Accordingly, if φ is a formula then ∀ x,y,z: φ is a formula where x, y and z are
-universally quantified. Variables in a formula are quantified over the set of
-terms, including constants. We say that a quantifier "ranges over" the set of
-terms, including constants.
+The variables in a formula may be quantified. If `φ` is a formula then `∃ x,y,z:
+φ` is a formula where variables `x, y` and `z` are existentially quantified.
+Accordingly, if `φ` is a formula then `∀ x,y,z: φ` is a formula where `x, y` and
+`z` are universally quantified. Variables in a formula are quantified over the
+se of terms, including constants. We say that a quantifier "ranges over" the set
+of terms, including constants.
 
 A FOL language can be used to form arbitrary formulae, but we are most
 interested in formulae in clausal form, or clauses which are disjunctions of
 literals, and in particular, Horn clauses, which are disjunction of at most one
 positive literal.
 
-A literal is an atom, or the negation of an atom. If A is an atom, then A is a
-positive literal and ¬A is a negative literal. A clause is a disjunction of
-literals: A ∨ B ∨ ¬C ∨ D ∨ ... . 
+A literal is an atom, or the negation of an atom. If `A` is an atom, then `A` is
+a positive literal and `¬A` is a negative literal. A clause is a disjunction of
+literals: `A ∨ B ∨ ¬C ∨ D ∨ ...` . 
 
-A clause is Horn if it has at most one positive literal: A ∨ ¬B ∨ ¬C ∨ ... . A
+A clause is Horn if it has at most one positive literal: `A ∨ ¬B ∨ ¬C ∨ ... . A`
 Horn clause is definite if it has one positive literal, otherwise it is a Horn
 goal. A definite clause is sometimes called a definite program clause. A
 definite program, or logic program, is a conjunction of definite program
@@ -87,11 +88,11 @@ clauses. Definite clauses are always, and only, universally quantified.
 
 Logic programming is the research discipline that studies logic programs, their
 syntax, semantics and interpretation. By logic programming convention a definite
-clause A ∨ ¬B ∨ ¬C is written as the equivalent implication B ∧ C → A (this
-works because a disjunction A ∨ ¬B is equivalent to the implication B → A). For
-convenience, the consequent of the implication is written first, then the
+clause `A ∨ ¬B ∨ ¬C` is written as the equivalent implication `B ∧ C → A` (this
+works because a disjunction `A ∨ ¬B` is equivalent to the implication `B → A`).
+For convenience, the consequent of the implication is written first, then the
 invernted, left-facing implication arrow and then each of the precednets
-separated by commas substituted for the conjunction symbols: A ← B, C.
+separated by commas substituted for the conjunction symbols: `A ← B, C`.
 
 The following is an example of the definite clause `∀P,Q,R,x,y,z; P(x,y) ∨
 ¬Q(x,z) ∨ R(x,y)`, written according to logic programming conventions: 
@@ -102,9 +103,9 @@ The following is an example of the definite clause `∀P,Q,R,x,y,z; P(x,y) ∨
 
 A Second-Order Logic (SOL) language is defined in the same way as a FOL
 language, with two exceptions: in SOL, a) definite clauses can be universally or
-existentially quantified, and b) the two quantifiers, ∃ and ∀, range over not
-only the set of terms, including constants, but also the sets of predicate and
-function _symbols_. Thus, the following definite clause is a second-order:
+existentially quantified, and b) the two quantifiers, `∃` and `∀`, range over
+not only the set of terms, including constants, but also the sets of predicate
+and function _symbols_. Thus, the following definite clause is a second-order:
 
 ```
 ∃P,Q,R, ∀x,y,z: P(x,y) ← Q(x,z), R(z,y)
