@@ -23,7 +23,8 @@ An example of learning the `ancestor` relation, using the training data in
 
 ```prolog
 % Make sure to load poker!
-?- use_module(lib(poker/poker)).true.
+?- use_module(lib(poker/poker)).
+true.
 
 ?- learn(ancestor/2).
 ancestor(A,B):-ancestor(A,B).
