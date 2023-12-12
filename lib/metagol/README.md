@@ -1,5 +1,5 @@
 Metagol - search-based Meta-Interpretive Learning
--------------------------------------------------
+=================================================
 
 This README file is a Work-In-Progress.
 
@@ -26,10 +26,11 @@ against the negative examples. If any negative example is entailed by the
 hypothesis, the hypothesis is rejected. Karl Popper would be proud (but maybe
 not if he saw Poker).
 
-Metagol uses a set of order constraints over the instantiations of second- and
-first-order variables in the metarules, lexicographic and interval order
-constraints respectively, to control recursion and ensure termination. Note that
-currently only lexicographic order constraints are implemented.
+Faithful to the original description of Metagol in the literature, this
+implementation uses a set of order constraints over the instantiations of
+second- and first-order variables in the metarules, lexicographic and interval
+order constraints respectively, to control recursion and ensure termination.
+Note that currently only lexicographic order constraints are implemented.
 
 The following is an example of learning a logic program for the `ancestor`
 relation with Metagol. Training data is taken from

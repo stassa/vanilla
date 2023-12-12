@@ -1,5 +1,5 @@
 Poker - True one-shot learning of logic programs
-------------------------------------------------
+================================================
 
 This README file is a Work-In-Progress.
 
