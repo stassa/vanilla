@@ -1,4 +1,5 @@
-:-module(hello_world, [background_knowledge/2
+:-module(hello_world, [program_signature/3
+		      ,background_knowledge/2
 		      ,metarules/2
 		      ,positive_example/2
 		      ,negative_example/2
@@ -7,6 +8,8 @@
 		      ]).
 
 /** <module> A simple example of MIL for Poker and Metagol.
+
+Learning with Poker, from a single example:
 
 ==
 ?- poker:experiment_data(ancestor/2,_,_Neg,_BK,_MS), learn([ancestor(stathis,stassa)],_Neg,_BK,_MS,_Ps), auxiliaries:print_clauses(_Ps).
@@ -20,7 +23,33 @@ true ;
 true.
 ==
 
+Learning with Metagol, from the conjunction of positive examples:
+==
+?- metagol:learn(ancestor/2).
+ancestor(A,B):-parent(A,B).
+ancestor(A,B):-parent(A,C),ancestor(C,B).
+true ;
+[]
+true.
+==
+
 */
+
+%!	program_signature(?Target,?Symbols,?Terms) is semidet.
+%
+%	Program signature for a learning Target.
+%
+%	Used by Metagol to produce a total ordering of the Herbrand
+%	base and ensure termination.
+%
+%	Symbols is the predicate signature, a total ordering over
+%	predicate symbols in the examples, background knowledge and
+%	invented predicate symbols.
+%
+%	Terms is the constant signature, a total ordering over constants
+%	and ground terms in the examples and background knowledge.
+%
+program_signature(ancestor/2,[ancestor,parent],[]).
 
 
 %!	background_knowledge(+Target,-Symbols) is semidet.

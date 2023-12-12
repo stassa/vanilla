@@ -14,6 +14,13 @@
 
 */
 
+% Metagol does not use tabling and instead controls recursion by means
+% of lexicographic and interval order constraints.
+%
+configuration:table_meta_interpreter(false).
+configuration:untable_meta_interpreter(true).
+
+
 %!      learn(+Target) is nondet.
 %
 %       Learn a program for a learning Target and print to the console.
@@ -246,7 +253,7 @@ configuration_metarules(MS):-
 %       knowledge in B_FO are generated on backtracking.
 %
 learn(Pos,Neg,BK,MS,Ps):-
-        metagol_configuration:clause_limits(K,J)
+        metagol_configuration:depth_limits(K,J)
         ,encapsulated_problem(Pos,Neg,BK,MS,[Pos_,Neg_,BK_,MS_])
         ,S = (write_problem(user,[BK_],Refs)
              ,refresh_tables(untable)
@@ -295,7 +302,7 @@ write_problem(M,Es,Rs):-
 generalise(Pos,K,J,MS,Subs):-
         list_tree(Pos,Pos_)
         ,between(K,J,I)
-        ,debug(generalise,'Depth: ~w',[I])
+        ,debug(depth,'Depth: ~w',[I])
         ,metasubstitutions(Pos_,I,MS,Subs)
         ,debug(generalise,'Subs: ~w',[Subs]).
 
@@ -390,3 +397,106 @@ metasub_metarule(Sub,MS,Sub_:-M):-
 	,length(As_,N)
 	,Sub_ =.. [m,Id|As_]
 	,free_member(Sub_:-M,MS).
+
+
+%!      metarule_constraints(+Metasub,-Truth) is det.
+%
+%       Implements lexicographic order constraints for Metagol
+%
+%       Metasub is a metasubstitution atom of the form S(Id,T,P1,..,Pn)
+%       where S is the encapsulation symbol defined in the
+%       configuration, Id is the identifier of a metarule, T is a
+%       learning target and P1, ..., Pn are predicate symbols. T and Ps
+%       may be unbound at the point of call, i.e. variables.
+%
+%       Truth is one of "true" or "false", denoting whether the
+%       constraint is passed or not. For this
+%
+%       Called by constraints/1. Checks order constraints defined in
+%       metagol_configuration.pl for the metarule identified in Metasub.
+%       Order constraints must be consistent with the lexicographic
+%       ordering declared for the learning target in Metasub are taken
+%       from the experiment file where the training data for that target
+%       are defined.
+%
+%       See data/examples/hello_world.pl for an example of declaring a
+%       lexicographic ordering for a learning target.
+%
+%       @bug Interval order constraints, over the first-order variables
+%       in a metarule, are not yet implemented! However, the
+%       lexicographic constraints currently implemented are enough to
+%       eliminate infinite left-recursive clauses from the hypothesis
+%       language.
+%
+configuration:metarule_constraints(M,B):-
+	%debug_clauses(lex,'Testing constraint for metasub:',M)
+        configuration:encapsulation_predicate(S)
+        ,M =.. [S,Id|[T|Ps]]
+        ,experiment_file:program_signature(T/_,PS,_)
+	,debug(lex,'Predicate signature: ~w',[PS])
+        % TODO: interval order constraints are ignored!
+        ,metagol_configuration:order_constraints(Id,[T|Ps],_Fs,STs,FTs)
+	,debug(lex,'Order constraints: ~w-~w',[STs,FTs])
+        ,(   order_tests(PS,[],STs,[])
+	 ->  B = true
+	    ,debug(lex,'Passed constraint test!',[])
+	 ;   B = false
+	    ,debug(lex,'Failed constraint test!',[])
+	 ).
+
+
+%!	order_tests(+Predicates,+Constants,+First_Order,+Second_Order)
+%!	is det.
+%
+%	Test the order constraints associated with a metarule.
+%
+%	Predicates is the program signature.
+%
+%	Constants is the constant signature.
+%
+%	First_order and Second_order are the lexicographic and interval
+%	inclusion order constraints imposed by a metarule.
+%
+order_tests(_,_,[],[]):-
+	!.
+order_tests(PS,_,STs,_):-
+	STs \= []
+	,!
+	,ordered_list(STs,PS).
+order_tests(_,CS,_,FTs):-
+	FTs \= []
+	,ordered_list(FTs,CS).
+
+
+%!	ordered_list(?List,+Ordering) is det.
+%
+%	A Sublist order according to a total Ordering of its elements.
+%
+ordered_list([X>Y],Os):-
+	above(X,Y,Os)
+	,!.
+ordered_list([X>Y|Ls],Os):-
+	above(X,Y,Os)
+	,ordered_list(Ls,Os).
+
+
+%!	above(?Above,+Below,+Ordering) is det.
+%
+%	True when Above is above Below in a total Ordering.
+%
+above(S1,S2,Ss):-
+	previous(S1,S2,Ss)
+	,!.
+above(S1,S3,Ss):-
+	previous(S1,S2,Ss)
+	,!
+	,above(S2,S3,Ss).
+above(S1,S2,[_|Ss]):-
+	above(S1,S2,Ss).
+
+
+%!	previous(?First,?Next,?List) is det.
+%
+%	True when First and Next are the first two elements of List.
+%
+previous(S1,S2,[S1,S2|_Ss]).

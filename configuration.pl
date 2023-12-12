@@ -14,7 +14,10 @@
 */
 
 % Allows experiment files to define their own, special metarules.
-:-multifile metarule/2.
+:-multifile metarule/2
+           ,metarule_constraints/2
+           ,table_meta_interpreter/1
+           ,untable_meta_interpreter/1.
 
 %!      encapsulation_predicate(+Symbol) is semidet.
 %
@@ -169,12 +172,11 @@ postcon_abduce metarule 'P(x,Y):- Q(x,Y), R(Y)'.
 %
 %	A Goal to be called when Metasubstitution is matched.
 %
-%       This option is declared multifile that constraints may be
-%       declared individually by experiment files, as needed. A few
-%       examples are given below.
+%       This option is declared dynamic and multifile that constraints
+%       may be declared individually by experiment files, as needed. A
+%       few examples are given below.
 %
 :- dynamic metarule_constraints/2.
-:- multifile metarule_constraints/2.
 /*
 % Simple constraint excluding left-recursive clauses that are instances of
 % a metarule with any Id and having two existentially quantified
@@ -244,15 +246,18 @@ configuration:metarule_constraints(M,B):-
 %       Whether to table the Vanilla meta-interpreter, or not.
 %
 %       Checked by refresh_tables/1 to decide whether to table or
-%       untable the prove/6 Vanilla meta-interpreter, or not.
+%       untable the prove/7 Vanilla meta-interpreter, or not.
 %
 %       This option and untable_meta_interpreter/1 are made available so
 %       that the user doesn't have to edit the source code of learning
-%       predicates to control tabling and untabling behaviour.
+%       predicates to control tabling and untabling behaviour. They are
+%       declared dynamic and multifile so that they can be defined
+%       separately in the configuration file of a MIL-learner
+%       implemented with Vanilla.
 %
 %       See refresh_tables/1 for more context.
 %
-table_meta_interpreter(true).
+:-dynamic(table_meta_interpreter/1).
 
 
 %!      untable_meta_interpreter(?Bool) is semidet.
@@ -260,13 +265,16 @@ table_meta_interpreter(true).
 %       Whether to untable Vanilla between learning queries.
 %
 %       This predicate is checked by refresh_tables/1 to decide whether
-%       to table or untable the prove/6 Vanilla meta-interpreter, or
+%       to table or untable the prove/7 Vanilla meta-interpreter, or
 %       not.
 %
 %       This option and table_meta_interpreter/1 are made available so
 %       that the user doesn't have to edit the source code of learning
-%       predicates to control tabling and untabling behaviour.
+%       predicates to control tabling and untabling behaviour. They are
+%       declared dynamic and multifile so that they can be defined
+%       separately in the configuration file of a MIL-learner
+%       implemented with Vanilla.
 %
 %       See refresh_tables/1 for more context.
 %
-untable_meta_interpreter(true).
+:- dynamic(untable_meta_interpreter/1).

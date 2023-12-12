@@ -5,7 +5,7 @@ This README is a work in progress
 =================================
 
 Vanilla is an inductive, second-order Prolog meta-interpreter for
-Meta-Interpretive Learning. Like a Prolog meta-interpreter is used for deduction
+Meta-Interpretive Learning (MIL). Like a Prolog meta-interpreter is used for deduction
 or reasoning, so an inductive meta-interpreter is used for induction or
 learning. In the second order of logic where Vanilla operates, deduction and
 induction, reasoning and learning, are one.
@@ -13,9 +13,32 @@ induction, reasoning and learning, are one.
 All this is to say, in more formal terminology, that Vanilla is an engine for
 machine learning and machine reasoning. As an engine, Vanilla is not meant to be
 used as a stand-alone application but instead used as the basis of learning and
-reasoning systems.
+reasoning systems for MIL.
 
-The hairy, formal terms are explained below.
+Two MIL systems are included with Vanilla to illustrate the implementation of
+different MIL-learners based on its meta-interpreter: Metagol and Poker.
+
+Metagol is the original MIL algorithm. It uses an iterative deepening search of
+the space of logic programs, and a set of order constraints to control recursion
+and ensure termination. An implementation of Metagol is included in the
+following directory:
+
+```
+<project root>/lib/metagol
+```
+
+Poker is a simple implementation of MIL that learns without the computationally
+expensive iterative deepening search in Metagol and from a single example at a
+time (it is strictly a one-shot learner). It uses tabling (a.k.a.
+SLG-Resolution) to control recursion and ensure termination. Poker is included
+in the following directory:
+
+```
+<project root>/lib/poker
+```
+
+The hairy, formal terms in the preceding paragraphs are now explained in the
+following sections. Deeep breath. Let's go.
 
 First- and Second-Order Logic
 -----------------------------

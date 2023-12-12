@@ -34,6 +34,21 @@ experiment_file(data('examples/hello_world.pl'),hello_world).
 %
 max_invented(0).
 
+
+%!      table_meta_interpreter(?Bool) is semidet.
+%
+%       Whether to table the Vanilla meta-interpreter, or not.
+%
+configuration:table_meta_interpreter(true).
+
+
+%!      untable_meta_interpreter(?Bool) is semidet.
+%
+%       Whether to untable Vanilla between learning queries.
+%
+configuration:untable_meta_interpreter(true).
+
+
 % Opens this configuration file and the current experiment file in the
 % SWI-Prolog IDE or your system's $EDITOR if one is set.
 :- edit(poker)

@@ -13,6 +13,9 @@
 
 */
 
+% Tabling of prove/7 may be overriden by configuration options at
+% runtime. See refresh_tables/1.
+%
 :-table(prove/7).
 
 
@@ -66,6 +69,10 @@
 %	table_meta_interpreter/1
 %	untable_meta_interpreter/1
 %	==
+%
+%	Those configuration options are declared as multifile and
+%	dynamic in configuration.pl. They should be defined in the
+%	configuration files of learners based on Vanilla.
 %
 %	Note that there is some slowdown when this predicate is called
 %	between learning queries with different clause_limit/1 settings.
