@@ -22,7 +22,7 @@ the space of logic programs, and a set of order constraints to control recursion
 and ensure termination. An implementation of Metagol is included in the
 following directory:
 
-[https://github.com/stassa/vanilla/tree/master/lib/metagol](vanilla/lib/metagol)
+[https://github.com/stassa/vanilla/blob/master/lib/metagol](vanilla/lib/metagol)
 
 Poker is a simple implementation of MIL that learns without the computationally
 expensive iterative deepening search in Metagol and from a single example at a
@@ -30,7 +30,7 @@ time (it is strictly a one-shot learner). It uses tabling (a.k.a.
 SLG-Resolution) to control recursion and ensure termination. Poker is included
 in the following directory:
 
-[https://github.com/stassa/vanilla/tree/master/lib/poker](vanilla/lib/poker)
+[https://github.com/stassa/vanilla/blob/master/lib/poker](vanilla/lib/poker)
 
 Vanilla was originally developed as the learning engine in Louise. It is now
 made available as a separate project to encourage experimentation with MIL. The
