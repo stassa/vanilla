@@ -1,31 +1,28 @@
-Vanilla
-=======
+Vanilla - a Second-Order Logic engine for learning and reasoning
+================================================================
 
 This README is a work in progress
 =================================
 
 Vanilla is an inductive, second-order Prolog meta-interpreter for
-Meta-Interpretive Learning (MIL). Like a Prolog meta-interpreter is used for
-deduction or reasoning, so an inductive meta-interpreter is used for induction
-or learning. In the second order of logic where Vanilla operates, deduction and
-induction, reasoning and learning, are one.
+Meta-Interpretive Learning (MIL). Like an ordinary Prolog meta-interpreter is
+used for deduction or reasoning, so an inductive Prolog meta-interpreter is used
+for induction or learning. In the second order of logic where Vanilla operates,
+deduction and induction, reasoning and learning, are one.
 
-All this is to say, in more formal terminology, that Vanilla is an engine for
-machine learning and machine reasoning. As an engine, Vanilla is not meant to be
-used as a stand-alone application but instead used as the basis of learning and
-reasoning systems for MIL.
+Vanilla is an engine for machine learning and machine reasoning. As an engine,
+Vanilla is not meant to be used as a stand-alone application but instead used to
+implement new MIL systems.
 
-Two MIL systems are included with Vanilla to illustrate the implementation of
-different MIL-learners based on its meta-interpreter: Metagol and Poker.
+To illustrate the use of Vanilla as a learning and reasoning engine, two example
+systems are included with Vanilla: Metagol and Poker.
 
 Metagol is the original MIL algorithm. It uses an iterative deepening search of
 the space of logic programs, and a set of order constraints to control recursion
 and ensure termination. An implementation of Metagol is included in the
 following directory:
 
-```
-<project root>/lib/metagol
-```
+[https://github.com/stassa/vanilla/tree/master/lib/metagol](vanilla/lib/metagol)
 
 Poker is a simple implementation of MIL that learns without the computationally
 expensive iterative deepening search in Metagol and from a single example at a
@@ -33,9 +30,15 @@ time (it is strictly a one-shot learner). It uses tabling (a.k.a.
 SLG-Resolution) to control recursion and ensure termination. Poker is included
 in the following directory:
 
-```
-<project root>/lib/poker
-```
+[https://github.com/stassa/vanilla/tree/master/lib/poker](vanilla/lib/poker)
+
+Vanilla was originally developed as the learning engine in Louise. It is now
+made available as a separate project to encourage experimentation with MIL. The
+two example implementations of Metagol and Poker listed above can be used as a
+template to create new MIL algorithms and learning systems.
+
+Meta-Interpretive Learning as Second-Order SLD-Resolution
+=========================================================
 
 The hairy, formal terms in the preceding paragraphs are now explained in the
 following sections. Deeep breath. Let's go.
