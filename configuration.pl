@@ -2,6 +2,7 @@
                         ,example_clauses/1
                         ,fetch_clauses/1
                         ,invented_symbol_prefix/1
+                        ,learner/2
                         ,metarule/2
                         ,metarule_constraints/2
                         ,table_meta_interpreter/1
@@ -168,6 +169,14 @@ precon_abduce metarule 'P(X,y):- Q(X), R(X,y)'.
 postcon_abduce metarule 'P(x,Y):- Q(x,Y), R(Y)'.
 
 
+%!      learner(?Name,?Path) is semidet.
+%
+%       The learning system to load at startup.
+%
+learner('Metagol',lib(metagol/metagol)).
+%learner('Poker',lib(poker/poker)).
+
+
 %!	metarule_constraints(+Metasubstitution,+Goal) is nondet.
 %
 %	A Goal to be called when Metasubstitution is matched.
@@ -278,3 +287,8 @@ configuration:metarule_constraints(M,B):-
 %       See refresh_tables/1 for more context.
 %
 :- dynamic(untable_meta_interpreter/1).
+
+
+:-learner(N,P)
+  ,format('Loading ~w~n',[N])
+  ,use_module(P).
