@@ -351,7 +351,10 @@ metasubstitutions(Ep,K,MS,Subs):-
 %
 %	Return the predicate Signature for one example's predicate.
 %
-signature((L,_),[T|Ss]):-
+signature((L,_),Ss):-
+        !
+        ,signature(L,Ss).
+signature(L,[T|Ss]):-
         metagol_configuration:max_invented(N)
         ,findall(S
                 ,invented_symbol(N,S)
@@ -484,6 +487,9 @@ ordered_list([X>Y|Ls],Os):-
 %
 %	True when Above is above Below in a total Ordering.
 %
+above(_S1,S2,_Ss):-
+        var(S2)
+        ,!.
 above(S1,S2,Ss):-
 	previous(S1,S2,Ss)
 	,!.
