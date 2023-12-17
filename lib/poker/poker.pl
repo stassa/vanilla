@@ -263,23 +263,6 @@ learn(Pos,Neg,BK,MS,Ps):-
 learn(_Pos,_Neg,_BK,_MS,[]).
 
 
-%!	write_problem(+Module,+Elements,-Refs) is det.
-%
-%	Write the Elements of a MIL problem to a Module.
-%
-%	Refs is a list of references of the clauses assserted to the
-%	dynamic database. These are meant to be used later to erase the
-%	asserted clauses.
-%
-write_problem(M,Es,Rs):-
-	findall(Rs_i
-		,(member(P, Es)
-		 ,assert_program(M,P,Rs_i)
-		 )
-		,Rs_)
-	,flatten(Rs_,Rs).
-
-
 %!      generalise(+Pos,+K,+B_SO,-Metasubs) is nondet.
 %
 %       Generalise a set of posiitve examples.
@@ -340,22 +323,6 @@ signature(L,[T|Ss]):-
                 ,invented_symbol(N,S)
                 ,Ss)
         ,L =.. [m,T|_].
-
-
-%!	invented_symbol(+Index,?Symbol) is nondet.
-%
-%	An invented Symbol witn an index in [1,Index].
-%
-%	As invented_symbol/2 but Symbol is an atomic term without an
-%	arity.
-%
-%	Use this predicate to generate invented symbols or verify that
-%	a Prolog term is an invented symbol.
-%
-invented_symbol(I,S):-
-	configuration:invented_symbol_prefix(F)
-	,between(1,I,K)
-	,atomic_list_concat([F,K],'',S).
 
 
 
