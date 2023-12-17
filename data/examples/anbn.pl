@@ -12,15 +12,6 @@
 
 */
 
-%configuration:metarule_constraints(m(chain,P,P,_),fail).
-%configuration:metarule_constraints(m(chain,P,_,P),fail).
-%configuration:metarule_constraints(m(chain,_,P,P),fail).
-
-%:- auxiliaries:set_configuration_option(clause_limit, [3]).
-%:- auxiliaries:set_configuration_option(max_invented, [1]).
-%:- auxiliaries:set_configuration_option(unfold_invented, [true]).
-%:- auxiliaries:set_configuration_option(reduction, [none]).
-
 program_signature(s/2,[s,a,'inv_1',b],[]).
 program_signature(inv_1/2,['inv_1',s,a,b],[]).
 
