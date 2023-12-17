@@ -5,6 +5,8 @@
                         ,learner/2
                         ,metarule/2
                         ,metarule_constraints/2
+                        ,metarule_formatting/1
+			,symbol_range/2
                         ,table_meta_interpreter/1
                         ,untable_meta_interpreter/1
 			,op(100,xfx,metarule)
@@ -248,6 +250,78 @@ configuration:metarule_constraints(M,B):-
 	    ,debug(lex,'Failed constraint test!',[])
 	 ).
 */
+
+
+%!      metarule_formatting(?How) is semidet.
+%
+%       How to print metarules learned with new_metarules/1.
+%
+%       How is one of: [quantified, user_friendly, expanded].
+%
+%       Option "quantified" prints metarules with quantifiers and in
+%       formal notation found in the MIL literature. Use this option to
+%       compare metarules with the ones in the literature, or just to
+%       get a more clear explanation of a metarule.
+%
+%       Option "user_friendly" prints metarules in Louise's user-level,
+%       and user-friendly format of metarules in experiment files. Use
+%       this option when you want to copy a metarule and later paste it
+%       to an experiment file. For example, this option is handy when
+%       you learn metarules with TOIL and you want to reuse them in an
+%       experiment file.
+%
+%       Option "expanded" prints metarules in Louise's internal format,
+%       encapsulated and expanded, with an encapsulated metasubstitution
+%       atom in the head. Use this option to inspect what Louise
+%       actually sees when you declare a metarule.
+%
+%       Note that the metarules printed with option "expanded" cannot be
+%       directly copy/pasted into an experiment file. Or, well, sure
+%       they can... but they won't be picked up by experiment_data/5 and
+%       you will probably see errors.
+%
+metarule_formatting(quantified).
+%metarule_formatting(user_friendly).
+%metarule_formatting(expanded).
+
+
+%!	symbol_range(?Type,?Symbols) is semidet.
+%
+%	A list of Symbols to pretty-print predicates or variables.
+%
+%	Type is one of [predicate,variable], denoting the type of
+%	symbols in the currenr range.
+%
+%	Symbols is a list of symbols of the given Type.
+%
+%	The atoms in list Symbols is used to assign names to the
+%	variables in a metarule for pretty-printing.
+%
+%	Warning:
+%	--------
+%
+%	symbol_range/2 must have exactly two clauses: one for the
+%	symbols to be used as names for second-order existentially
+%	quantified variables, and one to be used as names for
+%	first-order existentially and universally quantified variables.
+%
+%	You can change each Symbols list as you see fit, but _do not
+%	remove or add clauses_ to symbol_range/2!
+%
+%	Used by
+%	-------
+%
+%	This predicate is used by predicates in the transitive closure
+%	of print_metarules/1 and print_metarule/1, in particular,
+%	numbered_symbol/3, which uses this to generate lists of
+%	predicate symbols to be assigned to variables in metarules
+%	according with their (first- or second-) order.
+%
+symbol_range(predicate, ['P','Q','R','S','T']).
+symbol_range(variable, ['X','Y','Z','U','V','W']).
+% Silly. Don't use.
+%symbol_range(predicate, ['Alice','Bob','Carol']).
+%symbol_range(variable, ['Smith','Brown','Carpenter','Miller','Green']).
 
 
 %!      table_meta_interpreter(?Bool) is semidet.
