@@ -1,6 +1,7 @@
 :-module(metagol_configuration, [depth_limits/2
                                 ,experiment_file/2
                                 ,max_invented/1
+                                ,listing_limit/1
                                 ,order_constraints/5
                                 ]).
 
@@ -17,7 +18,7 @@
 %       Limit should be a natural number, including 0, or the atom 'inf'
 %       representing positive infinity if a limit is not required.
 %
-depth_limits(2,2).
+depth_limits(0,2).
 
 
 %!	experiment_file(?Path,?Module) is semidet.
@@ -34,6 +35,22 @@ experiment_file(data('examples/hello_world.pl'),hello_world).
 %	Must be at most Max - 1 for depth_limits(Min,Max).
 %
 max_invented(0).
+
+
+%!      listing_limit(?Limit) is semidet.
+%
+%       Limit the clauses printed when a MIL problem is listed.
+%
+%       Limit is a number, limiting the number of clauses of examples
+%       and BK that will be printed to the output when a MIL problem is
+%       listed. Affects list_mil_problem/1 and
+%       list_encapsulated_problem/1.
+%
+%       Limit should be a positive integer. It can also be the atom
+%       'inf' representing positive infinity. If Limit is 'inf', then no
+%       limit is imposed on the printed information.
+%
+listing_limit(10).
 
 
 %!      order_constraints(+Id,+Existential,+FO,+Lexicographic,+Interval)
@@ -110,9 +127,7 @@ order_constraints(projection_21,[P,Q],_Fs,[P>Q],[]).
 order_constraints(projection_12,[P,Q],_Fs,[P>Q],[]).
 order_constraints(inverse,[P,Q],_Fs,[P>Q],[]).
 order_constraints(identity,[P,Q],_Fs,[P>Q],[]).
-%order_constraints(chain,[P,Q,R],_Fs,[P>Q,P>R],[]).
-% One less constraint - for anbn.pl
-order_constraints(chain,[P,Q,_R],_Fs,[P>Q],[]).
+order_constraints(chain,[P,Q,R],_Fs,[P>Q,P>R,Q>R],[]).
 order_constraints(tailrec,[P,Q],[X,Y,Z],[P>Q],[X>Z,Z>Y]).
 order_constraints(precon,[P,Q,R],_Fs,[P>Q,P>R],[]).
 order_constraints(postcon,[P,Q,R],_Fs,[P>Q,P>R],[]).

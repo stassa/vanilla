@@ -7,6 +7,7 @@
 :-use_module(src(auxiliaries)).
 :-use_module(src(mil_problem)).
 :-use_module(lib(term_utilities/term_utilities)).
+:-use_module(metagol_auxiliaries).
 :-use_module(metagol_configuration).
 
 
@@ -56,179 +57,6 @@ learn(T,Ps):-
         ,learn(Pos,Neg,BK,MS,Ps).
 
 
-%!	experiment_data(+Targets,-Positive,-Negative,-BK,-Metarules) is
-%!	det.
-%
-%	Collect experiment file data for one or more learning Targets.
-%
-%	Targets is either a single predicate indicator, or a list of
-%	predicate indicators of the predicates to be learned.
-%
-%	experiment_data/5 expects an experiment file to be loaded into
-%	memory and will fail without warning otherwise.
-%	initialise_experiment/0 should be called before it, and
-%	cleanup_experiment/0 after it if cleanup is required between
-%	experiments.
-%
-experiment_data(Ts,_,_,_,_):-
-% A list of learning targets must be ground.
-	is_list(Ts)
-	,learning_targets(Ls)
-	,forall(member(T,Ts)
-	       ,(   \+ memberchk(T,Ls)
-		->  throw('Unknown learning target':T)
-		;   true
-		)
-	       )
-	,fail.
-experiment_data(T,_,_,_,_):-
-% A single learning target's predicate indicator must be ground.
-	\+ is_list(T)
-	,learning_targets(Ts)
-	,\+ memberchk(T,Ts)
-	,throw('Unknown learning target':T).
-experiment_data(T,Pos,Neg,BK,MS):-
-	signed_examples(positive,experiment_file,T,Pos_)
-	,signed_examples(negative,experiment_file,T,Neg_)
-	,maplist(list_to_set,[Pos_,Neg_],[Pos,Neg])
-	,bk_or_metarules(background_knowledge,experiment_file,T,BK)
-	,bk_or_metarules(metarules,experiment_file,T,MS_)
-	,(   (MS_ == [all]
-	     ;	 memberchk(all,MS_)
-	     )
-	 ->  configuration_metarules(MS)
-	 ;   MS = MS_
-	 ).
-
-
-
-%!	learning_targets(-Targets) is det.
-%
-%	Collect learning Targets defined in an experiment file.
-%
-%	Targets is the list of predicate symbols and arities of each of
-%	the target predicates that have background knowledge
-%	declarations in background/2 clauses in the current experiment
-%	file.
-%
-learning_targets(Ts):-
-	findall(T
-		,experiment_file:background_knowledge(T, _BK)
-		,Ts_)
-	,flatten(Ts_,Ts).
-
-
-%!	signed_examples(+Sign,+Module,+Targets,-Examples) is det.
-%
-%	Collect positive or negative Examples of one or more Targets.
-%
-%	Sign is one of [positive,negative] denoting the kind of
-%	examples to collect. Module is the module name of the current
-%	experiment file. Targets is either a list of learning targets'
-%	symbols and arities as F/A predicate indicators, or a single
-%	predicate indicator.
-%
-%	Examples is a list of examples of all the learning Targets. If
-%	Sign is "positive", Examples is a list of positive examples
-%	(ground unit clauses). If Sign is "negative", Examples is a list
-%	of negative examples (ground unit clauses prefixed with ":-").
-%
-signed_examples(S,M,Ts,Es):-
-% Ts is a list of learning targets.
-	is_list(Ts)
-	,!
-	,atom_concat(S,'_example',F)
-	,C =.. [F,T,Ep]
-	,findall(Ep_
-		,(member(T,Ts)
-		 ,M:C
-		 ,signed_example(S,Ep,Ep_)
-		 )
-		,Es_)
-	,flatten(Es_,Es).
-signed_examples(S,M,T,Es):-
-% T is a single learning target.
-	atom_concat(S,'_example',F)
-	,C =.. [F,T,Ep]
-	,findall(Ep_
-		,(M:C
-		 ,signed_example(S,Ep,Ep_)
-		 )
-		,Es).
-
-
-%!	signed_example(+Example,-Signed) is nondet.
-%
-%	Ensure an Example is Signed if nessary.
-%
-%	Negative examples declared in an experiment file as ground unit
-%	clauses or sets of literals must be prefixed with ":-" (so that
-%	they are properly definite goals).
-%
-%	Negative examples can also be definite clauses with a head
-%	literal, in which case it's not necessary to change them.
-%
-%	Positive examples don't need to be signed.
-%
-signed_example(_,H:-B,H:-B):-
-	!.
-signed_example(positive,E,E).
-signed_example(negative,E,:-E).
-
-
-%!	bk_or_metarules(+Bias,+Module,+Targets,-Delarations) is det.
-%
-%	Retrieve the BK or metarule Declarations for a MIL problem.
-%
-%	Bias is one of [background_knowledge,metarules]. Module is the
-%	module name of the current experiment file. Targets is either a
-%	list of learning targets or a single target, each as an F/A
-%	predicate indicator.
-%
-%	If Bias is "background_knowledge", Declarations is a list of the
-%	F/A predicate indicators of predicates declared as background
-%	knowledge for each learning target in Targets.
-%
-%	If Bias is "metarules", Declarations is a list of atomic
-%	metarule identifiers.
-%
-bk_or_metarules(B,M,Ts,Bs):-
-% Ts is a list of learning targets.
-	is_list(Ts)
-	,!
-	,C =.. [B,T,Bs_]
-	,findall(E_
-		,(member(T,Ts)
-		 ,M:C
-		 ,member(E_,Bs_)
-		 )
-	      ,Bs_)
-	,list_to_set(Bs_, Bs)
-	.
-bk_or_metarules(B,M,T,Bs):-
-% T is a single learning target.
-	C =.. [B,T,Bs]
-	,M:C.
-
-
-%!	configuration_metarules(-Metarules) is det.
-%
-%	Collect the names of all Metarules defined in the configuration.
-%
-%	Used when the list of metarules for a learning targets includes
-%	the atom "all", meaning that all known metarules should be used
-%	for that learning target.
-%
-configuration_metarules(MS):-
-	findall(Id
-	       ,(configuration:current_predicate(metarule,H)
-		,predicate_property(H, implementation_module(configuration))
-		,H =.. [metarule,Id|_]
-		,clause(H, _B)
-		)
-	       ,MS).
-
-
 
 %!      learn(+Pos,+Neg,+B_FO,+B_SO,-Program) is nondet.
 %
@@ -273,22 +101,6 @@ learn(Pos,Neg,BK,MS,Ps):-
         ,excapsulated_clauses(Ts,Ps_,Ps).
 learn(_Pos,_Neg,_BK,_MS,[]).
 
-
-%!	write_problem(+Module,+Elements,-Refs) is det.
-%
-%	Write the Elements of a MIL problem to a Module.
-%
-%	Refs is a list of references of the clauses assserted to the
-%	dynamic database. These are meant to be used later to erase the
-%	asserted clauses.
-%
-write_problem(M,Es,Rs):-
-	findall(Rs_i
-		,(member(P, Es)
-		 ,assert_program(M,P,Rs_i)
-		 )
-		,Rs_)
-	,flatten(Rs_,Rs).
 
 
 %!      generalise(+Pos,+Min,+Max,+B_SO,-Metasubs) is nondet.
@@ -360,22 +172,6 @@ signature(L,[T|Ss]):-
                 ,invented_symbol(N,S)
                 ,Ss)
         ,L =.. [m,T|_].
-
-
-%!	invented_symbol(+Index,?Symbol) is nondet.
-%
-%	An invented Symbol witn an index in [1,Index].
-%
-%	As invented_symbol/2 but Symbol is an atomic term without an
-%	arity.
-%
-%	Use this predicate to generate invented symbols or verify that
-%	a Prolog term is an invented symbol.
-%
-invented_symbol(I,S):-
-	configuration:invented_symbol_prefix(F)
-	,between(1,I,K)
-	,atomic_list_concat([F,K],'',S).
 
 
 
