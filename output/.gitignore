@@ -1,3 +1,4 @@
 # Write log files to this directory.
+*
 # Ignore all but this file.
 !.gitignore
