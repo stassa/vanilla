@@ -209,7 +209,8 @@ configuration:metarule_constraints(m(_Id,P,P,_),fail).
 %
 configuration:metarule_constraints(m(tailrec,_,_),fail).
 configuration:metarule_constraints(M,fail):-
-	M =.. [m,Id,P|Ps]
+	configuration:encapsulation_predicate(E)
+        ,M =.. [E,Id,P|Ps]
         ,\+ memberchk(Id,[abduce
 			 ,unit
 			 ,projection_21
@@ -222,7 +223,8 @@ configuration:metarule_constraints(M,fail):-
 % scientist.
 %
 configuration:metarule_constraints(M,fail):-
-	M =.. [m,Id,P,P|_Ps]
+	configuration:encapsulation_predicate(E)
+        ,M =.. [E,Id,P,P|_Ps]
         ,\+ memberchk(Id,[abduce
                       ,unit
                       ,projection_21
@@ -236,14 +238,15 @@ configuration:metarule_constraints(M,fail):-
 % Needs problem-specific ordering of the predicate signature.
 %
 configuration:metarule_constraints(M,B):-
-	debug(lex,'Testing constraint for metasub: ~w',M)
-        ,M =.. [m,Id|Ps]
+	configuration:encapsulation_predicate(E)
+        ,debug(lex,'Testing constraint for metasub: ~w',M)
+        ,M =.. [E,Id|Ps]
         %#REPLACE WITH PROBLEM-SPECIFIC ORDERING OF PREDICATE SIGNATURE#
         ,PS = [s,a,b] % Example ordering for a^nb^n
 	,debug(lex,'Predicate signature: ~w',[PS])
-        ,thelma_configuration:order_constraints(Id,Ps,Fs,STs,FTs)
+        ,metagol_configuration:order_constraints(Id,Ps,Fs,STs,FTs)
 	,debug(lex,'Order constraints: ~w-~w',[STs,FTs])
-        ,(   thelma:order_tests(PS,Fs,STs,FTs)
+        ,(   metagol:order_tests(PS,Fs,STs,FTs)
 	 ->  B = true
 	    ,debug(lex,'Passed constraint test!',[])
 	 ;   B = false

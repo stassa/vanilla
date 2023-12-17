@@ -123,14 +123,16 @@ parsed_metarule(Id,M):-
 %	in a metarule/2 clause in the program database.
 %
 parsed_metarule(Id,M,M1):-
-	atom_chars(M,Cs)
+	configuration:encapsulation_predicate(E)
+	,atom_chars(M,Cs)
 	,remove_whitespace(Cs,Cs_)
 	,once(phrase(clause_(Ls),Cs_))
 	,existential_vars(Ls,Es)
 	,args_vars(Es,Es_)
-	,A =.. [m,Id|Es_]
+	,A =.. [E,Id|Es_]
 	,literals_clause(Ls, M_)
 	,varnumbers(A:-M_, M1).
+
 
 
 %!	remove_whitespace(+Chars,-Cleaned) is det.
@@ -227,9 +229,11 @@ encapsulated_literals([],Acc,Ls):-
 	!
 	,reverse(Acc,Ls).
 encapsulated_literals([L|Ls],Acc,Bind):-
-	args_vars(L,Vs)
-	,L_ =.. [m|Vs]
+	configuration:encapsulation_predicate(E)
+	,args_vars(L,Vs)
+	,L_ =.. [E|Vs]
 	,encapsulated_literals(Ls,[L_|Acc],Bind).
+
 
 
 %!	args_vars(+Literal,-Variables) is det.

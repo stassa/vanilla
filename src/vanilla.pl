@@ -497,7 +497,8 @@ bind_head_literal(:-(L,Ls),M,(S:-(H,L,Ls))):-
 %	Instantiate a literal's predicate symbol to the given Symbol.
 %
 symbol(L,S):-
-        L =.. [m,S|_As].
+	configuration:encapsulation_predicate(E)
+        ,L =.. [E,S|_As].
 
 
 

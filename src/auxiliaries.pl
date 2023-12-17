@@ -352,10 +352,11 @@ skolem_copy(T,T_):-
 %	Extract a metarule's Metasubstitution and Body literals and Id.
 %
 metarule_head_body_name(M,Sub_,B_,Id):-
-	M = (Sub:-B)
+	configuration:encapsulation_predicate(E)
+	,M = (Sub:-B)
 	,strip_module(B,_M,B_)
 	,Sub =.. [_F,_|Ps]
-	,Sub_ =.. [m,_|Ps]
+	,Sub_ =.. [E,_|Ps]
 	,Id = '$metarule'.
 
 
@@ -1107,13 +1108,15 @@ metarule_variables(_A:-M,Ss,Fs):-
 %
 metarule_variables((L,Ls),Ss_Acc,Ss_Bind,Fs_Acc,Fs_Bind):-
 	! % Avoid backtracking here for more of the same.
-	,L =.. [m,P|Fs]
+	,configuration:encapsulation_predicate(E)
+	,L =.. [E,P|Fs]
 	,second_order(P,Ss_Acc,Ss_Acc_)
 	,first_order(Fs,Fs_Acc,Fs_Acc_)
 	,metarule_variables(Ls,Ss_Acc_,Ss_Bind,Fs_Acc_,Fs_Bind).
 metarule_variables(L,Ss_Acc,Ss,Fs_Acc,Fs):-
-	L \= (_,_)
-	,L =.. [m,P|Fs_L]
+	configuration:encapsulation_predicate(E)
+	,L \= (_,_)
+	,L =.. [E,P|Fs_L]
 	,second_order(P,Ss_Acc,Ss)
 	,first_order(Fs_L,Fs_Acc,Fs).
 
@@ -1396,7 +1399,8 @@ metarule_id(Id,Id):-
 	atom(Id)
 	,!.
 metarule_id(Sub:-_,Id):-
-	Sub =.. [m,Id|_].
+	configuration:encapsulation_predicate(E)
+	,Sub =.. [E,Id|_].
 
 
 
@@ -1492,7 +1496,9 @@ variables_symbols(T,Vs):-
 %	Collect Existentially quantified variables from a Metarule.
 %
 existential_vars(A:-_M,Es):-
-	A =.. [m,_Id|Es].
+	configuration:encapsulation_predicate(E)
+	,A =.. [E,_Id|Es].
+
 
 
 %!	quantification_case(+Existential,+First_Order) is det.
@@ -1562,7 +1568,8 @@ excapsulated_literals([],Acc,Ls):-
 	!
 	,reverse(Acc,Ls).
 excapsulated_literals([L|Ls],Acc,Bind):-
-	L =.. [m|As]
+	configuration:encapsulation_predicate(E)
+	,L =.. [E|As]
 	,findall(S
 		,member('$VAR'(S),As)
 		,Ss)
@@ -1570,12 +1577,15 @@ excapsulated_literals([L|Ls],Acc,Bind):-
 	,excapsulated_literals(Ls,[S_|Acc],Bind).
 
 
+
 %!	metarule_Id(+Metarule, -Id) is det.
 %
 %	Simple helper to extract metarule identifiers from metarules.
 %
 metarule_Id(A:-_M,Id):-
-	A =.. [m,Id|_Ps].
+	configuration:encapsulation_predicate(E)
+	,A =.. [E,Id|_Ps].
+
 
 
 %!	metarule_quantifiers(+Metarule,-Existential,-Universal) is det.

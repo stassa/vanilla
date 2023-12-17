@@ -221,7 +221,8 @@ symbol(H:-_B,F/A):-
 	,symbol(H,F/A).
 symbol(:-E,F/A):-
 % Encapsulated negative example.
-        E =.. [m,F|As]
+        configuration:encapsulation_predicate(Enc)
+	,E =.. [Enc,F|As]
         ,!
         ,length(As,A).
 symbol(:-H,F/A):-
@@ -230,7 +231,8 @@ symbol(:-H,F/A):-
         ,!.
 symbol(E,F/A):-
 % Encapsulated example.
-        E =.. [m,F|As]
+        configuration:encapsulation_predicate(Enc)
+	,E =.. [Enc,F|As]
         ,!
         ,length(As,A).
 symbol(H,F/A):-
@@ -400,7 +402,8 @@ excapsulated_clause(T,C,C_):-
 %
 excapsulated_clause(Ts,H:-Bs,Acc,Bind):-
 % Definite clause; H is the head literal.
-	H =.. [m|[S|As]]
+	configuration:encapsulation_predicate(E)
+	,H =.. [E|[S|As]]
 	,length(As,A)
 	,target_or_invention(Ts,S/A)
 	,!
@@ -409,13 +412,15 @@ excapsulated_clause(Ts,H:-Bs,Acc,Bind):-
 excapsulated_clause(Ts,(L,Ls),Acc,Bind):-
 % Definite clause: L is the next body literal.
 	!
-	,L =.. [m|[F|As]]
+	,configuration:encapsulation_predicate(E)
+	,L =.. [E|[F|As]]
 	,L_ =.. [F|As]
 	,excapsulated_clause(Ts,Ls,[L_|Acc],Bind).
 excapsulated_clause(Ts,L,[],L_):-
 % Unit clause: the accumulator is empty.
 	!
-        ,L =.. [m|[S|As]]
+        ,configuration:encapsulation_predicate(E)
+	,L =.. [E|[S|As]]
 	,length(As, A)
 	,target_or_invention(Ts,S/A)
 	,ground(S)
@@ -423,7 +428,8 @@ excapsulated_clause(Ts,L,[],L_):-
 excapsulated_clause(_Ts,(L),Acc,(H:-Bs)):-
 % Definite clause: L is the last literal.
 % We don't need to check the symbol again.
-	L =.. [m|[F|As]]
+	configuration:encapsulation_predicate(E)
+	,L =.. [E|[F|As]]
 	,L_ =.. [F|As]
 	,reverse([L_|Acc],Ls)
 	,once(list_tree(Ls,(H,Bs))).

@@ -167,11 +167,12 @@ signature((L,_),Ss):-
         !
         ,signature(L,Ss).
 signature(L,[T|Ss]):-
-        metagol_configuration:max_invented(N)
+        configuration:encapsulation_predicate(E)
+        ,metagol_configuration:max_invented(N)
         ,findall(S
                 ,invented_symbol(N,S)
                 ,Ss)
-        ,L =.. [m,T|_].
+        ,L =.. [E,T|_].
 
 
 
@@ -191,11 +192,13 @@ signature(L,[T|Ss]):-
 %	atom without binding variables in the encapsulated metarule.
 %
 metasub_metarule(Sub,MS,Sub_:-M):-
-	Sub =.. [m,Id|As]
+        configuration:encapsulation_predicate(E)
+	,Sub =.. [E,Id|As]
 	,length(As,N)
 	,length(As_,N)
-	,Sub_ =.. [m,Id|As_]
+	,Sub_ =.. [E,Id|As_]
 	,free_member(Sub_:-M,MS).
+
 
 
 %!      metarule_constraints(+Metasub,-Truth) is det.
