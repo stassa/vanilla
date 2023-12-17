@@ -362,17 +362,15 @@ clause([_BK,_Builtins,_Hypothesis,metarules],L,K,MS,Ss,Subs,Subs_,Ls):-
 %	True if all ground metasubstitutions obey constraints.
 %
 %	Metasubs is the list of metasubstitutions derived so-far. For
-%	each _ground_ metasubstitution in Metasubs, this predicate
-%	checks that it does not violate any constraints declared in a
+%	each metasubstitution in Metasubs, this predicate checks that it
+%	does not violate any constraint defined in a
 %	metarule_constraints/2 clause.
 %
 check_constraints(Subs):-
 	forall(member(Sub,Subs)
-	      ,(   ground(Sub)
-	       ->  constraints(Sub)
-	       ;   \+ ground(Sub)
-	       )
+	      ,constraints(Sub)
 	      ).
+
 
 
 %!	known_metasub(?Literal,+Subs,-Body) is nondet.
