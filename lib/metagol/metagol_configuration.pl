@@ -26,6 +26,7 @@ depth_limits(0,2).
 %	The Path and Module name of an experiment file.
 %
 experiment_file(data('examples/hello_world.pl'),hello_world).
+%experiment_file(data('examples/anbn.pl'),anbn).
 
 
 %!	max_invented(?Number) is semidet.
