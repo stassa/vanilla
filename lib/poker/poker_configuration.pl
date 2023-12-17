@@ -1,6 +1,7 @@
 :-module(poker_configuration, [clause_limit/1
                               ,experiment_file/2
                               ,max_invented/1
+                              ,listing_limit/1
                               ]).
 
 :-use_module(load_experiment_file).
@@ -24,6 +25,7 @@ clause_limit(2).
 %	The Path and Module name of an experiment file.
 %
 experiment_file(data('examples/hello_world.pl'),hello_world).
+%experiment_file(data('examples/anbn.pl'),anbn).
 
 
 %!	max_invented(?Number) is semidet.
@@ -33,6 +35,22 @@ experiment_file(data('examples/hello_world.pl'),hello_world).
 %	Assumes clause_limit(K) where K > 1.
 %
 max_invented(0).
+
+
+%!      listing_limit(?Limit) is semidet.
+%
+%       Limit the clauses printed when a MIL problem is listed.
+%
+%       Limit is a number, limiting the number of clauses of examples
+%       and BK that will be printed to the output when a MIL problem is
+%       listed. Affects list_mil_problem/1 and
+%       list_encapsulated_problem/1.
+%
+%       Limit should be a positive integer. It can also be the atom
+%       'inf' representing positive infinity. If Limit is 'inf', then no
+%       limit is imposed on the printed information.
+%
+listing_limit(10).
 
 
 %!      table_meta_interpreter(?Bool) is semidet.

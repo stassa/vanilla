@@ -256,16 +256,6 @@ print_limited(L,Cs):-
 %	constraints (currently defined as clauses
 %	of metarule_constraints/2) will be printed.
 %
-print_constraints(MS,order):-
-	!
-	,format_underlined('Order constraints')
-	,forall(member(Id,MS)
-	       ,(poker_configuration:order_constraints(Id,Ss,Fs,PS,CS)
-		,prettify_vars(Ss,predicate,Ss_)
-		,prettify_vars(Fs,variable,Fs_)
-		,print_or_debug(print,user_output,order_constraints(Id,Ss_,Fs_,PS,CS))
-		)
-	       ).
 print_constraints(_MS,metasub):-
 	predicate_property(configuration:metarule_constraints(_,_), number_of_clauses(N))
 	,(   N > 0
