@@ -191,13 +191,31 @@ signature(L,[T|Ss]):-
 %	metarule matching the metarule id of a ground metasubstitution
 %	atom without binding variables in the encapsulated metarule.
 %
-metasub_metarule(Sub,MS,Sub_:-M):-
-        configuration:encapsulation_predicate(E)
-	,Sub =.. [E,Id|As]
+metasub_metarule(Sub_E/Sub_U,MS,Sub_E_/Sub_U_:-M):-
+	configuration:encapsulation_predicate(E)
+        ,metasub_atom(E,Sub_E,Sub_E_)
+        ,metasub_atom(E,Sub_U,Sub_U_)
+        ,free_member(Sub_E_/Sub_U_:-M,MS).
+
+
+%!      metasub_atom(+Symbol,+Atom,-New) is det.
+%
+%       Construct a Metasubstitution Atom.
+%
+%       Symbol is the encapsulation predicate symbol defined in the
+%       configuration as encapsulation_predicate/1.
+%
+%       Atom is a metasubstitution atom, with existentially or
+%       universally quantified variables.
+%
+%       New is the given metasubstitution Atom with ground symbols or
+%       terms replaced by fresh variables.
+%
+metasub_atom(E,Sub,Sub_):-
+	Sub =.. [E,Id|As]
 	,length(As,N)
 	,length(As_,N)
-	,Sub_ =.. [E,Id|As_]
-	,free_member(Sub_:-M,MS).
+	,Sub_ =.. [E,Id|As_].
 
 
 
@@ -224,26 +242,20 @@ metasub_metarule(Sub,MS,Sub_:-M):-
 %       See data/examples/hello_world.pl for an example of declaring a
 %       lexicographic ordering for a learning target.
 %
-%       @bug Interval order constraints, over the first-order variables
-%       in a metarule, are not yet implemented! However, the
-%       lexicographic constraints currently implemented are enough to
-%       eliminate infinite left-recursive clauses from the hypothesis
-%       language.
-%
-configuration:metarule_constraints(M,B):-
-	%debug_clauses(lex,'Testing constraint for metasub:',M)
-        configuration:encapsulation_predicate(S)
-        ,M =.. [S,Id|[T|Ps]]
-        ,experiment_file:program_signature(T/_,PS,_)
-	,debug(lex,'Predicate signature: ~w',[PS])
-        % TODO: interval order constraints are ignored!
-        ,metagol_configuration:order_constraints(Id,[T|Ps],_Fs,STs,FTs)
-	,debug(lex,'Order constraints: ~w-~w',[STs,FTs])
-        ,(   order_tests(PS,[],STs,[])
+configuration:metarule_constraints(M_E/M_U,B):-
+	debug_clauses(constraints,'Testing constraint for metasub:',M_E/M_U)
+        ,configuration:encapsulation_predicate(S)
+        ,M_E =.. [S,Id|[T|Ps_E]]
+        ,M_U =.. [S,Id|Ts_U]
+        ,experiment_file:program_signature(T/_,PS,CS)
+	,debug(constraints,'Predicate signature: ~w',[PS-CS])
+        ,metagol_configuration:order_constraints(Id,[T|Ps_E],Ts_U,STs,FTs)
+	,debug(constraints,'Order constraints: ~w-~w',[STs,FTs])
+        ,(   order_tests(PS,CS,STs,FTs)
 	 ->  B = true
-	    ,debug(lex,'Passed constraint test!',[])
+	    ,debug(constraints,'Passed constraint test!',[])
 	 ;   B = false
-	    ,debug(lex,'Failed constraint test!',[])
+	    ,debug(constraints,'Failed constraint test!',[])
 	 ).
 
 

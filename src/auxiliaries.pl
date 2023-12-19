@@ -1033,7 +1033,6 @@ output_metarule(H,W,M):-
 	).
 
 
-
 %!	pretty_expanded_metarule(+Id,-Expanded) is det.
 %
 %	Transform a metarule into a pretty-printing format.
@@ -1071,7 +1070,6 @@ pretty_expanded_metarule(MR,MR_):-
 		 ,nth1(I,Us,'$VAR'(V))
 		 )
 		,Us).
-
 
 
 %!	metarule_variables(+Metarule,-Second_order,-First_order) is det.
@@ -1383,27 +1381,6 @@ user_friendly_metarule(Id,A):-
 	 ).
 
 
-
-%!	metarule_id(+Metarule,-Id) is det.
-%
-%	Extract the Id of a Metarule.
-%
-%	Metarule may be an atomic Id of a metarule or a metarule clause.
-%	Id is either the atom Id, or the atomic ide of the metarule in
-%	the clause.
-%
-%	@tbd this is going to be needed elsewhere. Maybe modify
-%	mil_problem's metarule_parts/5 so it actually works?
-%
-metarule_id(Id,Id):-
-	atom(Id)
-	,!.
-metarule_id(Sub:-_,Id):-
-	configuration:encapsulation_predicate(E)
-	,Sub =.. [E,Id|_].
-
-
-
 %!	quantified_metarule(+Id,-Atom) is det.
 %
 %	Transform a metarule into a pretty-printing atom.
@@ -1436,11 +1413,10 @@ quantified_metarule(Id,A):-
 quantified_metarule(M,A):-
 	metarule_symbols(M)
 	,excapsulated_metarule(M,M_)
-	,metarule_Id(M, Id)
+	,metarule_id(M, Id)
 	,metarule_quantifiers(M,Es,Us)
 	,pretty_metarule_id(Id,Id_)
 	,format(atom(A),'(~w) ~w~w: ~w',[Id_,Es,Us,M_]).
-
 
 
 %!	metarule_symbols(+Metarule) is det.
@@ -1495,10 +1471,9 @@ variables_symbols(T,Vs):-
 %
 %	Collect Existentially quantified variables from a Metarule.
 %
-existential_vars(A:-_M,Es):-
+existential_vars(Sub_E/_Sub_U:-_M,Es):-
 	configuration:encapsulation_predicate(E)
-	,A =.. [E,_Id|Es].
-
+	,Sub_E =.. [E,_Id|Es].
 
 
 %!	quantification_case(+Existential,+First_Order) is det.
@@ -1577,17 +1552,6 @@ excapsulated_literals([L|Ls],Acc,Bind):-
 	,excapsulated_literals(Ls,[S_|Acc],Bind).
 
 
-
-%!	metarule_Id(+Metarule, -Id) is det.
-%
-%	Simple helper to extract metarule identifiers from metarules.
-%
-metarule_Id(A:-_M,Id):-
-	configuration:encapsulation_predicate(E)
-	,A =.. [E,Id|_Ps].
-
-
-
 %!	metarule_quantifiers(+Metarule,-Existential,-Universal) is det.
 %
 %	Collect quantifiers and quantified variables in a Metarule.
@@ -1642,6 +1606,26 @@ pretty_metarule_id(Id,Id_):-
 		 )
 		,Cs_)
 	,atom_chars(Id_,[C_|Cs_]).
+
+
+
+%!	metarule_id(+Metarule,-Id) is det.
+%
+%	Extract the Id of a Metarule.
+%
+%	Metarule may be an atomic Id of a metarule or a metarule clause.
+%	Id is either the atom Id, or the atomic ide of the metarule in
+%	the clause.
+%
+%	@tbd this is going to be needed elsewhere. Maybe modify
+%	mil_problem's metarule_parts/5 so it actually works?
+%
+metarule_id(Id,Id):-
+	atom(Id)
+	,!.
+metarule_id(Sub_E/_Sub_U:-_M,Id):-
+	configuration:encapsulation_predicate(E)
+	,Sub_E =.. [E,Id|_].
 
 
 

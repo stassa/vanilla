@@ -170,10 +170,28 @@ signature(L,[T|Ss]):-
 %	metarule matching the metarule id of a ground metasubstitution
 %	atom without binding variables in the encapsulated metarule.
 %
-metasub_metarule(Sub,MS,Sub_:-M):-
+metasub_metarule(Sub_E/Sub_U,MS,Sub_E_/Sub_U_:-M):-
 	configuration:encapsulation_predicate(E)
-        ,Sub =.. [E,Id|As]
+        ,metasub_atom(E,Sub_E,Sub_E_)
+        ,metasub_atom(E,Sub_U,Sub_U_)
+        ,free_member(Sub_E_/Sub_U_:-M,MS).
+
+
+%!      metasub_atom(+Symbol,+Atom,-New) is det.
+%
+%       Construct a Metasubstitution Atom.
+%
+%       Symbol is the encapsulation predicate symbol defined in the
+%       configuration as encapsulation_predicate/1.
+%
+%       Atom is a metasubstitution atom, with existentially or
+%       universally quantified variables.
+%
+%       New is the given metasubstitution Atom with ground symbols or
+%       terms replaced by fresh variables.
+%
+metasub_atom(E,Sub,Sub_):-
+	Sub =.. [E,Id|As]
 	,length(As,N)
 	,length(As_,N)
-	,Sub_ =.. [E,Id|As_]
-	,free_member(Sub_:-M,MS).
+	,Sub_ =.. [E,Id|As_].

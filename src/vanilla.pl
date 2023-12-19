@@ -144,16 +144,22 @@ refresh_tables(untable):-
 %
 %	Acc is the accumulator of metasubstitutions.
 %
-%	Metasubs is a list of metasubstitution atoms derived during the
-%	proof. Metasubstitution atoms are of the form:
+%	Metasubs is a list of metasubstitution terms derived during the
+%	proof. Metasubstitution terms are of the form:
 %
-%	m(Id,Tgt,P1,...,Pn)
+%	m(Id,Tgt,P1,...,Pn)/m(Id,V1,...,Vm)
 %
 %	Where Id is the atomic identifier of a metarule in Metarules;
 %	Tgt is the predicate symbol (without arity) of one target
-%	predicate, and each Pi is the symbol of a background predicate
+%	predicate, each Pi is the symbol of a background predicate
 %	(which can also be the target predicate, or an invented
-%	predicate, as well as a predicate actually defined in the BK).
+%	predicate, as well as a predicate actually defined in the BK),
+%	and each Vi is a ground first-order term.
+%
+%	Metasubstitution atoms can be applied to the metarule with
+%	identifier Id to substitute that metarule's existentially or
+%	universally quantified variables with the symbols, or terms, in
+%	the two atoms of the metasubstitution term.
 %
 %	When this predicate is first called, Literals should be a single
 %	encapsulated literal, one example of one target predicate. As
@@ -357,6 +363,7 @@ clause([_BK,_Builtins,_Hypothesis,metarules],L,K,MS,Ss,Subs,Subs_,Ls):-
         ,new_metasub(L,MS,Ss,Subs,Subs_,Ls).
 
 
+
 %!	check_constraints(+Metasubs) is det.
 %
 %	True if all ground metasubstitutions obey constraints.
@@ -388,11 +395,11 @@ known_metasub(L,MS,Subs,Ls):-
 %
 %	Get the encapsulated body literals of a Metasubstitution.
 %
-applied_metasub(MS, Sub, H, B):-
-        free_member(Sub:-(H,B),MS)
+applied_metasub(MS, Sub/_, H, B):-
+        free_member(Sub/_Sub_U:-(H,B),MS)
 	,!.
-applied_metasub(MS, Sub, L, true):-
-	free_member(Sub:-(L),MS).
+applied_metasub(MS, Sub/_, L, true):-
+	free_member(Sub/_Sub_U:-(L),MS).
 
 
 %!	free_member(?Element,?List) is nondet.

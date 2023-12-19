@@ -357,9 +357,9 @@ applied_metarules(Ss,_MS,Ms):-
 %	Abstracts the application of a Metasubstitution atom to its
 %	corresponding metarule which may or may not have a body.
 %
-applied_metasubstitution(Sub-(Sub:-(H,B)), H:-B):-
+applied_metasubstitution(Sub/_Sub_U-(Sub/_:-(H,B)), H:-B):-
 	!.
-applied_metasubstitution(Sub-(Sub:-(L)), L).
+applied_metasubstitution(Sub/_Sub_U-(Sub/_:-(L)), L).
 
 
 

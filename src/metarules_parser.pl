@@ -20,10 +20,19 @@ This format is then tranformed by parsed_metarule/3 to Vanilla's
 internal reprsentation, as follows:
 
 ==
-?- metarule(chain, _M), parsed_metarule(chain,_M, _Mt), print_metarules([_Mt]).
-m(chain,P,Q,R):-m(P,X,Y),m(Q,X,Z),m(R,Z,Y)
+?- parsed_metarule(chain, _M), print_metarules([_M]).
+m(chain,P,Q,R)/m(chain,X,Y,Z):-m(P,X,Y),m(Q,X,Z),m(R,Z,Y)
 true.
 ==
+
+The internal representation of metarules is a clause of the form Atom
+:- Literal_1, ..., Literal_n where Atom is a term E/U, and each
+Literal_i is a litearl in a metarule. In the term E/U, E and U are
+encapsulated metasubstitution atoms of the form S(Id,Var_1, ..., Var_n)
+where S is the encapsulation predicate symbol set in the configuration
+option encapsulation_predicate/1, Id is the atomic identifier of a
+metarule, and each Var_i are the existentially or univesally quantified
+variables in the metarule, for E and U, respectively.
 
 User-level metarule format
 --------------------------
@@ -77,9 +86,10 @@ clause must obey the following rules:
 %	metarule in Atomic as its body literals. In the encapsulated
 %	literals of the expanded metarule predicate symbols, constants
 %	and variables in Atomic have been replaced with appropriate
-%	first-order, universally quantified variables and existentially
-%	quantified variables are collected in the arguments of the
-%	metasubstitution atom at the head of the clause.
+%	first-order, universally quantified variables and universally
+%	and existentially quantified variables are collected in the
+%	arguments of the metasubstitution atom at the head of the
+%	clause.
 %
 %	Example:
 %	==
@@ -128,10 +138,12 @@ parsed_metarule(Id,M,M1):-
 	,remove_whitespace(Cs,Cs_)
 	,once(phrase(clause_(Ls),Cs_))
 	,existential_vars(Ls,Es)
-	,args_vars(Es,Es_)
-	,A =.. [E,Id|Es_]
+	,universal_vars(Ls,Us)
+	,maplist(args_vars,[Es,Us],[Es_,Us_])
+	,Eh =.. [E,Id|Es_]
+	,Uh =.. [E,Id|Us_]
 	,literals_clause(Ls, M_)
-	,varnumbers(A:-M_, M1).
+	,varnumbers(Eh/Uh:-M_, M1).
 
 
 
@@ -168,6 +180,33 @@ remove_whitespace(Cs,Cs_):-
 existential_vars(Ls,Es):-
 	flatten(Ls, Ls_)
 	,args_of_case(Ls_,upper,Es).
+
+
+%!	universal_vars(+Literals,-Universal) is det.
+%
+%	Collect Universally quantified variables in Literals.
+%
+%	Counterpart to existential_vars/2 for universallyq uantified
+%	variables.
+%
+%	Literals is a list of lists [L1,...,Ln], where each sublist Li
+%	is a list [S,A1,...,Am], representing a literal where S is an
+%	atom representing the literal's predicate symbol and each Ai is
+%	an atom representing one of its arguments.
+%
+%	Universal is the list of universally-quantified variables in
+%	Literals.
+%
+%	This predicate collects the lower-case atoms in Literals, under
+%	the assumption that the atomic metarule from which those
+%	literals were extracted represents existentially quantified
+%	terms in upper-case and universally quantified terms in
+%	lower-case, and there is no overlap between the two.
+%
+universal_vars(Ls,Us):-
+	flatten(Ls, Ls_)
+	,args_of_case(Ls_,lower,Us).
+
 
 %!	args_of_case(+Characters,+Case,-Cased) is det.
 %
