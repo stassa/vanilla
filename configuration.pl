@@ -117,13 +117,13 @@ fetch_clauses(all).
 %       prepending Prefix to a number between 1, and the value of the
 %       configuration option max_invented/1.
 %
-%       The default-ish Prefix for this concatenation is the dollar
-%       symbol, '$'. This character is also defined as a prefix operator
-%       with precedence 1 and this can cause trouble in conjunction with
-%       the tokenisation in SWI-Prolog. This configuration option allows
-%       the user to set their own invented predicate symbol.
+%       The default-ish Prefix for this concatenation is the atom
+%       'inv_'. This character is also defined as a prefix operator with
+%       precedence 1 and this can cause trouble in conjunction with the
+%       tokenisation in SWI-Prolog. This configuration option allows the
+%       user to set their own invented predicate symbol.
 %
-invented_symbol_prefix('$').
+invented_symbol_prefix(inv_).
 
 
 %!	metarule(?Id,?Name,?Clause) is semidet.
