@@ -29,6 +29,7 @@ depth_limits(0,2).
 %
 experiment_file(data('examples/hello_world.pl'),hello_world).
 %experiment_file(data('examples/anbn.pl'),anbn).
+%experiment_file(data('examples/even_odd.pl'),even_odd).
 
 
 %!	max_invented(?Number) is semidet.
