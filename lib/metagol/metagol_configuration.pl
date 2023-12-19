@@ -11,6 +11,8 @@
 
 */
 
+:-multifile order_constraints/5.
+
 %!      clause_limit(?Limit) is semidet.
 %
 %       Limit the number of resolving clauses learned from each example.
@@ -128,7 +130,7 @@ order_constraints(projection_21,[P,Q],_Fs,[P>Q],[]).
 order_constraints(projection_12,[P,Q],_Fs,[P>Q],[]).
 order_constraints(inverse,[P,Q],_Fs,[P>Q],[]).
 order_constraints(identity,[P,Q],_Fs,[P>Q],[]).
-order_constraints(chain,[P,Q,R],_Fs,[P>Q,P>R,Q>R],[]).
+order_constraints(chain,[P,Q,R],[X,Y,Z],[P>Q,P>R,Q>R],[X>Z,Z>Y]).
 order_constraints(tailrec,[P,Q],[X,Y,Z],[P>Q],[X>Z,Z>Y]).
 order_constraints(precon,[P,Q,R],_Fs,[P>Q,P>R],[]).
 order_constraints(postcon,[P,Q,R],_Fs,[P>Q,P>R],[]).

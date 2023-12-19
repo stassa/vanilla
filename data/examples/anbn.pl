@@ -9,11 +9,10 @@
 
 /** <module> Learn an a^nb^n CFG with recursion and predicate invention.
 
-
 */
 
-program_signature(s/2,[s,a,'inv_1',b],[]).
-program_signature(inv_1/2,['inv_1',s,a,b],[]).
+program_signature(s/2,[s,a,'inv_1',b],[[a,a,b,b],[a,b,b],[b,b],[b],[]]).
+program_signature(inv_1/2,['inv_1',s,a,b],[[a,a,b,b],[a,b,b],[b,b],[b],[]]).
 
 background_knowledge(s/2,[a/2,b/2]).
 
