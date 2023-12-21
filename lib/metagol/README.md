@@ -30,7 +30,6 @@ Faithful to the original description of Metagol in the literature, this
 implementation uses a set of order constraints over the instantiations of
 second- and first-order variables in the metarules, lexicographic and interval
 order constraints respectively, to control recursion and ensure termination.
-Note that currently only lexicographic order constraints are implemented.
 
 The following is an example of learning a logic program for the `ancestor`
 relation with Metagol. Training data is taken from
@@ -66,7 +65,7 @@ in the learning problem, and the ordering of predicate symbols in
 order_constraints(identity,[P,Q],_Fs,[P>Q],[]).
 order_constraints(tailrec,[P,Q],[X,Y,Z],[P>Q],[X>Z,Z>Y]).
 
-% Lexicographic ordering for ancestor/2; interval order is missing:
+% Lexicographic ordering for ancestor/2; interval order aren't needed:
 program_signature(ancestor/2,[ancestor,parent],[]).
 ```
 

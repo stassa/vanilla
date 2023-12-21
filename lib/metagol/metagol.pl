@@ -151,7 +151,7 @@ metasubstitutions(Ep,K,MS,Subs):-
 	,debug(metasubstitutions,'Proved Example: ~w',[Ep])
 	,Subs_ \= []
 	,sort(Subs_,Subs_s)
-	%,debug_clauses(metasubstitutions,'Proved Metasubs:',[Subs_s])
+	,debug_clauses(metasubstitutions,'Proved Metasubs:',[Subs_s])
 	,findall(Sub-M
 		,(member(Sub,Subs_s)
 		 ,metasub_metarule(Sub,MS,M)
