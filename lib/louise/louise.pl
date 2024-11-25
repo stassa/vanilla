@@ -123,7 +123,7 @@ top_program(Pos,Neg,BK,MS,Ts):-
 	     ,specialise(Ss_Gen,MS,Neg,Ss_Spec)
 	     ,debug_clauses(top_program,'Specialised Top program',Ss_Spec)
 	     ,flatten(Ss_Spec,Ss_Spec_f)
-	     ,sort(1,@<,Ss_Spec_f,Ss_Spec_s)
+	     ,sort([1,1],@<,Ss_Spec_f,Ss_Spec_s)
 	     ,applied_metarules(Ss_Spec_s,MS,Ts)
 	     ,debug_clauses(top_program,'Applied metarules',Ts)
 	     )
@@ -173,20 +173,6 @@ top_program(_Pos,_Neg,_BK,_MS,[]):-
 %	metasubstitutions and metarules returned by generalise/3.
 %
 generalise(Pos,MS,Ss_Pos):-
-% Hands proofs to the Prolog engine.
-	louise_configuration:clause_limit(0)
-	,!
-	,findall(Sub-M
-	     ,(member(M,MS)
-	      ,member(Ep,Pos)
-	      ,debug_clauses(examples,'Positive example:',Ep)
-	      ,debug_msg_metarules(metasubstitution,'Instantiating metarule:',M)
-	      ,metasubstitution(Ep,M,Sub)
-	      ,constraints(Sub)
-	      )
-	     ,Ps)
-	,sort(1,@<,Ps,Ss_Pos).
-generalise(Pos,MS,Ss_Pos):-
 % Hands proofs to Vanilla inductive meta-interpreter.
 	louise_configuration:clause_limit(K)
 	,findall(Subs
@@ -202,76 +188,6 @@ generalise(Pos,MS,Ss_Pos):-
 	,predsort(unifiable_compare,Ss_Pos_,Ss_Pos)
 	,debug_length(generalise,'Derived ~w sub-hypotheses (sorted)',Ss_Pos).
 
-
-
-%!	specialise(+Generalised,+Negatives,-Specialised) is det.
-%
-%	Specialisation step of Top program construction.
-%
-%	Specialises a set of metasubstitutions generalising the positive
-%	examples against the Negative examples by discarding each
-%	metasubstitution that entails a negative example.
-%
-%	Generalised is a set of metasubstitutions that entail all
-%	positive examples with respect to BK, in the form returned by
-%	generalise/3.
-%
-%	Negatives is a set of negative examples.
-%
-%	Specialised is the set of metasubstitutions in Generalised that
-%	entail no negative examples, with respect to BK.
-%
-%	The configuration option max_error/2 can be set to allow
-%	Specialised to include clauses that entail one or more negative
-%	examples.
-%
-specialise(Ss_Pos,[],Ss_Pos):-
-	!.
-specialise(Ss_Pos,Neg,Ss_Neg):-
-	louise_configuration:clause_limit(0)
-	,louise_configuration:max_error(L_H,L_C)
-	,C_H = c(0)
-	,C_C = c(0)
-	,findall(H-M
-		,(member(H-M,Ss_Pos)
-		 ,nb_setarg(1,C_C,0)
-		 ,debug_clauses(metasubstitution,'Ground metasubstitution atom:',H)
-		 ,\+((member(En,Neg)
-		     ,debug_clauses(examples,'Negative example:',En)
-		     ,metasubstitution(En,M,H)
-		     ,(   error_exceeded(L_H,C_H,hypothesis)
-		      ;   error_exceeded(L_C,C_C,clause)
-		      )
-		     ,debug(errors,'Maximum Errors exceeded!',[])
-		     )
-		    )
-		 )
-		,Ss_Neg_)
-	,sort(Ss_Neg_,Ss_Neg).
-
-
-%!	error_exceeded(+Limit,+Errors) is det.
-%
-%	True when the count of Errors exceeds a Limit.
-%
-%	In the context of this predicate, an "error" is found when a
-%	metasubstitution entails a negative example, with respect to BK.
-%
-%	Limit is one of the two values of max_error/2, either the
-%	overall error allowed for the hypothesis as a whole, or the
-%	error of each single clause in the hypothesis.
-%
-%	Errors is a compound c(N) where N is the count of errors so-far
-%	for the kind of error associated with Limit (i.e. either errors
-%	of the hypothesis, or of one clause). N is destructively updated
-%	each time this predicate is reached.
-%
-error_exceeded(N,C,T):-
-	arg(1,C,I)
-	,succ(I,Ipp)
-	,nb_setarg(1,C,Ipp)
-	,debug(errors,'Max ~w errors: ~w Current errors: ~w',[T,N,Ipp])
-	,Ipp > N.
 
 
 %!	specialise(+Generalised,+Metarules,+Negatives,-Specialised) is
