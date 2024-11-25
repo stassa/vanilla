@@ -191,7 +191,7 @@ list_mil_problem(Pos,Neg,BK,MS):-
 	,format_underlined('Negative examples')
 	,print_limited(L,Neg)
 	,nl
-	,format_underlined('Background knowledge')
+	,format_underlined('Background knowledge (First Order)')
 	,forall(member(P,BK)
 	       ,(program(P,experiment_file,Ps)
 		,format('~w:~n',[P])
@@ -199,7 +199,7 @@ list_mil_problem(Pos,Neg,BK,MS):-
 		,format('~n',[])
 		)
 	       )
-	,format_underlined('Metarules')
+	,format_underlined('Background knowledge (Second Order)')
 	,print_metarules(quantified,MS).
 
 
