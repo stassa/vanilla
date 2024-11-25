@@ -43,7 +43,8 @@ Table space 2,147,483,648
 true.
 
 % Load Metagol into memory:
-?- use_module(lib(metagol/metagol)).true.
+?- use_module(lib(metagol/metagol)).
+true.
 
 % The hello_world.pl file should be loaded by default.
 ?- learn(ancestor/2).
