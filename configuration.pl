@@ -16,6 +16,10 @@
 
 */
 
+% Can be modified by louise predicates setup_negatives/3,
+% cleanup_negatives/3
+:- dynamic fetch_clauses/1.
+
 % Allows experiment files to define their own, special metarules.
 :-multifile metarule/2
            ,metarule_constraints/2
@@ -171,12 +175,19 @@ precon_abduce metarule 'P(X,y):- Q(X), R(X,y)'.
 postcon_abduce metarule 'P(x,Y):- Q(x,Y), R(Y)'.
 
 
-%!      learner(?Name,?Path) is semidet.
+%!      learner(?Module,?Path) is semidet.
 %
 %       The learning system to load at startup.
 %
-learner('Metagol',lib(metagol/metagol)).
-%learner('Poker',lib(poker/poker)).
+%       Module is the module name of Prolog module where the learner is
+%       defined.
+%
+%       Path is a path to the Prolog source file where the named Module
+%       is defined.
+%
+learner(metagol,lib(metagol/metagol)).
+%learner(poker,lib(poker/poker)).
+%learner(louise,lib(louise/louise)).
 
 
 %!	metarule_constraints(+Metasubstitution,+Goal) is nondet.
