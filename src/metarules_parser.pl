@@ -17,22 +17,47 @@ chain metarule 'P(x,y):- Q(x,z), R(z,y)'.
 ==
 
 This format is then tranformed by parsed_metarule/3 to Vanilla's
-internal reprsentation, as follows:
+internal reprsentation, in one of two forms, depending on the setting of
+the configuration option metasubstitution_atoms, as follows:
 
 ==
-?- parsed_metarule(chain, _M), print_metarules([_M]).
+?- metasubstitution_atoms(S), parsed_metarule(chain, _M), print_metarules([_M]).
 m(chain,P,Q,R)/m(chain,X,Y,Z):-m(P,X,Y),m(Q,X,Z),m(R,Z,Y)
-true.
+S = existential_and_universal.
+
+?- configuration:metasubstitution_atoms(S), metarules_parser:parsed_metarule(chain, _M), auxiliaries:print_metarules([_M]).
+m(chain,P,Q,R):-m(P,X,Y),m(Q,X,Z),m(R,Z,Y)
+S = existential.
 ==
 
-The internal representation of metarules is a clause of the form Atom
-:- Literal_1, ..., Literal_n where Atom is a term E/U, and each
-Literal_i is a litearl in a metarule. In the term E/U, E and U are
-encapsulated metasubstitution atoms of the form S(Id,Var_1, ..., Var_n)
-where S is the encapsulation predicate symbol set in the configuration
-option encapsulation_predicate/1, Id is the atomic identifier of a
-metarule, and each Var_i are the existentially or univesally quantified
-variables in the metarule, for E and U, respectively.
+More specifically.
+
+If metasubstitution_atoms/1 is set to "existential_and_universal", then
+the internal representation of metarules is a clause of the form Atom :-
+Literal_1, ..., Literal_n where Atom is a term E/U, and each Literal_i
+is a literal in a metarule. In the term E/U, E and U are encapsulated
+metasubstitution atoms of the form S(Id,Var_1, ..., Var_n) where S is
+the encapsulation predicate symbol set in the configuration option
+encapsulation_predicate/1, Id is the atomic identifier of a metarule,
+and each Var_i are the existentially or univesally quantified variables
+in the metarule, for E and U, respectively.
+
+If metasubstitution_atoms/1 is set to "existential" (i.e. existential
+only) then the head of the encapsulatead metarule is a single
+encapsulated metasubstitution atom, as E above, with only the
+existentially quantified variables in the metarule.
+
+The motivation for having two different representations is efficiency:
+when metasubstitution atoms are compound terms E/U, there will be one or
+more U's for each E, each of which will take some space in memory. For
+_very_ _large_ programs this can be an issue, particularly when turning
+on tabling.
+
+The choice of representation should be left to the implement-or of a
+learing system. For this reason the metasubstitution_atoms/1 option is
+made multifile and dynamic in the configuration to allow it to be set in
+individual learner system configurations.
+
 
 User-level metarule format
 --------------------------
@@ -69,6 +94,10 @@ clause must obey the following rules:
 
 * The sets of characters used for each type of variable: existentially
   or universally quantified, first- or second-order, must be disjoint.
+
+Note that the user-level representation does not depend on any options
+chosen for the internal representation, such as
+metasubstitution_atoms/1.
 
 */
 
@@ -125,6 +154,14 @@ parsed_metarule(Id,M):-
 %	Metarule is a transformation of Atomic to an expanded metarule
 %	in Vanilla's internal representation with Id as its identifier.
 %
+%	The form of Metarule depends on the setting of the configuration
+%	option metasubstitution_atoms/1. When that option is set to
+%	"existential_and_universal", expanded metarules have
+%	metasubstitution atoms in their heads that store the
+%	substitutions of both existentially and universally quantified
+%	varables. When the option is set to "existential" only
+%	existentially quantified variables' substitutions are kept.
+%
 %	@tbd This predicate can be used, inadvertently, to rename
 %	metarules. Since this will probably not be the intention of
 %	calling this predicate, it should be accessed only through the
@@ -133,7 +170,9 @@ parsed_metarule(Id,M):-
 %	in a metarule/2 clause in the program database.
 %
 parsed_metarule(Id,M,M1):-
-	configuration:encapsulation_predicate(E)
+	configuration:metasubstitution_atoms(existential_and_universal)
+	,!
+	,configuration:encapsulation_predicate(E)
 	,atom_chars(M,Cs)
 	,remove_whitespace(Cs,Cs_)
 	,once(phrase(clause_(Ls),Cs_))
@@ -144,6 +183,17 @@ parsed_metarule(Id,M,M1):-
 	,Uh =.. [E,Id|Us_]
 	,literals_clause(Ls, M_)
 	,varnumbers(Eh/Uh:-M_, M1).
+parsed_metarule(Id,M,M1):-
+	configuration:metasubstitution_atoms(existential)
+	,configuration:encapsulation_predicate(E)
+	,atom_chars(M,Cs)
+	,remove_whitespace(Cs,Cs_)
+	,once(phrase(clause_(Ls),Cs_))
+	,existential_vars(Ls,Es)
+	,args_vars(Es,Es_)
+	,A =.. [E,Id|Es_]
+	,literals_clause(Ls, M_)
+	,varnumbers(A:-M_, M1).
 
 
 

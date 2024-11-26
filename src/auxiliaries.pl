@@ -1470,8 +1470,16 @@ variables_symbols(T,Vs):-
 %!	existential_vars(+Metarule, -Existential) is det.
 %
 %	Collect Existentially quantified variables from a Metarule.
+%	%
+%	Allows for metasubstitutions in both known representations,
+%	depending on the setting of the configuration option
+%	metasubstitution_atoms/1.
 %
 existential_vars(Sub_E/_Sub_U:-_M,Es):-
+	!
+	,configuration:encapsulation_predicate(E)
+	,Sub_E =.. [E,_Id|Es].
+existential_vars(Sub_E:-_M,Es):-
 	configuration:encapsulation_predicate(E)
 	,Sub_E =.. [E,_Id|Es].
 
@@ -1616,6 +1624,10 @@ pretty_metarule_id(Id,Id_):-
 %	Metarule may be an atomic Id of a metarule or a metarule clause.
 %	Id is either the atom Id, or the atomic ide of the metarule in
 %	the clause.
+%	%
+%	Allows for metasubstitutions in both known representations,
+%	depending on the setting of the configuration option
+%	metasubstitution_atoms/1.
 %
 %	@tbd this is going to be needed elsewhere. Maybe modify
 %	mil_problem's metarule_parts/5 so it actually works?
@@ -1624,6 +1636,10 @@ metarule_id(Id,Id):-
 	atom(Id)
 	,!.
 metarule_id(Sub_E/_Sub_U:-_M,Id):-
+	configuration:encapsulation_predicate(E)
+	,Sub_E =.. [E,Id|_]
+	,!.
+metarule_id(Sub_E:-_M,Id):-
 	configuration:encapsulation_predicate(E)
 	,Sub_E =.. [E,Id|_].
 

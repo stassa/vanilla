@@ -6,6 +6,7 @@
                         ,metarule/2
                         ,metarule_constraints/2
                         ,metarule_formatting/1
+                        ,metasubstitution_atoms/1
 			,symbol_range/2
                         ,table_meta_interpreter/1
                         ,untable_meta_interpreter/1
@@ -24,7 +25,8 @@
 :-multifile metarule/2
            ,metarule_constraints/2
            ,table_meta_interpreter/1
-           ,untable_meta_interpreter/1.
+           ,untable_meta_interpreter/1
+           ,metasubstitution_atoms/1.
 
 %!      encapsulation_predicate(+Symbol) is semidet.
 %
@@ -297,6 +299,48 @@ configuration:metarule_constraints(M,B):-
 metarule_formatting(quantified).
 %metarule_formatting(user_friendly).
 %metarule_formatting(expanded).
+
+
+%!      metasubstitution_atoms(?What) is semidet.
+%
+%       What variables to store in metasubstitution atoms.
+%
+%       What, is an atom that determines what variables to store in
+%       metasubstitution atoms, one of: [existential_and_universal,
+%       existential].
+%
+%       Metasubstitution atoms are the atomic represerntations of
+%       metasubstitutions in the internal representation of expanded
+%       metarules used by Vanilla. See metarules_parser.pl for a
+%       description of the representation.
+%
+%       This option determines whether only existentially quantified or
+%       both existentially and universally quantified variables are
+%       represented in metasubstitution atoms.
+%
+%       The main practical consideration that informs the choice of this
+%       option is the amount of memory required to store one or the
+%       other representation: "existential_and_universal" stores
+%       multiple metasubstitution atoms for each set of existentially
+%       quantified variable stitutions, while "existential" only stores
+%       one, therefore "existential" is much easier on the RAM. This
+%       tends to affect tabling more than anything else.
+%
+%       Conversely, some learners may require both existentially and
+%       universally quantified variables to be represented in
+%       metasubstitution atoms. That is the case in Metagol, where
+%       the substitutions of universally quantified variables are used
+%       to implement interval order constraints, but is not the case in
+%       Poker or Louise where such constraints are not needed.
+%
+%       Example settings:
+%
+%       ==
+%       metasubstitution_atoms(existential_and_universal).
+%       metasubstitution_atoms(existential).
+%       ==
+%
+:- dynamic metasubstitution_atoms/1.
 
 
 %!	symbol_range(?Type,?Symbols) is semidet.

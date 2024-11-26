@@ -357,10 +357,17 @@ applied_metarules(Ss,_MS,Ms):-
 %	Abstracts the application of a Metasubstitution atom to its
 %	corresponding metarule which may or may not have a body.
 %
+%	Allows for metasubstitutions in both known representations,
+%	depending on the setting of the configuration option
+%	metasubstitution_atoms/1.
+%
 applied_metasubstitution(Sub/_Sub_U-(Sub/_:-(H,B)), H:-B):-
 	!.
-applied_metasubstitution(Sub/_Sub_U-(Sub/_:-(L)), L).
-
+applied_metasubstitution(Sub/_Sub_U-(Sub/_:-(L)), L):-
+	!.
+applied_metasubstitution(Sub-(Sub:-(H,B)), H:-B):-
+	!.
+applied_metasubstitution(Sub-(Sub:-(L)), L).
 
 
 %!	excapsulated_clauses(+Target, +Clauses, -Excapsulated) is det.
