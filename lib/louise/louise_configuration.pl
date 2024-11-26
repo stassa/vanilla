@@ -127,8 +127,8 @@ recursive_reduction(false).
 %	* subhypothesis: select one hypothesis entailed by the Top
 %	program.
 %
-reduction(none).
-%reduction(plotkins).
+%reduction(none).
+reduction(plotkins).
 %reduction(subhypothesis).
 
 
@@ -244,11 +244,13 @@ configuration:untable_meta_interpreter(true).
 
 % Opens this configuration file and the current experiment file in the
 % SWI-Prolog IDE or your system's $EDITOR if one is set.
+/*
 :- edit(louise)
   ,edit(louise_configuration)
   ,edit(louise_auxiliaries)
   ,louise_configuration:experiment_file(P,_)
   ,edit(P).
+*/
 
 % This line ensures the experiment file set in the configuration option
 % experiment_file/2 is always updated when the configuration module is
