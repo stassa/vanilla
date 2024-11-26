@@ -108,8 +108,7 @@ top_program(Pos,Neg,BK,MS,_Ts):-
 top_program(Pos,Neg,BK,MS,Ts):-
 % Uses the Prolog engine and avoids using the dynamic db too much.
 	louise_configuration:clause_limit(K)
-	,K > 0
-	,(   K == 1
+	,(   K =< 1
 	 ->  Bs = [Pos,BK]
 	 ;   Bs = [BK]
 	 )
@@ -206,7 +205,6 @@ specialise(Ss_Pos,_MS,[],Ss_Pos):-
 	!.
 specialise(Ss_Pos,MS,Neg,Ss_Neg):-
 	louise_configuration:clause_limit(K)
-	,K > 0
 	,findall(Subs
 	       ,(member(Subs,Ss_Pos)
 		,findall(Sub
@@ -222,31 +220,6 @@ specialise(Ss_Pos,MS,Neg,Ss_Neg):-
 		)
 	       ,Ss_Neg).
 
-
-
-%!	metasubstitution(+Example,+Metarule,-Metasubstitution) is
-%!	nondet.
-%
-%	Perform one Metasubstutition of Metarule initialised to Example.
-%
-%	Example is either a positive example or a negative example. A
-%	positive example is a ground definite unit clause, while a
-%	negative example is a ground definite goal (i.e. a clause of the
-%	form :-Example).
-%
-%	@tbd This version of metasubstitution/n hands proofs of body
-%	literals of a metarule to the Prolog engine and only resolves
-%	metarules with examples and BK predicates. That means that this
-%	version is much faster than metasubstitution/4 but can only
-%	derive one kind of recursive clause, the kind that can resolve
-%	with positive examples (and BK predicates).
-%
-metasubstitution(E,M,Sub):-
-	copy_term(M,M_)
-	,vanilla:bind_head_literal(E,M_,(Sub:-(H,Ls)))
-	,debug_clauses(metasubstitution,'Trying metasubstitution:',H:-Ls)
-	,user:call(Ls)
-	,debug_clauses(metasubstitution,'Succeeded:',Ls).
 
 
 %!	metasubstitutions(+Example,+Limit,+Metarules,-Metasubstitutions)
