@@ -31,10 +31,9 @@ clause_limit(1).
 %
 %	The Path and Module name of an experiment file.
 %
-%experiment_file(data('examples/hello_world.pl'),hello_world).
+experiment_file(data('examples/hello_world.pl'),hello_world).
 %experiment_file(data('examples/anbn.pl'),anbn).
 %experiment_file(data('examples/even_odd.pl'),even_odd).
-experiment_file(data('benchmarks/robots.pl'),robots).
 
 
 %!      listing_limit(?Limit) is semidet.
@@ -222,6 +221,13 @@ tautology(H:-B):-
         ,sort(Ls,[_]).
 
 
+%!      metasubstitution_atoms(?What) is semidet.
+%
+%       What variables to store in metasubstitution atoms.
+%
+configuration:metasubstitution_atoms(existential).
+
+
 %!      table_meta_interpreter(?Bool) is semidet.
 %
 %       Whether to table the Vanilla meta-interpreter, or not.
@@ -238,13 +244,11 @@ configuration:untable_meta_interpreter(true).
 
 % Opens this configuration file and the current experiment file in the
 % SWI-Prolog IDE or your system's $EDITOR if one is set.
-%/*
 :- edit(louise)
   ,edit(louise_configuration)
   ,edit(louise_auxiliaries)
   ,louise_configuration:experiment_file(P,_)
   ,edit(P).
-%*/
 
 % This line ensures the experiment file set in the configuration option
 % experiment_file/2 is always updated when the configuration module is

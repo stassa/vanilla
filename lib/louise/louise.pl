@@ -123,7 +123,7 @@ top_program(Pos,Neg,BK,MS,Ts):-
 	     ,specialise(Ss_Gen,MS,Neg,Ss_Spec)
 	     ,debug_clauses(top_program,'Specialised Top program',Ss_Spec)
 	     ,flatten(Ss_Spec,Ss_Spec_f)
-	     ,sort([1,1],@<,Ss_Spec_f,Ss_Spec_s)
+	     ,sort(1,@<,Ss_Spec_f,Ss_Spec_s)
 	     ,applied_metarules(Ss_Spec_s,MS,Ts)
 	     ,debug_clauses(top_program,'Applied metarules',Ts)
 	     )
@@ -353,7 +353,6 @@ signature(L,[T|Ss]):-
         ,L =.. [E,T|_].
 
 
-
 %!	metasub_metarule(+Sub,+Metarules,-Metarule) is det.
 %
 %	Retrieve an expanded metarule matching a metasub atom.
@@ -369,31 +368,13 @@ signature(L,[T|Ss]):-
 %	metarule matching the metarule id of a ground metasubstitution
 %	atom without binding variables in the encapsulated metarule.
 %
-metasub_metarule(Sub_E/Sub_U,MS,Sub_E_/Sub_U_:-M):-
+metasub_metarule(Sub,MS,Sub_:-M):-
 	configuration:encapsulation_predicate(E)
-        ,metasub_atom(E,Sub_E,Sub_E_)
-        ,metasub_atom(E,Sub_U,Sub_U_)
-        ,free_member(Sub_E_/Sub_U_:-M,MS).
-
-
-%!      metasub_atom(+Symbol,+Atom,-New) is det.
-%
-%       Construct a Metasubstitution Atom.
-%
-%       Symbol is the encapsulation predicate symbol defined in the
-%       configuration as encapsulation_predicate/1.
-%
-%       Atom is a metasubstitution atom, with existentially or
-%       universally quantified variables.
-%
-%       New is the given metasubstitution Atom with ground symbols or
-%       terms replaced by fresh variables.
-%
-metasub_atom(E,Sub,Sub_):-
-	Sub =.. [E,Id|As]
+        ,Sub =.. [E,Id|As]
 	,length(As,N)
 	,length(As_,N)
-	,Sub_ =.. [E,Id|As_].
+	,Sub_ =.. [E,Id|As_]
+	,free_member(Sub_:-M,MS).
 
 
 
