@@ -13,12 +13,12 @@
 
 :-multifile order_constraints/5.
 
-%!      clause_limit(?Limit) is semidet.
+%!      clause_limit(?Min,?Max) is semidet.
 %
 %       Limit the number of resolving clauses learned from each example.
 %
-%       Limit should be a natural number, including 0, or the atom 'inf'
-%       representing positive infinity if a limit is not required.
+%       Min and Max should be natural numbers, including 0, or the atom
+%       'inf' representing positive infinity if a limit is not required.
 %
 depth_limits(0,2).
 
@@ -132,18 +132,42 @@ order_constraints(projection_12,[P,Q],_Fs,[P>Q],[]).
 order_constraints(inverse,[P,Q],_Fs,[P>Q],[]).
 order_constraints(identity,[P,Q],_Fs,[P>Q],[]).
 order_constraints(chain,[P,Q,R],[X,Y,Z],[P>Q,P>R,Q>R],[X>Z,Z>Y]).
+%order_constraints(chain,[P,Q,R],[X,Y,Z],[P>Q,P>R],[X>Z,Z>Y]).
 order_constraints(tailrec,[P,Q],[X,Y,Z],[P>Q],[X>Z,Z>Y]).
 order_constraints(precon,[P,Q,R],_Fs,[P>Q,P>R],[]).
 order_constraints(postcon,[P,Q,R],_Fs,[P>Q,P>R],[]).
 order_constraints(switch,[P,Q,R],_Fs,[P>Q,P>R],[]).
 
 
+%!      metasubstitution_atoms(?What) is semidet.
+%
+%       What variables to store in metasubstitution atoms.
+%
+configuration:metasubstitution_atoms(existential_and_universal).
+
+
+%!      table_meta_interpreter(?Bool) is semidet.
+%
+%       Whether to table the Vanilla meta-interpreter, or not.
+%
+configuration:table_meta_interpreter(false).
+
+
+%!      untable_meta_interpreter(?Bool) is semidet.
+%
+%       Whether to untable Vanilla between learning queries.
+%
+configuration:untable_meta_interpreter(true).
+
+
 % Opens this configuration file and the current experiment file in the
 % SWI-Prolog IDE or your system's $EDITOR if one is set.
+/*
 :- edit(metagol)
   ,edit(metagol_configuration)
   ,metagol_configuration:experiment_file(P,_)
   ,edit(P).
+*/
 
 % This line ensures the experiment file set in the configuration option
 % experiment_file/2 is always updated when the configuration module is
