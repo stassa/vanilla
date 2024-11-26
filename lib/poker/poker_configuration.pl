@@ -17,7 +17,7 @@
 %       Limit should be a natural number, including 0, or the atom 'inf'
 %       representing positive infinity if a limit is not required.
 %
-clause_limit(2).
+clause_limit(1).
 
 
 %!	experiment_file(?Path,?Module) is semidet.
@@ -54,6 +54,13 @@ max_invented(0).
 listing_limit(10).
 
 
+%!      metasubstitution_atoms(?What) is semidet.
+%
+%       What variables to store in metasubstitution atoms.
+%
+configuration:metasubstitution_atoms(existential).
+
+
 %!      table_meta_interpreter(?Bool) is semidet.
 %
 %       Whether to table the Vanilla meta-interpreter, or not.
@@ -70,10 +77,12 @@ configuration:untable_meta_interpreter(true).
 
 % Opens this configuration file and the current experiment file in the
 % SWI-Prolog IDE or your system's $EDITOR if one is set.
+/*
 :- edit(poker)
   ,edit(poker_configuration)
   ,poker_configuration:experiment_file(P,_)
   ,edit(P).
+*/
 
 % This line ensures the experiment file set in the configuration option
 % experiment_file/2 is always updated when the configuration module is
