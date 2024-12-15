@@ -132,8 +132,7 @@ order_constraints(projection_12,[P,Q],_Fs,[P>Q],[]).
 order_constraints(inverse,[P,Q],_Fs,[P>Q],[]).
 order_constraints(identity,[P,Q],_Fs,[P>Q],[]).
 order_constraints(chain,[P,Q,R],[X,Y,Z],[P>Q,P>R,Q>R],[X>Z,Z>Y]).
-%order_constraints(chain,[P,Q,R],[X,Y,Z],[P>Q,P>R],[X>Z,Z>Y]).
-order_constraints(tailrec,[P,Q],[X,Y,Z],[P>Q],[X>Z,Z>Y]).
+order_constraints(tailrec,[P,Q],[_X,_Y,_Z],[P>Q],[]).
 order_constraints(precon,[P,Q,R],_Fs,[P>Q,P>R],[]).
 order_constraints(postcon,[P,Q,R],_Fs,[P>Q,P>R],[]).
 order_constraints(switch,[P,Q,R],_Fs,[P>Q,P>R],[]).
