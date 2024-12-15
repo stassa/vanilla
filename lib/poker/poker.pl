@@ -107,8 +107,12 @@ generalise(Pos,K,MS,Subs):-
 %       Specialise a set of Metasubstitutions using Negative examples.
 %
 specialise(Neg,K,MS,Subs):-
-        forall(member(En,Neg)
-              ,\+ metasubstitutions(En,K,MS,Subs)
+% prove/7 only needs metasubstitution terms.
+        findall(Sub
+               ,member(Sub-_M,Subs)
+               ,Subs_)
+        ,forall(member(En,Neg)
+              ,\+ metasubstitutions(En,K,MS,Subs_)
               ).
 
 
