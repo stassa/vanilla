@@ -112,11 +112,12 @@ learn(_Pos,_Neg,_BK,_MS,[]).
 %       of the search ranges from Min to Max.
 %
 generalise(Pos,K,J,MS,Subs):-
-        list_tree(Pos,Pos_)
+        debug(generalise,'Generalising examples',[])
+        ,list_tree(Pos,Pos_)
         ,between(K,J,I)
         ,debug(depth,'Depth: ~w',[I])
         ,metasubstitutions(Pos_,I,MS,Subs)
-        ,debug(generalise,'Subs: ~w',[Subs]).
+        ,debug_clauses(generalise,'New metasubs:',[Subs]).
 
 
 
@@ -125,8 +126,16 @@ generalise(Pos,K,J,MS,Subs):-
 %       Specialise a set of Metasubstitutions using Negative examples.
 %
 specialise(Neg,K,MS,Subs):-
-        forall(member(En,Neg)
-              ,\+ metasubstitutions(En,K,MS,Subs)
+        debug_clauses(specialise,'Specialising metasubs:',[Subs])
+        % prove/7 only needs metasubstitution terms.
+        ,findall(Sub
+               ,(member(Sub-_M,Subs)
+                )
+               ,Subs_)
+        ,debug_clauses(specialise,'Checking constraints on metasubs:',[Subs_])
+        ,check_constraints(Subs_)
+        ,forall(member(En,Neg)
+              ,\+ metasubstitutions(En,K,MS,Subs_)
               ).
 
 
@@ -140,13 +149,17 @@ specialise(Neg,K,MS,Subs):-
 %
 metasubstitutions(:-En,K,MS,Subs):-
 	!
-        ,prove(En,K,MS,[],Subs,Subs)
-	,debug(metasubstitutions,'Proved Example: ~w',[:-En])
-	%,debug_clauses(metasubstitutions,'With Metasubs:',[Subs])
+	,signature(En,Ss)
+	,debug(signature,'Signature (neg): ~w',[Ss])
+	,debug(metasubstitutions,'Proving negative example: ~w',[:-En])
+        ,prove(En,K,MS,Ss,Subs,Subs)
+	,debug(metasubstitutions,'Proved example: ~w',[:-En])
+	,debug_clauses(metasubstitutions,'With metasubs:',[Subs])
         .
 metasubstitutions(Ep,K,MS,Subs):-
 	signature(Ep,Ss)
 	,debug(signature,'Signature: ~w',[Ss])
+	,debug(metasubstitutions,'Proving positive example: ~w',[Ep])
         ,vanilla:prove(Ep,K,MS,Ss,[],Subs_)
 	,debug(metasubstitutions,'Proved Example: ~w',[Ep])
 	,Subs_ \= []
@@ -245,8 +258,9 @@ metasub_atom(E,Sub,Sub_):-
 configuration:metarule_constraints(M_E/M_U,B):-
 	debug_clauses(constraints,'Testing constraint for metasub:',M_E/M_U)
         ,configuration:encapsulation_predicate(S)
-        ,M_E =.. [S,Id|[T|Ps_E]]
-        ,M_U =.. [S,Id|Ts_U]
+        ,copy_term(M_E/M_U,M_E_c/M_U_c)
+        ,M_E_c =.. [S,Id|[T|Ps_E]]
+        ,M_U_c =.. [S,Id|Ts_U]
         ,experiment_file:program_signature(T/_,PS,CS)
 	,debug(constraints,'Predicate signature: ~w',[PS-CS])
         ,metagol_configuration:order_constraints(Id,[T|Ps_E],Ts_U,STs,FTs)
@@ -271,15 +285,17 @@ configuration:metarule_constraints(M_E/M_U,B):-
 %	First_order and Second_order are the lexicographic and interval
 %	inclusion order constraints imposed by a metarule.
 %
-order_tests(_,_,[],[]):-
+order_tests(_PS,_CS,[],[]):-
 	!.
-order_tests(PS,_,STs,_):-
-	STs \= []
-	,!
-	,ordered_list(STs,PS).
-order_tests(_,CS,_,FTs):-
-	FTs \= []
-	,ordered_list(FTs,CS).
+order_tests(_PS,CS,[],Us):-
+	!
+       ,ordered_list(Us,CS).
+order_tests(PS,_CS,Es,[]):-
+	!
+       ,ordered_list(Es,PS).
+order_tests(PS,CS,Es,Us):-
+	ordered_list(Es,PS)
+        ,ordered_list(Us,CS).
 
 
 %!	ordered_list(?List,+Ordering) is det.
