@@ -188,8 +188,8 @@ postcon_abduce metarule 'P(x,Y):- Q(x,Y), R(Y)'.
 %       is defined.
 %
 learner(metagol,lib(metagol/metagol)).
-%learner(poker,lib(poker/poker)).
 %learner(louise,lib(louise/louise)).
+%learner(simpleton,lib(simpleton/simpleton)).
 
 
 %!	metarule_constraints(+Metasubstitution,+Goal) is nondet.
@@ -331,7 +331,8 @@ metarule_formatting(quantified).
 %       metasubstitution atoms. That is the case in Metagol, where
 %       the substitutions of universally quantified variables are used
 %       to implement interval order constraints, but is not the case in
-%       Poker or Louise where such constraints are not needed.
+%       Simpleton, Poker or Louise where such constraints are not
+%       needed.
 %
 %       Example settings:
 %

@@ -1,27 +1,27 @@
-:-module(poker_auxiliaries, [% MIL problem auxiliaries
-			     write_encapsulated_problem/1
-			     % Debugging auxiliaries
-			    ,list_encapsulated_problem/1
-			    ,list_learning_results/0
-			    ,list_mil_problem/1
-			    ,list_problem_statistics/1
-			     % Experiment file auxiliaries
-			    ,cleanup_experiment/0
-			    ,experiment_data/5
-			    ,learning_target/1
-			    ,learning_targets/1
-			    ,load_experiment_file/0
-			    ,edit_experiment_file/0
-			    ]).
+:-module(simpleton_auxiliaries, [% MIL problem auxiliaries
+	                        write_encapsulated_problem/1
+	                        % Debugging auxiliaries
+				,list_encapsulated_problem/1
+				,list_learning_results/0
+				,list_mil_problem/1
+				,list_problem_statistics/1
+	                        % Experiment file auxiliaries
+				,cleanup_experiment/0
+				,experiment_data/5
+				,learning_target/1
+				,learning_targets/1
+				,load_experiment_file/0
+				,edit_experiment_file/0
+				]).
 
-:-use_module(poker_configuration).
+:-use_module(simpleton_configuration).
 :-use_module(src(auxiliaries)).
 :-use_module(src(mil_problem)).
 
-/** <module> Auxiliary predicates for Poker.
+/** <module> Auxiliary predicates for Simpleton.
 
 Predicates in this module support the implementation and usage of
-Poker. They include predicates to examine an experiment file in the
+Simpleton. They include predicates to examine an experiment file in the
 format utiliesed in Louise, the project from which these predicates were
 originally copied.
 
@@ -64,7 +64,7 @@ write_encapsulated_problem(T):-
 %	encapsulated MIL problem to be listed.
 %
 list_encapsulated_problem(Ts):-
-	poker_configuration:listing_limit(L)
+	simpleton_configuration:listing_limit(L)
 	,experiment_data(Ts,Pos,Neg,BK,MS)
 	,encapsulated_problem(Pos,Neg,BK,MS,[Pos_,Neg_,_BK_,MS_])
 	,format_underlined('Positive examples')
@@ -184,7 +184,7 @@ list_mil_problem(T):-
 %	Business end of list_mil_problem/1, list_mil_problem_thelma/1.
 %
 list_mil_problem(Pos,Neg,BK,MS):-
-	poker_configuration:listing_limit(L)
+	simpleton_configuration:listing_limit(L)
 	,format_underlined('Positive examples')
 	,print_limited(L,Pos)
 	,nl
@@ -557,5 +557,5 @@ load_experiment_file:-
 %	Open the current experiment file in the Swi-Prolog IDE.
 %
 edit_experiment_file:-
-	poker_configuration:experiment_file(P,_M)
+	simpleton_configuration:experiment_file(P,_M)
 	,edit(P).

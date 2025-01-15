@@ -1,12 +1,12 @@
-:-module(poker_configuration, [clause_limit/1
-                              ,experiment_file/2
-                              ,max_invented/1
-                              ,listing_limit/1
-                              ]).
+:-module(simpleton_configuration, [clause_limit/1
+                                  ,experiment_file/2
+                                  ,max_invented/1
+                                  ,listing_limit/1
+                                  ]).
 
 :-use_module(load_experiment_file).
 
-/** <module> Configuration options for Poker.
+/** <module> Configuration options for Simpleton.
 
 */
 
@@ -17,7 +17,7 @@
 %       Limit should be a natural number, including 0, or the atom 'inf'
 %       representing positive infinity if a limit is not required.
 %
-clause_limit(1).
+clause_limit(2).
 
 
 %!	experiment_file(?Path,?Module) is semidet.
@@ -25,6 +25,7 @@ clause_limit(1).
 %	The Path and Module name of an experiment file.
 %
 experiment_file(data('examples/hello_world.pl'),hello_world).
+%experiment_file(data('examples/hello_world_overgeneral.pl'),hello_world).
 %experiment_file(data('examples/anbn.pl'),anbn).
 %experiment_file(data('examples/even_odd.pl'),even_odd).
 
@@ -78,9 +79,9 @@ configuration:untable_meta_interpreter(true).
 % Opens this configuration file and the current experiment file in the
 % SWI-Prolog IDE or your system's $EDITOR if one is set.
 /*
-:- edit(poker)
-  ,edit(poker_configuration)
-  ,poker_configuration:experiment_file(P,_)
+:- edit(simpleton)
+  ,edit(simpleton_configuration)
+  ,simpleton_configuration:experiment_file(P,_)
   ,edit(P).
 */
 

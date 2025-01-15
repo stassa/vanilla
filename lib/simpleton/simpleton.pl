@@ -1,13 +1,13 @@
-:-module(poker, [learn/1
-                ,learn/2
-                ,learn/5
-                ]).
+:-module(simpleton, [learn/1
+                    ,learn/2
+                    ,learn/5
+                    ]).
 
 :-use_module(src(vanilla)).
 :-use_module(src(auxiliaries)).
-:-use_module(lib(poker/poker_auxiliaries)).
+:-use_module(lib(simpleton/simpleton_auxiliaries)).
 :-use_module(src(mil_problem)).
-:-use_module(poker_configuration).
+:-use_module(simpleton_configuration).
 
 /** <module> Simple MIL-learner based on Vanilla.
 
@@ -23,7 +23,7 @@
 %
 %       Examples and background knowledge, including metarules, for
 %       Target are taken from currently loaded experiment file, defined
-%       in poker_configuration.pl.
+%       in simpleton_configuration.pl.
 %
 learn(T):-
         learn(T,Ps)
@@ -42,7 +42,7 @@ learn(T):-
 %
 %       Examples and background knowledge, including metarules, for
 %       Target are taken from currently loaded experiment file, defined
-%       in poker_configuration.pl.
+%       in simpleton_configuration.pl.
 %
 learn(T,Ps):-
         experiment_data(T,Pos,Neg,BK,MS)
@@ -70,7 +70,7 @@ learn(T,Ps):-
 %       knowledge in B_FO are generated on backtracking.
 %
 learn(Pos,Neg,BK,MS,Ps):-
-        poker_configuration:clause_limit(K)
+        simpleton_configuration:clause_limit(K)
         ,encapsulated_problem(Pos,Neg,BK,MS,[Pos_,Neg_,BK_,MS_])
         ,S = (write_problem(user,[BK_],Refs)
              ,refresh_tables(untable)
@@ -151,7 +151,7 @@ metasubstitutions(Ep,K,MS,Subs):-
 %
 signature(L,[T|Ss]):-
         configuration:encapsulation_predicate(E)
-        ,poker_configuration:max_invented(N)
+        ,simpleton_configuration:max_invented(N)
         ,findall(S
                 ,invented_symbol(N,S)
                 ,Ss)

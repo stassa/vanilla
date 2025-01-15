@@ -72,8 +72,8 @@ support Louise's concept of an "experiment file" with a specific format.
 Vanilla does not use this format in order to avoid strong coupling with
 any particular implementation, hence those auxiliaries that are specific
 to experiment files are left out. They are currently included in the
-auxiliaries for lib(metagol) and lib(poker) that do use the experiment
-file format.
+auxiliaries for lib(metagol), lib(simpleton), lib(poker), and
+lib(louise), that do use the experiment file format.
 
 
 Table of Contents

@@ -45,10 +45,10 @@
 %	ensure tables are refreshed between learning attempts.
 %
 %	As an example of this use, refresh_tables/1 is called by learn/5
-%	in Poker, as follows:
+%	in Simpleton, as follows:
 %	==
 %	learn(Pos,Neg,BK,MS,Ps):-
-%	        poker_configuration:clause_limit(K)
+%	        simpleton_configuration:clause_limit(K)
 %	        ,encapsulated_problem(Pos,Neg,BK,MS,[Pos_,Neg_,BK_,MS_])
 %	        ,S = (write_problem(user,[BK_],Refs)
 %	             ,refresh_tables(untable)

@@ -7,12 +7,12 @@
 		      ,parent/2
 		      ]).
 
-/** <module> A simple example of MIL for Poker and Metagol.
+/** <module> A simple example of MIL.
 
-Learning with Poker, from a single example:
+Learning with Simpleton, from a single example:
 
 ==
-?- poker:experiment_data(ancestor/2,_,_Neg,_BK,_MS), learn([ancestor(stathis,stassa)],_Neg,_BK,_MS,_Ps), auxiliaries:print_clauses(_Ps).
+?- simpleton:experiment_data(ancestor/2,_,_Neg,_BK,_MS), learn([ancestor(stathis,stassa)],_Neg,_BK,_MS,_Ps), auxiliaries:print_clauses(_Ps).
 ancestor(A,B):-parent(A,B).
 ancestor(A,B):-parent(A,C),ancestor(C,B).
 true ;
