@@ -25,7 +25,6 @@ clause_limit(2).
 %	The Path and Module name of an experiment file.
 %
 experiment_file(data('examples/hello_world.pl'),hello_world).
-%experiment_file(data('examples/hello_world_overgeneral.pl'),hello_world).
 %experiment_file(data('examples/anbn.pl'),anbn).
 %experiment_file(data('examples/even_odd.pl'),even_odd).
 
