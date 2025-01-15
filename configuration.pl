@@ -188,6 +188,7 @@ postcon_abduce metarule 'P(x,Y):- Q(x,Y), R(Y)'.
 %       is defined.
 %
 learner(metagol,lib(metagol/metagol)).
+%learner(poker,lib(poker/poker)).
 %learner(louise,lib(louise/louise)).
 %learner(simpleton,lib(simpleton/simpleton)).
 
