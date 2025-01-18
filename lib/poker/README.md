@@ -34,7 +34,7 @@ Generalisation of an atom, abbreviated to MSG; not to be confused with the food
 additive, or the Heavy Rock group.
 
 Example session with Poker
---------------------------
+==========================
 
 Below, Poker is shown learning a grammar for the context-free `a^nb^n` language
 from the string `aaabbb` (given in Definite Clause Grammars form) as an initial
@@ -42,7 +42,7 @@ example. From this example Poker learns a Top Program consisting of two
 sub-programs, each with recursive clauses and invented predicates. We list this
 Top Program below:
 
-```
+```Prolog
 inv_1_7(A,B):-a(A,C),s(C,B).
 inv_1_8(A,B):-s(A,C),b(C,B).
 s(A,B):-a(A,C),b(C,B).
@@ -54,7 +54,7 @@ In the procerss Poker generates 1018 new examples and labels three of them as
 positive and the rest as negative. The following are the 3 positive examples
 generated this way:
 
-```
+```Prolog
 s([a,b],[]).
 s([a,a,b,b],[]).
 s([a,a,a,a,b,b,b,b],[]).
@@ -62,7 +62,7 @@ s([a,a,a,a,b,b,b,b],[]).
 
 And here are the first 10 of the negative examples generated:
 
-```
+```Prolog
 s([b,b,b,b,b,b,b,b,b],[]).
 s([b,b,b,b,b,b,b,b,a],[]).
 s([b,b,b,b,b,b,b,b],[]).
@@ -82,6 +82,46 @@ Both sub-programs and their union, the Top Program, are  MSGs of the initial
 example. They are also correct hypotheses in the sense that they cover the
 initial example, and none of the negative examples derived during learning.
 
+The negative examples derived by Poker during learning are necessary to learn
+the MSG listed above. By contrast here is the Top Program learned by Louise from
+the same initial example _without any negative examples_:
+
+```Prolog
+?- louise:learn(s/2).
+inv_1_11(A,B):-a(A,C),a(C,B).
+inv_1_12(A,B):-a(A,C),a(C,B).
+inv_1_13(A,B):-a(A,C),a(C,B).
+inv_1_13(A,B):-inv_1_13(A,C),b(C,B).
+inv_1_14(A,B):-a(A,C),inv_1_14(C,B).
+inv_1_14(A,B):-b(A,C),b(C,B).
+inv_1_15(A,B):-b(A,C),b(C,B).
+inv_1_16(A,B):-b(A,C),b(C,B).
+inv_1_6(A,B):-a(A,C),s(C,B).
+inv_1_7(A,B):-s(A,C),b(C,B).
+s(A,B):-a(A,C),a(C,B).
+s(A,B):-a(A,C),b(C,B).
+s(A,B):-a(A,C),inv_1_11(C,B).
+s(A,B):-a(A,C),inv_1_13(C,B).
+s(A,B):-a(A,C),inv_1_7(C,B).
+s(A,B):-a(A,C),s(C,B).
+s(A,B):-b(A,C),b(C,B).
+s(A,B):-b(A,C),inv_1_16(C,B).
+s(A,B):-b(A,C),s(C,B).
+s(A,B):-inv_1_12(A,C),a(C,B).
+s(A,B):-inv_1_14(A,C),b(C,B).
+s(A,B):-inv_1_15(A,C),b(C,B).
+s(A,B):-inv_1_6(A,C),b(C,B).
+s(A,B):-s(A,C),a(C,B).
+s(A,B):-s(A,C),b(C,B).
+true.
+```
+
+It should be obvious that this Top Program is an over-general definition of the
+target theory for `a^nb^n`.
+
+Learning demonstration
+----------------------
+
 `a^nb^n` strings in Definite Clause Grammars form contain lists and Poker
 imposes a limit on the length of lists in generated examples to avoid generating
 infinitely many, infinite-length lists. The limit is set in the predicate
@@ -92,14 +132,14 @@ The experiment file used for this demonstration is in the following path:
 
 `data/examples/anbn_poker.pl`. 
 
-That experimnet file also holds positive and negative examples used with the
+That experiment file also holds positive and negative examples used with the
 other MIL systems included with Vanilla. Those labelled examples are _not_ used
 to train Poker. They are only there for easy comparison with other systems.
 
 Below is a big friendly dump of the entire learning session for the user's
 delectation.
 
-```
+```Prolog
 % List the MIL problem elements, including a single initial example.
 ?- poker_auxiliaries:list_mil_problem(s/2).
 Unlabelled examples
@@ -120,7 +160,7 @@ Background knowledge (Second Order)
 
 true.
 
-% List the definition fo safe_example/1 to show the length limit imposed on
+% List the definition of safe_example/1 to show the length limit imposed on
 % lists in generated examples.
 anbn:safe_example(m(s, Ls, [])) :-
     between(1, 9, L),
@@ -1165,7 +1205,6 @@ s([a,a],[]).
 true.
 
 % Learn again but separate sub-programs with reduction(subhypotheses):
-
 ?- poker_configuration:reduction(R).
 R = subhypotheses.
 
@@ -1183,10 +1222,10 @@ s(A,B):-a(A,C),inv_1_8(C,B).
 true.
 ```
 
-Wew, you made it all the way down here! As a reward for your patience here is
+Wow, you made it all the way down here! As a reward for your patience here is
 some testing of the Top Program learned by Poker:
 
-```
+```Prolog
 % Assert the learned program and BK at the Prolog top-level.
 ?- [user].
 |: :-table(s/2). % Avoids generating the same strings multiple times.
