@@ -2,7 +2,7 @@ Poker: Self-supervised Meta-Interpretive Learning
 ==================================================
 
 Poker is a self-supervised Meta-Interpretive Learning system based on
-[Louise](lib/louise) and its Top Program Construction algorithm. It learns a
+[Louise](../lib/louise) and its Top Program Construction algorithm. It learns a
 maximally special hypothesis that generalises an initial example by deriving
 sets of new positive and negative examples that are consistent with the initial
 example; hence "self-supervised": because it generates its own positive and
