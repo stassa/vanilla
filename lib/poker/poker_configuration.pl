@@ -32,6 +32,7 @@ clause_limit(2).
 %	The Path and Module name of an experiment file.
 %
 experiment_file(data('examples/hello_world_poker.pl'),hello_world_poker).
+%experiment_file(data('examples/anbn_poker.pl'),anbn).
 
 
 %!      listing_limit(?Limit) is semidet.

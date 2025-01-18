@@ -37,13 +37,28 @@ returned at the end.
 
 */
 
-:-nodebug(_).
+%:-nodebug(_).
 %:-debug(label).
 %:-debug(generate).
 %:-debug(label_more).
 %:-debug(prove_all).
 %:-debug(examples).
 %:-debug(specialise).
+
+
+%!	safe_example(-Example) is nondet.
+%
+%	Generate a safe scaffold for unlabelled examples.
+%
+%	For examples with list arguments, generating unlabelled examples
+%	during learning can "go infinite". This predicate ensures that
+%	list arguments in examples are limited in length.
+%
+%	This argument should not itself be a generator of ground
+%	examples. This is left to the user to avoid.
+%
+:-dynamic experiment_file:safe_example/1.
+:-multifile experiment_file:safe_example/1.
 
 
 %!	learn(+Targets) is det.
@@ -122,7 +137,6 @@ learn(As,BK,MS,Pos,Neg,Ps):-
 		,member(:-En,Neg_)
 		,Neg_c)
 	,excapsulated_clauses(Ss,Neg_c,Neg).
-
 
 
 %!	top_program(+Pos,+Neg,+BK,+Metarules,-Top) is det.
@@ -238,6 +252,28 @@ label(Ep,MS,K,Pos,Neg,Ps):-
 %	Neg is a set of atoms of the same predicates as Atoms, initially
 %	assumed to be negative examples of those predicates.
 %
+%	If Atoms include arguments that are lists the generation can go
+%	infinite. In that case the user must define safe_example/1
+%	(dynamic and multifile in module experiment_file) to limit the
+%	length of generated list arguments. It's up to the user to not
+%	abuse this mechanism to generate specific examples.
+%
+generate(N,[Ep|Pos],K,MS,Subs,Neg_s):-
+        experiment_file:safe_example(_)
+	,!
+	,flatten(Subs,Subs_f)
+        ,setof(Sub
+               ,M^Subs_f^member(Sub-M,Subs_f)
+               ,Subs_)
+        ,findall(:-En
+		,(between(1,N,_)
+		 ,experiment_file:safe_example(En)
+		 ,prove(En,K,MS,[],Subs_,Subs_)
+		 ,\+ memberchk(En,[Ep|Pos])
+		 )
+		,Neg)
+	,sort(Neg, Neg_s)
+	,debug_length(generate,'Generated ~w new atoms:',Neg_s).
 generate(N,[Ep|Pos],K,MS,Subs,Neg_s):-
         configuration:encapsulation_predicate(Enc)
         ,Ep =.. [Enc,S|_Args0]
