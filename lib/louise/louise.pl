@@ -174,6 +174,8 @@ top_program(_Pos,_Neg,_BK,_MS,[]):-
 generalise(Pos,MS,Ss_Pos):-
 % Hands proofs to Vanilla inductive meta-interpreter.
 	louise_configuration:clause_limit(K)
+	% Used to name invented predicates apart in rename_invented/3.
+	,reset_gensym('_')
 	,findall(Subs
 		,(member(Ep,Pos)
 		 ,debug_clauses(examples,'Positive example:',Ep)
@@ -248,8 +250,10 @@ metasubstitutions(Ep,K,MS,Subs):-
 	,Subs_ \= []
 	,sort(Subs_,Subs_s)
 	,debug_clauses(metasubstitutions,'Proved Metasubs:',[Subs_s])
-	,findall(Sub-M
+	,gensym('_',GS)
+	,findall(Sub_-M
 		,(member(Sub,Subs_s)
+		 ,rename_invented(Sub,GS,Sub_)
 		 ,metasub_metarule(Sub,MS,M)
 		 )
 		,Subs).
@@ -324,6 +328,99 @@ signature(L,[T|Ss]):-
                 ,invented_symbol(N,S)
                 ,Ss)
         ,L =.. [E,T|_].
+
+
+%!	rename_invented(+Metasub,+Gensym,-Renamed) is det.
+%
+%	Ensure invented predicates in a Metasub are uniquely named.
+%
+%	Metasub is a ground metasubstitution atom as returned by
+%	prove/7.
+%
+%	Gensym is a an atom with prefix _ and a numeric suffix generated
+%	by gensym('_',Gensym).
+%
+%	Renamed is the metasubstitution atom in Metasub with all
+%	invented symbols renamed by appending Gensym to each of them as
+%	a new suffix.
+%
+%	gensym/2 is reset in generalise/4 and called once before calling
+%	this predicate on each new list of metasubstitutions returned by
+%	prove/7, so each new set of metasubstitutions will have fresh
+%	suffixes but each invented symbol in the set will have the same
+%	suffix throughout the set.
+%
+%	The purpose of this renaming is to name invented predicate
+%	symbols apart in order to avoid them getting all mixed up in the
+%	Top Program, which can lead to overgeneralisation.
+%
+%	For example, consider the Top Program learned by Louise from
+%	data/examples/anbn.pl. Without renaming invented predicates
+%	apart that Top Program would look like this:
+%	==
+%	?- louise:learn(s/2).
+%	inv_1(A,B):-a(A,C),s(C,B).
+%	inv_1(A,B):-s(A,C),b(C,B).
+%	s(A,B):-a(A,C),b(C,B).
+%	s(A,B):-a(A,C),inv_1(C,B).
+%	s(A,B):-inv_1(A,C),b(C,B).
+%	true.
+%	==
+%
+%	That Top Program includes two clauses of one invented predicate,
+%	inv_1/2. In truth these two clauses belong to two invented
+%	predicates that were constructed from different branches of the
+%	inductive proof performed by prove/7 on backtracking. But that
+%	distinction is lost if we name them all the same.
+%
+%	This predicate ensures that invented predicates constructed in
+%	different branches of a prove/7 proof are named appart, so that
+%	they are different predicates. For example, this is how the Top
+%	Program for anbn looks like when this predicate is used:
+%	==
+%	?- louise:learn(s/2).
+%	inv_1_16(A,B):-a(A,C),s(C,B).
+%	inv_1_17(A,B):-s(A,C),b(C,B).
+%	s(A,B):-a(A,C),b(C,B).
+%	s(A,B):-a(A,C),inv_1_17(C,B).
+%	s(A,B):-inv_1_16(A,C),b(C,B).
+%	true.
+%	==
+%
+%	The new Top Program includes the definitions of two different
+%	invented predicates, which now cannot call each other (unless
+%	explicitly defined to do so) and so cannot over-generalise by
+%	getting tangled up in each other, unlike in the first example
+%	with the single inv_1/2 predicate above.
+%
+rename_invented(Sub,_GS,Sub):-
+	max_invented(0)
+	,!.
+rename_invented(Sub,GS,Sub_):-
+	configuration:encapsulation_predicate(M)
+	,Sub =.. [M|Ss]
+	,findall(S_
+		,(member(S,Ss)
+		 ,(   invented_symbol_(_I,S)
+		  ->  atom_concat(S,GS,S_)
+		  ;   S_ = S
+		  )
+		 )
+		,Ss_)
+	,Sub_ =.. [M|Ss_].
+
+
+%!	invented_symbol_(?Index,+Symbol) is det.
+%
+%	True when Symbol is an invented predicate symbol.
+%
+%	@tbd Add as second clause to auxiliaries invented_symbol/2 to
+%	avoid using between/3 for checks rather than generation.
+%
+invented_symbol_(I,S):-
+	configuration:invented_symbol_prefix(F)
+	,atom_concat(F,A,S)
+	,atom_number(A,I).
 
 
 %!	metasub_metarule(+Sub,+Metarules,-Metarule) is det.

@@ -13,7 +13,7 @@
 :-reexport(lib(louise/program_reduction/reduction_configuration),
 	   except([resolutions/1])).
 
-/** <module> Configuration options for Poker.
+/** <module> Configuration options for Louise.
 
 */
 
@@ -34,6 +34,7 @@ clause_limit(1).
 experiment_file(data('examples/hello_world.pl'),hello_world).
 %experiment_file(data('examples/anbn.pl'),anbn).
 %experiment_file(data('examples/even_odd.pl'),even_odd).
+%experiment_file(data('benchmarks/robots.pl'),robots).
 
 
 %!      listing_limit(?Limit) is semidet.
