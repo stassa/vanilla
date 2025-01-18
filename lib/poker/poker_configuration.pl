@@ -95,7 +95,7 @@ recursive_reduction(false).
 %
 %reduction(none).
 reduction(plotkins).
-%reduction(subhypothesis).
+%reduction(subhypotheses).
 
 
 %!	resolutions(?Resolutions) is semidet.
