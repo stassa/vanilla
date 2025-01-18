@@ -7,7 +7,6 @@
 :-use_module(src(auxiliaries)).
 :-use_module(src(mil_problem)).
 :-use_module(lib(louise/louise_auxiliaries)).
-:-use_module(lib(louise/subhypothesis_selection)).
 :-use_module(lib(louise/program_reduction/program_reduction)).
 :-use_module(lib(louise/louise_configuration)).
 
@@ -117,14 +116,10 @@ top_program(Pos,Neg,BK,MS,Ts):-
 	     ,refresh_tables(table)
 	     )
 	,G = (debug(top_program,'Constructing Top program...',[])
-	     ,generalise(Pos,MS,Ss_Gen)
-	     ,debug_clauses(top_program,'Generalised Top program',Ss_Gen)
-	     ,specialise(Ss_Gen,MS,Neg,Ss_Spec)
-	     ,debug_clauses(top_program,'Specialised Top program',Ss_Spec)
-	     ,flatten(Ss_Spec,Ss_Spec_f)
-	     ,sort(1,@<,Ss_Spec_f,Ss_Spec_s)
-	     ,applied_metarules(Ss_Spec_s,MS,Ts)
-	     ,debug_clauses(top_program,'Applied metarules',Ts)
+	     ,generalise(Pos,MS,Ts_)
+	     ,debug_clauses(top_program,'Generalised Top program',Ts_)
+	     ,specialise(Ts_,MS,Neg,Ts)
+	     ,debug_clauses(top_program,'Specialised Top program',Ts)
 	     )
 	,C = (erase_program_clauses(Refs)
 	     ,refresh_tables(untable)
@@ -467,20 +462,24 @@ metasub_metarule(Sub,MS,Sub_:-M):-
 %	shorter amount of time, without increasing the number of
 %	resolution steps in the program reduction meta-interpreter.
 %
-reduced_top_program(_Pos,_BK,_MS,Ps,Ps):-
+reduced_top_program(_Pos,_BK,MS,Ps,Ps_):-
 	louise_configuration:reduction(none)
-	,debug(reduction,'reduction/1 is "none". The Top program is not reduced.',[])
-	,!.
-reduced_top_program(Pos,BK,_MS,Ps,Rs):-
-	louise_configuration:reduction(subhypothesis)
 	,!
-	,debug(reduction,'Reducing Top program by subhypothesis selection...',[])
-	,subhypothesis(Pos,BK,Ps,Rs)
-	,debug_clauses(reduction,'Reduced Top program:',Rs).
+	,flatten_top_program_and_apply_metasubs(Ps,MS,Ps_)
+	,debug(reduction,'reduction/1 is "none". The Top program is not reduced.',[]).
+reduced_top_program(_Pos,_BK,MS,Ps,Rs):-
+	louise_configuration:reduction(subhypotheses)
+	,!
+	,debug(reduction,'Splitting Top Program to subhypotheses...',[])
+	,member(Ps_i,Ps)
+	,applied_metarules(Ps_i,MS,Rs)
+	,debug_clauses(reduction,'Applied metasubstitutions to subhypothesis:',Rs).
+
 reduced_top_program(Pos,BK,MS,Ps,Rs):-
 	louise_configuration:recursive_reduction(true)
 	,!
-	,flatten([Pos,BK,Ps,MS],Fs)
+	,flatten_top_program_and_apply_metasubs(Ps,MS,Ps_a)
+	,flatten([Pos,BK,Ps_a,MS],Fs)
 	,list_to_set(Fs, Fs_)
 	,debug(reduction,'Reducing Top program recursively...',[])
 	,program_reduction(Fs_,Rs_,_)
@@ -494,12 +493,30 @@ reduced_top_program(Pos,BK,MS,Ps,Rs):-
 	,cleanup_experiment.
 reduced_top_program(Pos,BK,MS,Ps,Rs):-
 	louise_configuration:recursive_reduction(false)
-	,flatten([Pos,BK,Ps,MS],Fs)
+	,flatten_top_program_and_apply_metasubs(Ps,MS,Ps_a)
+	,flatten([Pos,BK,Ps_a,MS],Fs)
 	,list_to_set(Fs,Fs_)
 	,debug(reduction,'Reducing Top program by Plotkin\'s algorithm...',[])
 	,program_reduction(Fs_,Rs,_)
 	,debug_clauses(reduction,'Reduced Top program:',Rs)
 	,cleanup_experiment.
+
+
+%!	flatten_top_program_and_apply_metasubs(+Top,+MS,-Reduced) is
+%!	det.
+%
+%	What it says on the tin.
+%
+%	Helper to take the union of clauses in the Top Program by
+%	flattening, sort it, and apply metasubstitution, to avoid
+%	repetition of the same three calls in clauses of
+%	reduced_top_program/5.
+%
+flatten_top_program_and_apply_metasubs(Ps,MS,Ps_a):-
+	flatten(Ps,Ps_f)
+	,sort(1,@<,Ps_f,Ps_s)
+	,applied_metarules(Ps_s,MS,Ps_a)
+	,debug_clauses(top_program,'Applied metasubstitutions:',Ps_a).
 
 
 %!	reduced_top_program_(+N,+Prog,+BK,+Metarules,-Reduced) is

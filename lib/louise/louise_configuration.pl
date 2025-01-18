@@ -124,13 +124,13 @@ recursive_reduction(false).
 %	One of:
 %	* none: no reduction.
 %	* plotkins: discard logically redundant clauses by application
-%	of Plotkin's program reduction.
-%	* subhypothesis: select one hypothesis entailed by the Top
-%	program.
+%	  of Plotkin's program reduction.
+%       * subhypotheses: separate each sub-hypothesis included in the
+%         Top program and return it on backtracking.
 %
 %reduction(none).
 reduction(plotkins).
-%reduction(subhypothesis).
+%reduction(subhypotheses).
 
 
 %!	resolutions(?Resolutions) is semidet.
