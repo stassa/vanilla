@@ -462,6 +462,9 @@ metasub_metarule(Sub,MS,Sub_:-M):-
 %	shorter amount of time, without increasing the number of
 %	resolution steps in the program reduction meta-interpreter.
 %
+reduced_top_program(_Pos,_BK,_MS,[],[]):-
+	!
+       ,debug(reduction,'Empty Top program. Nothing to reduce',[]).
 reduced_top_program(_Pos,_BK,MS,Ps,Ps_):-
 	louise_configuration:reduction(none)
 	,!
