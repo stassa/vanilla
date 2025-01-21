@@ -36,12 +36,14 @@ returned at the end.
 
 */
 
-%:-nodebug(_).
+:-nodebug(_).
 %:-debug(label).
 %:-debug(generate).
+%:-debug(generate_full).
 %:-debug(label_more).
 %:-debug(prove_all).
 %:-debug(examples).
+%:-debug(generalise).
 %:-debug(specialise).
 
 
@@ -223,7 +225,8 @@ label(Ep,MS,K,Pos,Neg,Ps):-
         poker_configuration:unlabelled_examples(N)
         ,debug_clauses(label,'Initial Example:',[Ep])
 	,generalise(Ep,MS,Subs)
-        ,debug_clauses(label,'Initial hypothesis:',Subs)
+        ,debug_length(label,'Constructed ~w initial clauses.',Subs)
+        ,debug_clauses(label_full,'Initial hypothesis:',Subs)
         ,generate(N,Ep,K,MS,Subs,As)
         ,label(Ep,As,MS,K,Subs,Pos,[],Neg,Ps).
 
@@ -268,7 +271,8 @@ generate(N,[Ep|Pos],K,MS,Subs,Neg_s):-
 		 )
 		,Neg)
 	,sort(Neg, Neg_s)
-	,debug_length(generate,'Generated ~w new atoms:',Neg_s).
+	,debug_length(generate,'Generated ~w new atoms.',Neg_s)
+	,debug_clauses(generate_full,'Generated new atoms:',Neg_s).
 generate(N,[Ep|Pos],K,MS,Subs,Neg_s):-
         configuration:encapsulation_predicate(Enc)
         ,Ep =.. [Enc,S|_Args0]
@@ -566,7 +570,7 @@ setup_negatives(Fs,T,U):-
 %	configuration. See setup_negatives/3 for details.
 %
 cleanup_negatives(Fs,T,U):-
-	set_configuration_option(fetch_clauses, [[Fs]])
+	set_configuration_option(fetch_clauses, [Fs])
 	,set_configuration_option(table_meta_interpreter, [T])
 	,set_configuration_option(untable_meta_interpreter, [U])
 	,refresh_tables(untable)
@@ -728,6 +732,9 @@ metasub_metarule(Sub,MS,Sub_:-M):-
 %	shorter amount of time, without increasing the number of
 %	resolution steps in the program reduction meta-interpreter.
 %
+reduced_top_program(_Pos,_BK,_MS,[],[]):-
+	!
+       ,debug(reduction,'Empty Top program. Nothing to reduce',[]).
 reduced_top_program(_Pos,_BK,MS,Ps,Ps_):-
 	poker_configuration:reduction(none)
 	,!
