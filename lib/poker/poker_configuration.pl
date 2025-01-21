@@ -7,6 +7,7 @@
                               ,resolutions/1
                               ,tautology/1
                               ,unlabelled_examples/1
+                              ,unlabelled_examples_order/1
                               ]).
 
 :-use_module(load_experiment_file).
@@ -199,6 +200,18 @@ tautology(H:-B):-
 %
 unlabelled_examples(10).
 
+
+%!      unlabelled_examples(?Order) is semidet.
+%
+%       What Order to generate unlabelled examples in.
+%
+%       Order is one of: [deterministic, random]. "deterministic" leaves
+%       unlabelled examples in the order they are generated (or given).
+%       "random" randomly permutes the list of generated (or given)
+%       examples once.
+%
+unlabelled_examples_order(deterministic).
+%unlabelled_examples_order(random).
 
 
 %!      metasubstitution_atoms(?What) is semidet.

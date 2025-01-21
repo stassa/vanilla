@@ -231,7 +231,7 @@ label(Ep,MS,K,Pos,Neg,Ps):-
         ,label(Ep,As,MS,K,Subs,Pos,[],Neg,Ps).
 
 
-%!	generate(+N,+Atoms,+Limite,+MS,+Sig,+Subs,-Neg) is det.
+%!	generate(+N,+Atoms,+Limit,+MS,+Sig,+Subs,-Neg) is det.
 %
 %	Generate a set assumed negative examples of a target predicate.
 %
@@ -256,24 +256,57 @@ label(Ep,MS,K,Pos,Neg,Ps):-
 %	length of generated list arguments. It's up to the user to not
 %	abuse this mechanism to generate specific examples.
 %
-generate(N,[Ep|Pos],K,MS,Subs,Neg_s):-
-        experiment_file:safe_example(_)
-	,!
+generate(N,[Ep|Pos],K,MS,Subs,Neg):-
+	poker_configuration:unlabelled_examples_order(O)
+	,S = setup_negatives(Fs,T,U)
+	,(   experiment_file:safe_example(_)
+	 ->  G = generate(list_safe,N,[Ep|Pos],K,MS,Subs,Neg_)
+	 ;   G = generate(atomic,N,[Ep|Pos],K,MS,Subs,Neg_)
+	 )
+	,C = cleanup_negatives(Fs,T,U)
+	,setup_call_cleanup(S,G,C)
+	,(   O == deterministic
+	 ->  Neg = Neg_
+	 ;   O == random
+	 ->  random_permutation(Neg_,Neg)
+	 )
+	,debug_length(generate,'Generated ~w new atoms.',Neg)
+	,debug_clauses(generate_full,'Generated new atoms:',Neg).
+
+
+%!	generate(+How,+N,+Atoms,+Limit,+MS,+Sig,+Subs,-Neg) is det.
+%
+%	Business end of generate/6.
+%
+%	Clauses are selected according to the value of How, which can be
+%	one of: [list_safe, atomic].
+%
+%	If How is "list_safe" it means there is a definition of
+%	safe_example/1 in the current experiment file. In that case,
+%	that definintion will be used to safely generate examples with
+%	list arguments, without generating infinite list arguments.
+%
+%	If How is "atomic" then there is no need to worry about list
+%	arguments or generating infinite lists and generation will not
+%	take safe_example/1 into account.
+%
+generate(list_safe,N,[Ep|Pos],K,MS,Subs,Neg_s):-
+        !
 	,flatten(Subs,Subs_f)
         ,setof(Sub
                ,M^Subs_f^member(Sub-M,Subs_f)
                ,Subs_)
         ,findall(:-En
-		,(between(1,N,_)
-		 ,experiment_file:safe_example(En)
-		 ,prove(En,K,MS,[],Subs_,Subs_)
+		,(G = ( experiment_file:safe_example(En)
+		      ,prove(En,K,MS,[],Subs_,Subs_)
+		      )
+		 ,limit(N,G)
 		 ,\+ memberchk(En,[Ep|Pos])
+		 ,debug_clauses(generate_full,'Generated new atom:',:-En)
 		 )
 		,Neg)
-	,sort(Neg, Neg_s)
-	,debug_length(generate,'Generated ~w new atoms.',Neg_s)
-	,debug_clauses(generate_full,'Generated new atoms:',Neg_s).
-generate(N,[Ep|Pos],K,MS,Subs,Neg_s):-
+	,sort(Neg, Neg_s).
+generate(atomic,N,[Ep|Pos],K,MS,Subs,Neg_s):-
         configuration:encapsulation_predicate(Enc)
         ,Ep =.. [Enc,S|_Args0]
         ,functor(Ep,F,A)
@@ -284,13 +317,13 @@ generate(N,[Ep|Pos],K,MS,Subs,Neg_s):-
                ,M^Subs_f^member(Sub-M,Subs_f)
                ,Subs_)
         ,findall(:-En
-		,(between(1,N,_)
-		 ,prove(En,K,MS,[],Subs_,Subs_)
+		,(G = prove(En,K,MS,[],Subs_,Subs_)
+		 ,limit(N,G)
 		 ,\+ memberchk(En,[Ep|Pos])
+		 ,debug_clauses(generate_full,'Generated new atom:',:-En)
 		 )
 		,Neg)
-	,sort(Neg, Neg_s)
-	,debug_clauses(generate,'Generated new atoms:',Neg_s).
+	,sort(Neg, Neg_s).
 
 
 %!	label(+Pos,+Neg,+MS,+K,+Prog,+Acc1,+Acc2,-Neg,-Ps) is det.
