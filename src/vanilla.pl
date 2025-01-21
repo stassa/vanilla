@@ -497,10 +497,22 @@ bind_head_literal(E,M,(H:-(E,true))):-
 % M is the Abduce metarule, i.e. body-less clause.
 	M = (H:-E)
 	,!.
+bind_head_literal(E,M,(H:-(E))):-
+% Positive example given as a unit clause.
+% M is the Abduce metarule, i.e. body-less clause.
+	E \= (_,_)
+	,M = (H:-E)
+	,!.
 bind_head_literal(:-E,M,(H:-(E,true))):-
 % Negative example given as a unit clause.
 % M is the Adbuce metarule, i.e. body-less clause.
 	M = (H:-E)
+	,!.
+bind_head_literal(:-E,M,(H:-(E))):-
+% Negative example given as a unit clause.
+% M is the Adbuce metarule, i.e. body-less clause.
+	E \= (_,_)
+	,M = (H:-E)
 	,!.
 bind_head_literal(:-(L,Ls),M,(S:-(H,L,Ls))):-
 % Negative example given as a Horn goal with no head literal.
