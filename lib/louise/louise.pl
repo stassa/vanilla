@@ -182,18 +182,9 @@ generalise(Pos,MS,Ss_Pos):-
 		 )
 		,Ss_Pos_)
 	,skolem_sort(Ss_Pos_,Ss_Pos_s)
-	,debug_length(sort,'Derived ~w sub-hypotheses (sorted)',Ss_Pos_s)
-	,debug_clauses(sort,'Derived sub-hypotheses (sorted)',Ss_Pos_s)
-	,findall(Ss_r
-		,(member(Ss,Ss_Pos_s)
-		 ,gensym('_',GS)
-		 ,findall(Sub_r-M
-			 ,(member(Sub_i-M,Ss)
-			  ,rename_invented(Sub_i,GS,Sub_r)
-			  )
-			 ,Ss_r)
-		 )
-		,Ss_Pos).
+	,debug_length(generalise,'Derived ~w sub-hypotheses (sorted)',Ss_Pos_s)
+	,debug_clauses(generalise_full,'Derived sub-hypotheses:',Ss_Pos_s)
+	,rename_all_invented(Ss_Pos_s,Ss_Pos).
 
 
 
@@ -358,25 +349,21 @@ metasub_metarule(Sub,MS,Sub_:-M):-
 	,free_member(Sub_:-M,MS).
 
 
-%!	rename_invented(+Metasub,+Gensym,-Renamed) is det.
+
+%!	rename_all_invented(+Metasubs,-Renamed) is det.
 %
-%	Ensure invented predicates in a Metasub are uniquely named.
+%	Name apart invented predicates in a list of Metasubs.
 %
-%	Metasub is a ground metasubstitution atom as returned by
-%	prove/7.
+%	Metasubs is a list of metasubstitutions derived by generalise/4,
+%	possibly with invented predicate symbols.
 %
-%	Gensym is a an atom with prefix _ and a numeric suffix generated
-%	by gensym('_',Gensym).
+%	Renamed is the list of lists of metasubstitutions in Metasubs
+%	with their invented predicates renamed by appending a gensym'd
+%	atom to each copy of an invented symbol in the same list of
+%	metasubs as a new suffix.
 %
-%	Renamed is the metasubstitution atom in Metasub with all
-%	invented symbols renamed by appending Gensym to each of them as
-%	a new suffix.
-%
-%	gensym/2 is reset in generalise/4 and called once before calling
-%	this predicate on each new list of metasubstitutions returned by
-%	prove/7, so each new set of metasubstitutions will have fresh
-%	suffixes but each invented symbol in the set will have the same
-%	suffix throughout the set.
+%	Note that invented predicates are renamed in this way only if
+%	reduction(subhypotheses) is selected.
 %
 %	The purpose of this renaming is to name invented predicate
 %	symbols apart in order to avoid them getting all mixed up in the
@@ -420,6 +407,39 @@ metasub_metarule(Sub,MS,Sub_:-M):-
 %	explicitly defined to do so) and so cannot over-generalise by
 %	getting tangled up in each other, unlike in the first example
 %	with the single inv_1/2 predicate above.
+%
+rename_all_invented(Subs,Subs_r):-
+	findall(Ss_r
+		,(member(Ss,Subs)
+		 ,gensym('_',GS)
+		 ,findall(Sub_r-M
+			 ,(member(Sub_i-M,Ss)
+			  ,rename_invented(Sub_i,GS,Sub_r)
+			  )
+			 ,Ss_r)
+		 )
+		,Subs_r).
+
+
+%!	rename_invented(+Metasub,+Gensym,-Renamed) is det.
+%
+%	Ensure invented predicates in a Metasub are uniquely named.
+%
+%	Metasub is a ground metasubstitution atom as returned by
+%	prove/7.
+%
+%	Gensym is a an atom with prefix _ and a numeric suffix generated
+%	by gensym('_',Gensym).
+%
+%	Renamed is the metasubstitution atom in Metasub with all
+%	invented symbols renamed by appending Gensym to each of them as
+%	a new suffix.
+%
+%	gensym/2 is reset in generalise/4 and called once before calling
+%	this predicate on each new list of metasubstitutions returned by
+%	prove/7, so each new set of metasubstitutions will have fresh
+%	suffixes but each invented symbol in the set will have the same
+%	suffix throughout the set.
 %
 rename_invented(Sub,_GS,Sub):-
 	max_invented(0)
@@ -526,11 +546,11 @@ reduced_top_program(Pos,BK,MS,Ps,Rs):-
 %	repetition of the same three calls in clauses of
 %	reduced_top_program/5.
 %
-flatten_top_program_and_apply_metasubs(Ps,MS,Ps_a):-
+flatten_top_program_and_apply_metasubs(Ps,MS,Ps_s):-
 	flatten(Ps,Ps_f)
-	,sort(1,@<,Ps_f,Ps_s)
-	,applied_metarules(Ps_s,MS,Ps_a)
-	,debug_clauses(top_program,'Applied metasubstitutions:',Ps_a).
+	,applied_metarules(Ps_f,MS,Ps_a)
+	,skolem_sort(0,@>,Ps_a,Ps_s)
+	,debug_clauses(top_program,'Applied metasubstitutions:',Ps_s).
 
 
 %!	reduced_top_program_(+N,+Prog,+BK,+Metarules,-Reduced) is

@@ -18,6 +18,7 @@
 			     % Program auxiliaries
 			     ,unifiable_compare/3
 			     ,skolem_sort/2
+			     ,skolem_sort/4
 			    ]).
 
 :-use_module(louise_configuration).
@@ -724,5 +725,28 @@ skolem_sort(Ls,Ss):-
 	,findall(Li
 		,(member(L_,Ss_)
 		 ,varnumbers(L_,Li)
+		 )
+		,Ss).
+
+
+
+%!	skolem_sort(+Key,+Order,+List,-Sorted) is det.
+%
+%	Sort a List, ignoring variable age.
+%
+%	Skolemises each element of list, sorts it, then unskolemises it.
+%
+%	The 4-arity version passes Key and Order to sort/4. Look it up!
+%
+skolem_sort(K,O,Ls,Ss):-
+	findall(Li
+	       ,(member(Li,Ls)
+		,numbervars(Li)
+		)
+	       ,Ss_)
+	,sort(K,O,Ss_,Ss_s)
+	,findall(Lj
+		,(member(Lk,Ss_s)
+		 ,varnumbers(Lk,Lj)
 		 )
 		,Ss).
