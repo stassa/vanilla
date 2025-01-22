@@ -409,7 +409,9 @@ metasub_metarule(Sub,MS,Sub_:-M):-
 %	with the single inv_1/2 predicate above.
 %
 rename_all_invented(Subs,Subs_r):-
-	findall(Ss_r
+	louise_configuration:gestalt(false)
+	,!
+	,findall(Ss_r
 		,(member(Ss,Subs)
 		 ,gensym('_',GS)
 		 ,findall(Sub_r-M
@@ -419,6 +421,7 @@ rename_all_invented(Subs,Subs_r):-
 			 ,Ss_r)
 		 )
 		,Subs_r).
+rename_all_invented(Subs,Subs).
 
 
 %!	rename_invented(+Metasub,+Gensym,-Renamed) is det.

@@ -1,5 +1,6 @@
 :-module(louise_configuration, [clause_limit/1
                                ,experiment_file/2
+                               ,gestalt/1
                                ,listing_limit/1
                                ,max_invented/1
                                ,max_error/2
@@ -35,6 +36,75 @@ experiment_file(data('examples/hello_world.pl'),hello_world).
 %experiment_file(data('examples/anbn.pl'),anbn).
 %experiment_file(data('examples/even_odd.pl'),even_odd).
 %experiment_file(data('benchmarks/robots.pl'),robots).
+
+
+%!      gestalt(?Bool) is semidet.
+%
+%       Whether to gestalt the Top Program or not.
+%
+%       This option controls whether invented predicates in the Top
+%       program are named apart using rename_all_invented/2, in
+%       louise.pl, or not. Setting this option to "true" leaves invented
+%       predicates unchanged while setting it to "false" renames them.
+%
+%       The effect of setting this option to "true" is that the Top
+%       Program is more general than the set of its sub-hypotheses,
+%       while the effect of setting this option to "false" is that the
+%       Top program is exactly as general as the set of its
+%       sub-hypotheses.
+%
+%       The reason for the shift in generality is that, when this option
+%       is true, invented predicates in sub-hypotheses of the Top
+%       Program share the same set of symbols. This means that clauses
+%       of invented predicates constructed independently in different
+%       branches of the inductive proof, can now resolve with each other
+%       thus potentially increasing the success set of their
+%       combination.
+%
+%       Conversely, when this option is false, invented predicates
+%       constructed independently, in different branches of the
+%       inductive proof, are named apart with an additional numerical
+%       suffix, so they cannot resolve with clauses of each other and
+%       cannot generalise beyond their individual success set.
+%
+%       When to gestalt the Top Program
+%       -------------------------------
+%
+%       When the Top Program consists of a set of sub-hypotheses that
+%       each have the same success-set as the others the option
+%       gestalt(false) is safest because the Top Program then has eactly
+%       the success set of each of its sub-hypotheses. Setting
+%       gestalt(true) in that case risks over-generalising by creating
+%       interactions between sub-hypotheses not derived from the
+%       training examples.
+%
+%       Conversely, when the Top Program consists of sub-hypotheses that
+%       do not all have the same success-set, it can be safe to set
+%       gestalt(true). In that case, allowing sub-hypotheses to resolve
+%       with each other can increase the generality of the Top Program
+%       beyond what can only be derived from the training examples. This
+%       can also help learn a more accurate Top Program when a smaller
+%       clause_limit is selected, which may not be large enough to learn
+%       a sub-hypothesis from each positive example. In that case, the
+%       combined success-set of the gestalt Top Program can be general
+%       enough to "cover" all positive examples.
+%
+%       As a downside, when gestalt(true) is selected it is possible
+%       that the generality of the Top Program increases so that it now
+%       "covers" _negative_ examples not previously covered by any
+%       sub-hypothesis. Thus, there is a tradeoff in setting this option
+%       and it may have to be fine-tuned in an iterative process.
+%
+%       What is a gestalt?
+%       ------------------
+%
+%       In psychology, the word "gestalt" is used to mean that "the
+%       whole is greater than the sum of its parts". In this option it
+%       is used to describe how the Top Program can be more general than
+%       the sum of its parts, i.e. its component sub-hypotheses.
+%
+gestalt(true).
+%gestalt(false).
 
 
 %!      listing_limit(?Limit) is semidet.
