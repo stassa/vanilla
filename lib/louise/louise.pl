@@ -181,8 +181,19 @@ generalise(Pos,MS,Ss_Pos):-
 		 ,debug_clauses(generalise,'Passed metasub constraints:',[Subs])
 		 )
 		,Ss_Pos_)
-	,predsort(unifiable_compare,Ss_Pos_,Ss_Pos)
-	,debug_length(generalise,'Derived ~w sub-hypotheses (sorted)',Ss_Pos).
+	,skolem_sort(Ss_Pos_,Ss_Pos_s)
+	,debug_length(sort,'Derived ~w sub-hypotheses (sorted)',Ss_Pos_s)
+	,debug_clauses(sort,'Derived sub-hypotheses (sorted)',Ss_Pos_s)
+	,findall(Ss_r
+		,(member(Ss,Ss_Pos_s)
+		 ,gensym('_',GS)
+		 ,findall(Sub_r-M
+			 ,(member(Sub_i-M,Ss)
+			  ,rename_invented(Sub_i,GS,Sub_r)
+			  )
+			 ,Ss_r)
+		 )
+		,Ss_Pos).
 
 
 
@@ -245,10 +256,8 @@ metasubstitutions(Ep,K,MS,Subs):-
 	,Subs_ \= []
 	,sort(Subs_,Subs_s)
 	,debug_clauses(metasubstitutions,'Proved Metasubs:',[Subs_s])
-	,gensym('_',GS)
-	,findall(Sub_-M
+	,findall(Sub-M
 		,(member(Sub,Subs_s)
-		 ,rename_invented(Sub,GS,Sub_)
 		 ,metasub_metarule(Sub,MS,M)
 		 )
 		,Subs).
@@ -325,6 +334,30 @@ signature(L,[T|Ss]):-
         ,L =.. [E,T|_].
 
 
+%!	metasub_metarule(+Sub,+Metarules,-Metarule) is det.
+%
+%	Retrieve an expanded metarule matching a metasub atom.
+%
+%	Sub is an encapsulated metasubtitution atom.
+%
+%	Metarules is the list of expanded metarules.
+%
+%	Metarules is an expanded metarule in Metarules with a metarule
+%	Id matching the metarule Id of Sub.
+%
+%	Used by metasubstitutions/3 to retrieve the encapsulated
+%	metarule matching the metarule id of a ground metasubstitution
+%	atom without binding variables in the encapsulated metarule.
+%
+metasub_metarule(Sub,MS,Sub_:-M):-
+	configuration:encapsulation_predicate(E)
+        ,Sub =.. [E,Id|As]
+	,length(As,N)
+	,length(As_,N)
+	,Sub_ =.. [E,Id|As_]
+	,free_member(Sub_:-M,MS).
+
+
 %!	rename_invented(+Metasub,+Gensym,-Renamed) is det.
 %
 %	Ensure invented predicates in a Metasub are uniquely named.
@@ -396,7 +429,9 @@ rename_invented(Sub,GS,Sub_):-
 	,Sub =.. [M|Ss]
 	,findall(S_
 		,(member(S,Ss)
-		 ,(   invented_symbol_(_I,S)
+		 ,(   atomic(S)
+		      ,S \== []
+		     ,invented_symbol_(_I,S)
 		  ->  atom_concat(S,GS,S_)
 		  ;   S_ = S
 		  )
@@ -416,30 +451,6 @@ invented_symbol_(I,S):-
 	configuration:invented_symbol_prefix(F)
 	,atom_concat(F,A,S)
 	,atom_number(A,I).
-
-
-%!	metasub_metarule(+Sub,+Metarules,-Metarule) is det.
-%
-%	Retrieve an expanded metarule matching a metasub atom.
-%
-%	Sub is an encapsulated metasubtitution atom.
-%
-%	Metarules is the list of expanded metarules.
-%
-%	Metarules is an expanded metarule in Metarules with a metarule
-%	Id matching the metarule Id of Sub.
-%
-%	Used by metasubstitutions/3 to retrieve the encapsulated
-%	metarule matching the metarule id of a ground metasubstitution
-%	atom without binding variables in the encapsulated metarule.
-%
-metasub_metarule(Sub,MS,Sub_:-M):-
-	configuration:encapsulation_predicate(E)
-        ,Sub =.. [E,Id|As]
-	,length(As,N)
-	,length(As_,N)
-	,Sub_ =.. [E,Id|As_]
-	,free_member(Sub_:-M,MS).
 
 
 
@@ -470,14 +481,14 @@ reduced_top_program(_Pos,_BK,MS,Ps,Ps_):-
 	,!
 	,flatten_top_program_and_apply_metasubs(Ps,MS,Ps_)
 	,debug(reduction,'reduction/1 is "none". The Top program is not reduced.',[]).
-reduced_top_program(_Pos,_BK,MS,Ps,Rs):-
+reduced_top_program(_Pos,_BK,MS,Ps,Rs_s):-
 	louise_configuration:reduction(subhypotheses)
 	,!
 	,debug(reduction,'Splitting Top Program to subhypotheses...',[])
 	,member(Ps_i,Ps)
 	,applied_metarules(Ps_i,MS,Rs)
+	,sort(0,@>,Rs,Rs_s)
 	,debug_clauses(reduction,'Applied metasubstitutions to subhypothesis:',Rs).
-
 reduced_top_program(Pos,BK,MS,Ps,Rs):-
 	louise_configuration:recursive_reduction(true)
 	,!

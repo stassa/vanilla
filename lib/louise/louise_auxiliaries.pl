@@ -17,6 +17,7 @@
 			     ,set_configuration_option/2
 			     % Program auxiliaries
 			     ,unifiable_compare/3
+			     ,skolem_sort/2
 			    ]).
 
 :-use_module(louise_configuration).
@@ -705,3 +706,23 @@ unifiable_compare(Delta, A, B) :-
     ->  Delta = (=)
     ;   compare(Delta, A, B)
     ).
+
+
+
+%!	skolem_sort(+List,-Sorted) is det.
+%
+%	Sort a List, ignoring variable age.
+%
+%	Skolemises each element of list, sorts it, then unskolemises it.
+%
+skolem_sort(Ls,Ss):-
+	setof(L
+	     ,Ls^(member(L,Ls)
+		 ,numbervars(L)
+		 )
+	     ,Ss_)
+	,findall(Li
+		,(member(L_,Ss_)
+		 ,varnumbers(L_,Li)
+		 )
+		,Ss).
