@@ -118,8 +118,10 @@ top_program(Pos,Neg,BK,MS,Ts):-
 	,G = (debug(top_program,'Constructing Top program...',[])
 	     ,generalise(Pos,MS,Ts_)
 	     ,debug_clauses(top_program,'Generalised Top program',Ts_)
-	     ,specialise(Ts_,MS,Neg,Ts)
-	     ,debug_clauses(top_program,'Specialised Top program',Ts)
+	     ,specialise(Ts_,MS,Neg,Ts_s)
+	     ,debug_clauses(top_program,'Specialised Top program',Ts_)
+	     ,respecialise(Ts_s,Pos,MS,Ts)
+	     ,debug_clauses(top_program,'Repecialised Top program',Ts)
 	     )
 	,C = (erase_program_clauses(Refs)
 	     ,refresh_tables(untable)
@@ -218,6 +220,51 @@ specialise(Ss_Pos,MS,Neg,Ss_Neg):-
 		   )
 		)
 	       ,Ss_Neg).
+
+
+
+%!	respecialise(+Metasubs,+Pos,+MS,-Specialised) is det.
+%
+%	Strongly specialise the Top Program against positive examples.
+%
+%	Second step of specialisation that specialises the
+%	already-specialised Top Program further by removing each
+%	sub-hypothesis that does not entail all the positive examples.
+%
+%	This is useful when the Top Program contains many over-special
+%	sub-hypotheses and only a few ones that are sufficiently general
+%	to cover all the positive examples.
+%
+%	This specialisation operation is applied only if the
+%	louise_configuration option respecialise/1 is set to "true".
+%
+respecialise(Ss_Neg,_,_MS,Ss_Neg):-
+	louise_configuration:respecialise(false)
+	,!.
+respecialise(Ss_Neg,[E0|Pos],MS,Ss_Neg_):-
+	louise_configuration:respecialise(true)
+	,louise_configuration:clause_limit(K)
+	,signature(E0,Ss)
+	,debug(respecialise,'Respecialising specialised Top Program',[])
+	,S = setup_negatives(Fs,T,U)
+	,G = findall(Subs
+		    ,(member(Subs, Ss_Neg)
+		     ,findall(Sub
+			     ,member(Sub-_M,Subs)
+			     ,Subs_)
+		     ,debug_clauses(respecialise,'Ground metasubstitutions:',Subs_)
+		     ,forall(member(Ep,[E0|Pos])
+			    ,(debug_clauses(respecialise,'Positive example:',Ep)
+			     ,vanilla:prove(Ep,K,MS,Ss,Subs_,Subs_)
+			     ,debug_clauses(respecialise,'Proved positive example:',Ep)
+			     )
+			    )
+		     ,debug_clauses(respecialise,'Proved metasubstitutions:',Subs_)
+		     )
+		    ,Ss_Neg_)
+	,C = cleanup_negatives(Fs,T,U)
+	,setup_call_cleanup(S,G,C)
+	,debug_length(respecialise,'Kept ~w sub-hypotheses',Ss_Neg_).
 
 
 
