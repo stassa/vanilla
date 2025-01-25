@@ -36,15 +36,23 @@ returned at the end.
 
 */
 
-:-nodebug(_).
+% For development only.
+%:-nodebug(_).
+%:-debug(learn).
+%:-debug(top_program).
+%:-debug(reduction).
 %:-debug(label).
+%:-debug(label_full).
 %:-debug(generate).
 %:-debug(generate_full).
 %:-debug(label_more).
 %:-debug(prove_all).
 %:-debug(examples).
 %:-debug(generalise).
+%:-debug(sort).
 %:-debug(specialise).
+%:-debug(metasubstitutions).
+%:-debug(signature).
 
 
 %!	safe_example(-Example) is nondet.
@@ -478,8 +486,10 @@ generalise(Pos,MS,Ss_Pos):-
 		 ,debug_clauses(generalise,'Passed metasub constraints:',[Subs])
 		 )
 		,Ss_Pos_)
-	,predsort(unifiable_compare,Ss_Pos_,Ss_Pos)
-	,debug_length(generalise,'Derived ~w sub-hypotheses (sorted)',Ss_Pos).
+	,debug_length(sort,'Derived ~w sub-hypotheses (unsorted)',Ss_Pos_)
+	,once( skolem_sort(Ss_Pos_,Ss_Pos_s) )
+	,debug_length(sort,'Derived ~w sub-hypotheses (sorted)',Ss_Pos_s)
+	,rename_all_invented(Ss_Pos_s,Ss_Pos).
 
 
 
@@ -543,10 +553,8 @@ metasubstitutions(Ep,K,MS,Subs):-
 	,Subs_ \= []
 	,sort(Subs_,Subs_s)
 	,debug_clauses(metasubstitutions,'Proved Metasubs:',[Subs_s])
-	,gensym('_',GS)
-	,findall(Sub_-M
+	,findall(Sub-M
 		,(member(Sub,Subs_s)
-		 ,rename_invented(Sub,GS,Sub_)
 		 ,metasub_metarule(Sub,MS,M)
 		 )
 		,Subs).
@@ -621,6 +629,80 @@ signature(L,[T|Ss]):-
                 ,invented_symbol(N,S)
                 ,Ss)
         ,L =.. [E,T|_].
+
+
+%!	rename_all_invented(+Metasubs,-Renamed) is det.
+%
+%	Name apart invented predicates in a list of Metasubs.
+%
+%	Metasubs is a list of metasubstitutions derived by generalise/4,
+%	possibly with invented predicate symbols.
+%
+%	Renamed is the list of lists of metasubstitutions in Metasubs
+%	with their invented predicates renamed by appending a gensym'd
+%	atom to each copy of an invented symbol in the same list of
+%	metasubs as a new suffix.
+%
+%	Note that invented predicates are renamed in this way only if
+%	reduction(subhypotheses) is selected.
+%
+%	The purpose of this renaming is to name invented predicate
+%	symbols apart in order to avoid them getting all mixed up in the
+%	Top Program, which can lead to overgeneralisation.
+%
+%	For example, consider the Top Program learned by Louise from
+%	data/examples/anbn.pl. Without renaming invented predicates
+%	apart that Top Program would look like this:
+%	==
+%	?- louise:learn(s/2).
+%	inv_1(A,B):-a(A,C),s(C,B).
+%	inv_1(A,B):-s(A,C),b(C,B).
+%	s(A,B):-a(A,C),b(C,B).
+%	s(A,B):-a(A,C),inv_1(C,B).
+%	s(A,B):-inv_1(A,C),b(C,B).
+%	true.
+%	==
+%
+%	That Top Program includes two clauses of one invented predicate,
+%	inv_1/2. In truth these two clauses belong to two invented
+%	predicates that were constructed from different branches of the
+%	inductive proof performed by prove/7 on backtracking. But that
+%	distinction is lost if we name them all the same.
+%
+%	This predicate ensures that invented predicates constructed in
+%	different branches of a prove/7 proof are named appart, so that
+%	they are different predicates. For example, this is how the Top
+%	Program for anbn looks like when this predicate is used:
+%	==
+%	?- louise:learn(s/2).
+%	inv_1_16(A,B):-a(A,C),s(C,B).
+%	inv_1_17(A,B):-s(A,C),b(C,B).
+%	s(A,B):-a(A,C),b(C,B).
+%	s(A,B):-a(A,C),inv_1_17(C,B).
+%	s(A,B):-inv_1_16(A,C),b(C,B).
+%	true.
+%	==
+%
+%	The new Top Program includes the definitions of two different
+%	invented predicates, which now cannot call each other (unless
+%	explicitly defined to do so) and so cannot over-generalise by
+%	getting tangled up in each other, unlike in the first example
+%	with the single inv_1/2 predicate above.
+%
+rename_all_invented(Subs,Subs_r):-
+	poker_configuration:gestalt(false)
+	,!
+	,findall(Ss_r
+		,(member(Ss,Subs)
+		 ,gensym('_',GS)
+		 ,findall(Sub_r-M
+			 ,(member(Sub_i-M,Ss)
+			  ,rename_invented(Sub_i,GS,Sub_r)
+			  )
+			 ,Ss_r)
+		 )
+		,Subs_r).
+rename_all_invented(Subs,Subs).
 
 
 %!	rename_invented(+Metasub,+Gensym,-Renamed) is det.
@@ -817,11 +899,11 @@ reduced_top_program(Pos,BK,MS,Ps,Rs):-
 %	repetition of the same three calls in clauses of
 %	reduced_top_program/5.
 %
-flatten_top_program_and_apply_metasubs(Ps,MS,Ps_a):-
+flatten_top_program_and_apply_metasubs(Ps,MS,Ps_s):-
 	flatten(Ps,Ps_f)
-	,sort(1,@<,Ps_f,Ps_s)
-	,applied_metarules(Ps_s,MS,Ps_a)
-	,debug_clauses(top_program,'Applied metasubstitutions:',Ps_a).
+	,applied_metarules(Ps_f,MS,Ps_a)
+	,skolem_sort(0,@>,Ps_a,Ps_s)
+	,debug_clauses(top_program,'Applied metasubstitutions:',Ps_s).
 
 
 %!	reduced_top_program_(+N,+Prog,+BK,+Metarules,-Reduced) is
