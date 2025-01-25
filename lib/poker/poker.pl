@@ -401,12 +401,12 @@ label(Pos,[:-Ep|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
 %	This predicate proves all of the atoms in Pos, with the
 %	metasubstitutions in Subs, and fails if it can't do that, Dave.
 %
-/*
-% TODO: Need to figure out the differences of these two versions.
 prove_all(_Pos,_K,_MS,_Ss,[]):-
         debug(prove_all,'Empty hypothesis. Proof fails',[])
 	,!
 	,fail.
+/*
+% TODO: Need to figure out the differences of these two versions.
 prove_all(Pos,K,MS,Ss,Subs):-
 	% Maybe not? Maybe specialise each sybhypothesis separately
 	% And check also the positive examples?
@@ -415,27 +415,29 @@ prove_all(Pos,K,MS,Ss,Subs):-
 	      ,M^Subs_f^member(Sub-M,Subs_f)
 	      ,Subs_)
 	,debug_clauses(prove_all,'With current metasubs: ',Subs_)
-	,forall(member(Ep,Pos)
-	       ,prove(Ep,K,MS,Ss,Subs_,Subs_)
-	       )
+	,S = setup_negatives(Fs,T,U)
+	,G = forall(member(Ep,Pos)
+		   ,prove(Ep,K,MS,Ss,Subs_,Subs_)
+		   )
+	,C = cleanup_negatives(Fs,T,U)
+	,setup_call_cleanup(S,G,C)
 	,debug(prove_all,'Proof succeeded',[]).
 */
 %/*
-prove_all(_Pos,_K,_MS,_Ss,[]):-
-        debug(prove_all,'Empty hypothesis. Proof fails',[])
-	,!
-        ,fail.
 prove_all(Pos,K,MS,Ss,Subs):-
-	forall(member(Sub,Subs)
-	      ,(setof(Sub_
-		     ,M^Sub^member(Sub_-M,Sub)
-		     ,Subs_)
-	       ,debug_clauses(prove_all,'With current metasubs: ',Subs_)
-	       ,forall(member(Ep,Pos)
-		      ,prove(Ep,K,MS,Ss,Subs_,Subs_)
-		      )
-	       )
-	      )
+	S = setup_negatives(Fs,T,U)
+	,G = forall(member(Sub,Subs)
+		   ,(setof(Sub_
+			  ,M^Sub^member(Sub_-M,Sub)
+			  ,Subs_)
+		    ,debug_clauses(prove_all,'With current metasubs: ',Subs_)
+		    ,forall(member(Ep,Pos)
+			   ,prove(Ep,K,MS,Ss,Subs_,Subs_)
+			   )
+		    )
+		   )
+	,C = cleanup_negatives(Fs,T,U)
+	,setup_call_cleanup(S,G,C)
 	,debug(prove_all,'Proof succeeded',[]).
 %*/
 
