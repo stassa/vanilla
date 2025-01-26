@@ -37,6 +37,7 @@ clause_limit(2).
 %
 experiment_file(data('examples/hello_world_poker.pl'),hello_world_poker).
 %experiment_file(data('examples/anbn_poker.pl'),anbn).
+%experiment_file(data('examples/parity_poker.pl'),parity).
 
 
 %!      gestalt(?Bool) is semidet.
