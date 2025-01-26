@@ -51,6 +51,7 @@ returned at the end.
 %:-debug(generalise).
 %:-debug(sort).
 %:-debug(specialise).
+%:-debug(respecialise).
 %:-debug(metasubstitutions).
 %:-debug(signature).
 
@@ -370,12 +371,13 @@ label(Pos,[En|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
         debug_clauses(label_more,'Specialising hypothesis:',Subs)
 	,debug(label_more,'With negative example: ~w',[En])
 	,specialise(Subs,MS,[En],Subs_S)
-        ,debug_clauses(label_more,'Specialised hypothesis:',Subs_S)
+	,respecialise(Subs_S,Pos,MS,Subs_R)
+        ,debug_clauses(label_more,'Specialised hypothesis:',Subs_R)
         ,debug_clauses(prove_all,'Re-proving positive examples:',Pos)
-        ,prove_all(Pos,K,MS,[],Subs_S)
+        ,prove_all(Pos,K,MS,[],Subs_R)
         ,!
         ,debug(label_more,'Keeping negative example: ~w',[En])
-        ,label(Pos,Neg,MS,K,Subs_S,Pos_Bind,[En|Neg_Acc],Neg_Bind,Ps).
+        ,label(Pos,Neg,MS,K,Subs_R,Pos_Bind,[En|Neg_Acc],Neg_Bind,Ps).
 label(Pos,[:-Ep|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
         debug_clauses(label_more,'Keeping hypothesis:',Subs)
         ,debug(label_more,'Keeping as positive example: ~w',[Ep])
@@ -526,6 +528,51 @@ specialise(Ss_Pos,MS,Neg,Ss_Neg):-
 		   )
 		)
 	       ,Ss_Neg).
+
+
+
+%!	respecialise(+Metasubs,+Pos,+MS,-Specialised) is det.
+%
+%	Strongly specialise the Top Program against positive examples.
+%
+%	Second step of specialisation that specialises the
+%	already-specialised Top Program further by removing each
+%	sub-hypothesis that does not entail all the positive examples.
+%
+%	This is useful when the Top Program contains many over-special
+%	sub-hypotheses and only a few ones that are sufficiently general
+%	to cover all the positive examples.
+%
+%	This specialisation operation is applied only if the
+%	poker_configuration option respecialise/1 is set to "true".
+%
+respecialise(Ss_Neg,_,_MS,Ss_Neg):-
+	poker_configuration:respecialise(false)
+	,!.
+respecialise(Ss_Neg,[E0|Pos],MS,Ss_Neg_):-
+	poker_configuration:respecialise(true)
+	,poker_configuration:clause_limit(K)
+	,signature(E0,Ss)
+	,debug_length(respecialise,'Respecialising ~w sub-hypotheses',Ss_Neg)
+	,S = setup_negatives(Fs,T,U)
+	,G = findall(Subs
+		    ,(member(Subs, Ss_Neg)
+		     ,findall(Sub
+			     ,member(Sub-_M,Subs)
+			     ,Subs_)
+		     ,debug_clauses(respecialise,'Ground metasubstitutions:',Subs_)
+		     ,forall(member(Ep,[E0|Pos])
+			    ,(debug_clauses(respecialise,'Positive example:',Ep)
+			     ,vanilla:prove(Ep,K,MS,Ss,Subs_,Subs_)
+			     ,debug_clauses(respecialise,'Proved positive example:',Ep)
+			     )
+			    )
+		     ,debug_clauses(respecialise,'Proved metasubstitutions:',Subs_)
+		     )
+		    ,Ss_Neg_)
+	,C = cleanup_negatives(Fs,T,U)
+	,setup_call_cleanup(S,G,C)
+	,debug_length(respecialise,'Kept ~w sub-hypotheses',Ss_Neg_).
 
 
 

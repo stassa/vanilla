@@ -6,6 +6,7 @@
                               ,recursive_reduction/1
                               ,reduction/1
                               ,resolutions/1
+                              ,respecialise/1
                               ,tautology/1
                               ,unlabelled_examples/1
                               ,unlabelled_examples_order/1
@@ -187,6 +188,26 @@ resolutions(5000).
 %resolutions(100).
 %resolutions(15).
 %resolutions(0).
+
+
+%!      respecialise(?Bool) is semidet.
+%
+%       Strongly specialise the Top Program against positive examples.
+%
+%       When Bool is true, each of the Top Program's sub-hypotheses must
+%       entail _all_ positive examples with respect to background
+%       knowledge. When Bool is false some sub-hypotheses in the Top
+%       Program may not entail all positive examples, with respect to
+%       background knowledge.
+%
+%       Setting this option to "true" is useful when the Top Program
+%       contains many over-specialised sub-hypotheses and only one or a
+%       few onets that fully generalise to the positive examples, or
+%       nearly. In such cases the Top Program might grow too large and
+%       unwieldy.
+%
+respecialise(true).
+%respecialise(false).
 
 
 %!      tautology(+Clause) is det.
