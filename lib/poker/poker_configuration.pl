@@ -7,6 +7,7 @@
                               ,reduction/1
                               ,resolutions/1
                               ,respecialise/1
+                              ,safe_example/1
                               ,tautology/1
                               ,unlabelled_examples/1
                               ,unlabelled_examples_order/1
@@ -210,6 +211,21 @@ respecialise(true).
 %respecialise(false).
 
 
+%!     safe_example(-Example) is nondet.
+%
+%      Generate a safe scaffold for unlabelled examples.
+%
+%      For examples with list arguments, generating unlabelled examples
+%      during learning can "go infinite". This predicate ensures that
+%      list arguments in examples are limited in length.
+%
+%      This argument should not itself be a generator of ground
+%      examples. This is left to the user to avoid.
+%
+:-dynamic safe_example/1.
+:-multifile safe_example/1.
+
+
 %!      tautology(+Clause) is det.
 %
 %       True when Clause is a tautology.
@@ -289,7 +305,7 @@ tautology(H:-B):-
 %       generated examples are assumed-negative and the assumption
 %       checked by Poker's labelling loop.
 %
-unlabelled_examples(10).
+unlabelled_examples(100).
 
 
 %!      unlabelled_examples(?Order) is semidet.

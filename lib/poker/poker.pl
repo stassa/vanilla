@@ -56,21 +56,6 @@ returned at the end.
 %:-debug(signature).
 
 
-%!	safe_example(-Example) is nondet.
-%
-%	Generate a safe scaffold for unlabelled examples.
-%
-%	For examples with list arguments, generating unlabelled examples
-%	during learning can "go infinite". This predicate ensures that
-%	list arguments in examples are limited in length.
-%
-%	This argument should not itself be a generator of ground
-%	examples. This is left to the user to avoid.
-%
-:-dynamic experiment_file:safe_example/1.
-:-multifile experiment_file:safe_example/1.
-
-
 %!	learn(+Targets) is det.
 %
 %	Learn a deafinition of one or more learning Targets.
@@ -268,7 +253,7 @@ label(Ep,MS,K,Pos,Neg,Ps):-
 generate(N,[Ep|Pos],K,MS,Subs,Neg):-
 	poker_configuration:unlabelled_examples_order(O)
 	,S = setup_negatives(Fs,T,U)
-	,(   experiment_file:safe_example(_)
+	,(   poker_configuration:safe_example(_)
 	 ->  G = generate(list_safe,N,[Ep|Pos],K,MS,Subs,Neg_)
 	 ;   G = generate(atomic,N,[Ep|Pos],K,MS,Subs,Neg_)
 	 )
@@ -306,7 +291,7 @@ generate(list_safe,N,[Ep|Pos],K,MS,Subs,Neg_s):-
                ,M^Subs_f^member(Sub-M,Subs_f)
                ,Subs_)
         ,findall(:-En
-		,(G = ( experiment_file:safe_example(En)
+		,(G = ( poker_configuration:safe_example(En)
 		      ,prove(En,K,MS,[],Subs_,Subs_)
 		      )
 		 ,limit(N,G)

@@ -1,5 +1,4 @@
-:-module(anbn, [safe_example/1
-	       ,program_signature/3
+:-module(anbn, [program_signature/3
 	       ,background_knowledge/2
 	       ,metarules/2
 	       ,unlabelled_example/2
@@ -15,6 +14,18 @@
 
 */
 
+configuration:metarule_constraints(m(identity,P0,P1),fail):-
+        P0 == P1.
+
+configuration:metarule_constraints(m(tailrec,P0,P1),fail):-
+        P0 == P1.
+
+configuration:metarule_constraints(m(chain,P0,P1,_P2),fail):-
+        P0 == P1.
+configuration:metarule_constraints(m(chain,_P0,P1,P2),fail):-
+        P1 == P2.
+
+
 %!	safe_example(-Example) is nondet.
 %
 %	Generate a safe scaffold for unlabelled examples.
@@ -26,7 +37,7 @@
 %	This argument should not itself be a generator of ground
 %	examples. This is left to the user to avoid.
 %
-safe_example(m(s,Ls,[])):-
+poker_configuration:safe_example(m(s,Ls,[])):-
 	between(1,9,L)
 	,length(Ls,L).
 
