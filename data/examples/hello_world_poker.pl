@@ -1,7 +1,7 @@
 :-module(hello_world, [program_signature/3
 		      ,background_knowledge/2
 		      ,metarules/2
-		      ,unlabelled_example/2
+		      ,initial_example/2
 		      ,positive_example/2
 		      ,negative_example/2
 		      ,ancestor/2
@@ -10,12 +10,7 @@
 		      ,mother/2
 		      ]).
 
-/** <module> A simple example of MIL for Poker and Metagol.
-
-Learning with Poker, from a single example:
-
-==
-==
+/** <module> A simple example using Poker.
 
 */
 
@@ -46,7 +41,7 @@ program_signature(p/2,[ancestor,parent,father,mother],[]).
 background_knowledge(p/2,[parent/2
 			 ,mother/2
 			 ,father/2
-			 ,ancestor/2
+			 %,ancestor/2
 			 ]).
 
 %!	metarules(+Target, -Metarules) is semidet.
@@ -60,11 +55,11 @@ background_knowledge(p/2,[parent/2
 %
 metarules(p/2,[identity,chain]).
 
-%!	unlabelled_example(+Target,-Examples) is nondet.
+%!	initial_example(+Target,-Examples) is nondet.
 %
-%	Generator of unlabelled Examples for a learning Target.
+%	Generator of initial Examples for a learning Target.
 %
-unlabelled_example(p/2,p(stathis,stassa)).
+initial_example(p/2,p(stathis,stassa)).
 
 %!	positive_example(+Target,-Examples) is nondet.
 %

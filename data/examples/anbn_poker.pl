@@ -1,7 +1,7 @@
 :-module(anbn, [program_signature/3
 	       ,background_knowledge/2
 	       ,metarules/2
-	       ,unlabelled_example/2
+	       ,initial_example/2
 	       ,positive_example/2
 	       ,negative_example/2
 	       ,a/2
@@ -9,15 +9,13 @@
 	       ]).
 
 :-use_module(project_root(configuration)).
+:-use_module(lib(poker/poker_configuration),[]).
 
-/** <module> Learn an a^nb^n CFG with recursion and predicate invention.
+/** <module> Learn an a^nb^n CFG with Poker.
 
 */
 
 configuration:metarule_constraints(m(identity,P0,P1),fail):-
-        P0 == P1.
-
-configuration:metarule_constraints(m(tailrec,P0,P1),fail):-
         P0 == P1.
 
 configuration:metarule_constraints(m(chain,P0,P1,_P2),fail):-
@@ -64,15 +62,12 @@ configuration:metarule_constraints(m(_ID,P,Q,_R)/_U,fail):-
 	,Q == inv_1.
 :-endif.
 
-configuration:trichain metarule 'P(x,y):- Q(x,z),R(z,u),S(u,y)'.
-
 background_knowledge(s/2,[a/2,b/2]).
 
 metarules(s/2,[chain]).
-%metarules(s/2,[chain,trichain]).
 
 % For Poker
-unlabelled_example(s/2,s([a,a,a,b,b,b],[])).
+initial_example(s/2,s([a,a,a,b,b,b],[])).
 
 positive_example(s/2,E):-
 % Uncomment extra examples to experiment with different combinations
@@ -100,7 +95,6 @@ negative_example(s/2,E):-
 		 ,s([a,b,b],[])
 		 ]).
 :- endif.
-
 
 a([a|T],T).
 b([b|T],T).

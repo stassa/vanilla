@@ -73,7 +73,7 @@ list_encapsulated_problem(Ts):-
 	poker_configuration:listing_limit(L)
 	,experiment_data(Ts,Pos,BK,MS)
 	,encapsulated_problem(Pos,[],BK,MS,[Pos_,_Neg,_BK_,MS_])
-	,format_underlined('Unlabelled examples')
+	,format_underlined('Initial examples')
 	,print_limited(L,Pos_)
 	,nl
 	,format_underlined('Background knowledge (First Order)')
@@ -188,7 +188,7 @@ list_mil_problem(T):-
 %
 list_mil_problem(Pos,BK,MS):-
 	poker_configuration:listing_limit(L)
-	,format_underlined('Unlabelled examples')
+	,format_underlined('Initial examples')
 	,print_limited(L,Pos)
 	,nl
 	,format_underlined('Background knowledge (First Order)')
@@ -288,15 +288,10 @@ prettify_vars(Vs,T,Ps):-
 %
 %	List statistics of the MIL problem for Target.
 %
-%	Currently this only lists the numbers of positive and negative
-%	examples, background definitions and metarules in the initial
-%	MIL problem for Target (i.e. before any automatic modifications
-%	such as metarule extension).
-%
 list_problem_statistics(T):-
 	experiment_data(T,Pos,BK,MS)
 	,maplist(length,[Pos,BK,MS],[I,K,N])
-	,format('Unlabelled examples:  ~w~n', [I])
+	,format('Initial examples:  ~w~n', [I])
 	,format('Background knowledge: ~w ~w~n', [K,BK])
 	,format('Metarules:            ~w ~w ~n', [N,MS]).
 
@@ -340,7 +335,7 @@ cleanup_experiment:-
 
 
 
-%!	experiment_data(+Targets,-Unlabelled,-BK,-Metarules) is det.
+%!	experiment_data(+Targets,-Initial,-BK,-Metarules) is det.
 %
 %	Collect experiment file data for one or more learning Targets.
 %
@@ -392,13 +387,15 @@ experiment_data(T,Es,BK,MS):-
 %
 %	Atoms is a list of atoms of all the learning Targets. These
 %	atoms can be used as examples to learn a hypothesis that can
-%	label them (i.e. assign truth values to them) accordingly.
+%	generate and label new atoms (i.e. assign truth values to them)
+%	depending on whether they are consistent with the initial
+%	examples.
 %
 example_atoms(M,Ts,Es):-
 % Ts is a list of learning targets.
 	is_list(Ts)
 	,!
-	,C =.. [unlabelled_example,T,Ep]
+	,C =.. [initial_example,T,Ep]
 	,findall(Ep
 		,(member(T,Ts)
 		 ,M:C
@@ -407,7 +404,7 @@ example_atoms(M,Ts,Es):-
 	,flatten(Es_,Es).
 example_atoms(M,T,Es):-
 % T is a single learning target.
-	C =.. [unlabelled_example,T,Ep]
+	C =.. [initial_example,T,Ep]
 	,findall(Ep
 		,(M:C
 		 )
