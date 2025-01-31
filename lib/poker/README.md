@@ -15,17 +15,17 @@ Poker](https://en.wikipedia.org/wiki/Wittgenstein%27s_Poker).
 Table of contents
 -----------------
 
-[How Poker works](#how-poker-works)
-[Example session with Poker](#example-session-with-poker)
-[Recursion and predicate invention](#recursion-and-predicate-invention)
-[Discovering new positive and negative examples](#discovering-new-positive-and-negative-examples)
-[Learning demonstration](#learning-demonstration)
-[Generating new examples](#generating-new-examples)
-[Avoiding infinite lists](#avoiding-infinite-lists)
-[Learning session](#learning-session)
-[Further discussion](#further-discussion)
-[Learning Parity](#learning-parity)
-[A more strict experiment](#a-more-strict-experiment)
+[How Poker works](#how-poker-works)  
+[Example session with Poker](#example-session-with-poker)  
+[Recursion and predicate invention](#recursion-and-predicate-invention)  
+[Discovering new positive and negative examples](#discovering-new-positive-and-negative-examples)  
+[Learning demonstration](#learning-demonstration)  
+[Generating new examples](#generating-new-examples)  
+[Avoiding infinite lists](#avoiding-infinite-lists)  
+[Learning session](#learning-session)  
+[Further discussion](#further-discussion)  
+[Learning Parity](#learning-parity)  
+[A more strict experiment](#a-more-strict-experiment)  
 
 How Poker works
 ---------------
