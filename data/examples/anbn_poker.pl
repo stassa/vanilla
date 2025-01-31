@@ -13,11 +13,14 @@
 
 /** <module> Learn an a^nb^n CFG with Poker.
 
+Copy of data/examples/anbn.pl with added Poker predicates
+(initial_example/2).
+
 */
 
+% Constraints to avoid unnecessary left-recursions.
 configuration:metarule_constraints(m(identity,P0,P1),fail):-
         P0 == P1.
-
 configuration:metarule_constraints(m(chain,P0,P1,_P2),fail):-
         P0 == P1.
 configuration:metarule_constraints(m(chain,_P0,P1,P2),fail):-
@@ -69,9 +72,9 @@ metarules(s/2,[chain]).
 % For Poker
 initial_example(s/2,s([a,a,a,b,b,b],[])).
 
+% For Metagol, Simpleton and Louise.
 positive_example(s/2,E):-
-% Uncomment extra examples to experiment with different combinations
-% thereof.
+% Uncomment extra examples to experiment with more or less general ones.
 	member(E, [%s([a,b],[])
 		  %,s([a,a,b,b],[])
 		  s([a,a,a,b,b,b],[])
@@ -81,18 +84,20 @@ positive_example(s/2,E):-
 		  ]).
 
 :- if(configuration:learner(metagol,_)).
-% On the upside (see conditional compilation block) Metagol needs no
-% negative examples to learn a correct hypothesis. This is thanks to the
-% stronger inductive bias provided by order constraints.
+% Metagol needs no negative examples to learn a correct hypothesis.
+% This is thanks to the stronger inductive bias provided by order
+% constraints.
 negative_example(s/2,_E):- fail.
 :- else.
-% Simpleton and Louise both need negative constraints otherwise they
+% Simpleton and Louise both need negative examples otherwise they
 % construct over-general hypotheses.
 negative_example(s/2,E):-
 	member(E,[s([a,a],[])
 		 ,s([b,b],[])
 		 ,s([a,a,b],[])
 		 ,s([a,b,b],[])
+		 ,s([a,a,a,a],[])
+		 ,s([b,b,b,b],[])
 		 ]).
 :- endif.
 

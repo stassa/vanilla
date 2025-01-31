@@ -27,9 +27,9 @@ metagol_configuration:order_constraints(chain_s,[P,Q,R],[_X,_Y,_Z],[P>Q,P>R],[])
 % clauses are instances of Chain and we can only apply one set of order
 % constraints to Chain.
 %
-% That's not a problem with Poker or Louise thanks to tabling and in
-% fact may stop them from constructing some correct hypotheses, so this
-% is only applied when learner/2 is set to load Metagol.
+% That's not a problem with Simpleton, Poker or Louise thanks to tabling
+% and in fact may stop them from constructing some correct hypotheses,
+% so this is only applied when learner/2 is set to load Metagol.
 %
 configuration:metarule_constraints(m(_ID,P,Q,_R)/_U,fail):-
 	P == s
@@ -57,17 +57,17 @@ positive_example(s/2,E):-
 % stronger inductive bias provided by order constraints.
 negative_example(s/2,_E):- fail.
 :- else.
-% Poker and Louise both need negative constraints otherwise they
+% Simpleton and Louise both need negative constraints otherwise they
 % construct over-general hypotheses.
 negative_example(s/2,E):-
 	member(E,[s([a,a],[])
 		 ,s([b,b],[])
 		 ,s([a,a,b],[])
 		 ,s([a,b,b],[])
+		 ,s([a,a,a,a],[])
+		 ,s([b,b,b,b],[])
 		 ]).
 :- endif.
 
-
 a([a|T],T).
 b([b|T],T).
-
