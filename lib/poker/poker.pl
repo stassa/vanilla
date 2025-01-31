@@ -217,12 +217,15 @@ top_program(_As,_BK,_MS,[],[],[]):-
 %
 label(Ep,MS,K,Pos,Neg,Ps):-
         poker_configuration:unlabelled_examples(N)
-        ,debug_clauses(label,'Initial Example:',[Ep])
-	,generalise(Ep,MS,Subs)
-        ,debug_length(label,'Constructed ~w initial clauses.',Subs)
+        ,debug_clauses(label,'Initial Examples:',Ep)
+	,generalise(Ep,MS,Subs_)
+	,respecialise(Subs_,Ep,MS,Subs)
+        ,debug_length(label,'Constructed ~w initial sub-hypotheses.',Subs)
         ,debug_clauses(label_full,'Initial hypothesis:',Subs)
         ,generate(N,Ep,K,MS,Subs,As)
-        ,label(Ep,As,MS,K,Subs,Pos,[],Neg,Ps).
+        ,label(Ep,As,MS,K,Subs,Pos,[],Neg,Ps)
+        ,debug_length(label,'Kept ~w final sub-hypotheses.',Ps)
+        ,debug_clauses(label_full,'Final hypothesis:',Ps).
 
 
 %!	generate(+N,+Atoms,+Limit,+MS,+Sig,+Subs,-Neg) is det.
@@ -356,13 +359,12 @@ label(Pos,[En|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
         debug_clauses(label_more,'Specialising hypothesis:',Subs)
 	,debug(label_more,'With negative example: ~w',[En])
 	,specialise(Subs,MS,[En],Subs_S)
-	,respecialise(Subs_S,Pos,MS,Subs_R)
-        ,debug_clauses(label_more,'Specialised hypothesis:',Subs_R)
+        ,debug_clauses(label_more,'Specialised hypothesis:',Subs_S)
         ,debug_clauses(prove_all,'Re-proving positive examples:',Pos)
-        ,prove_all(Pos,K,MS,[],Subs_R)
+        ,prove_all(Pos,K,MS,[],Subs_S)
         ,!
         ,debug(label_more,'Keeping negative example: ~w',[En])
-        ,label(Pos,Neg,MS,K,Subs_R,Pos_Bind,[En|Neg_Acc],Neg_Bind,Ps).
+        ,label(Pos,Neg,MS,K,Subs_S,Pos_Bind,[En|Neg_Acc],Neg_Bind,Ps).
 label(Pos,[:-Ep|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
         debug_clauses(label_more,'Keeping hypothesis:',Subs)
         ,debug(label_more,'Keeping as positive example: ~w',[Ep])
@@ -475,9 +477,9 @@ generalise(Pos,MS,Ss_Pos):-
 		 ,debug_clauses(generalise,'Passed metasub constraints:',[Subs])
 		 )
 		,Ss_Pos_)
-	,debug_length(sort,'Derived ~w sub-hypotheses (unsorted)',Ss_Pos_)
+	,debug_length(generalise_c,'Derived ~w sub-hypotheses (unsorted)',Ss_Pos_)
 	,once( skolem_sort(Ss_Pos_,Ss_Pos_s) )
-	,debug_length(sort,'Derived ~w sub-hypotheses (sorted)',Ss_Pos_s)
+	,debug_length(generalise_c,'Derived ~w sub-hypotheses (sorted)',Ss_Pos_s)
 	,rename_all_invented(Ss_Pos_s,Ss_Pos).
 
 
@@ -538,7 +540,7 @@ respecialise(Ss_Neg,[E0|Pos],MS,Ss_Neg_):-
 	poker_configuration:respecialise(true)
 	,poker_configuration:clause_limit(K)
 	,signature(E0,Ss)
-	,debug_length(respecialise,'Respecialising ~w sub-hypotheses',Ss_Neg)
+	,debug_length(respecialise_c,'Respecialising ~w sub-hypotheses',Ss_Neg)
 	,S = setup_negatives(Fs,T,U)
 	,G = findall(Subs
 		    ,(member(Subs, Ss_Neg)
@@ -557,7 +559,7 @@ respecialise(Ss_Neg,[E0|Pos],MS,Ss_Neg_):-
 		    ,Ss_Neg_)
 	,C = cleanup_negatives(Fs,T,U)
 	,setup_call_cleanup(S,G,C)
-	,debug_length(respecialise,'Kept ~w sub-hypotheses',Ss_Neg_).
+	,debug_length(respecialise_c,'Kept ~w sub-hypotheses',Ss_Neg_).
 
 
 
@@ -569,6 +571,7 @@ respecialise(Ss_Neg,[E0|Pos],MS,Ss_Neg_):-
 %	Limit is the clause limit specified in the configuration option
 %	clause_limit/1.
 %
+%/*
 metasubstitutions(:-En,K,MS,Subs):-
 	 !
 	,signature(En,Ss)
@@ -592,6 +595,34 @@ metasubstitutions(Ep,K,MS,Subs):-
 		 ,metasub_metarule(Sub,MS,M)
 		 )
 		,Subs).
+%*/
+/*
+metasubstitutions(:-En,K,MS,Subs):-
+	 !
+	,signature(En,Ss)
+	,debug(signature,'Signature: ~w',[Ss])
+	,S = setup_negatives(Fs,T,U)
+	,G = prove(En,K,MS,Ss,Subs,Subs)
+	,C = cleanup_negatives(Fs,T,U)
+	,setup_call_cleanup(S,G,C)
+	,debug(metasubstitutions,'Proved Example: ~w',[:-En])
+	,debug_clauses(metasubstitutions,'With Metasubs:',[Subs]).
+metasubstitutions(Ep,K,MS,Subs):-
+	signature(Ep,Ss)
+	,debug(signature,'Signature: ~w',[Ss])
+	% TODO: add option to enforce.
+	,length(Subs_,K)
+        ,vanilla:prove(Ep,K,MS,Ss,[],Subs_)
+	,debug(metasubstitutions,'Proved Example: ~w',[Ep])
+	,debug_length(metasubstitutions_c,'Proved ~w Metasubs:',Subs_)
+	,sort(Subs_,Subs_s)
+	,debug_clauses(metasubstitutions,'Proved Metasubs:',[Subs_s])
+	,findall(Sub-M
+		,(member(Sub,Subs_s)
+		 ,metasub_metarule(Sub,MS,M)
+		 )
+		,Subs).
+*/
 
 
 %!	setup_negatives(-Fetch,-Table,-Untable) is det.
