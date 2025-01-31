@@ -11,6 +11,8 @@
 :-use_module(project_root(configuration),[]).
 :-use_module(lib(poker/poker_configuration),[]).
 
+:-use_module(data(examples/test_harness)).
+
 /** <poker> Learn even parity by inventing odd parity with Poker.
 
 */
@@ -46,6 +48,18 @@ background_knowledge(q0/2,[zero/2
 
 metarules(q0/2,[identity,chain]).
 
+
+% Uncomment when running with test harness.
+%initial_example(q0/2,_E):- fail.
+
+% To train with random examples without the test harness.
+%initial_example(q0/2,E):-
+%	generate_initial(even,25,0,10,Es)
+%        ,member(E,Es)
+%        %,E \= q0([],[])
+%        ,debug(generated_examples,'You are here: ~w',[E]).
+
+% Hand-picked examples.
 initial_example(q0/2,E):-
 	positive_example(q0/2,E).
 
