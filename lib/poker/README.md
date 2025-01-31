@@ -12,6 +12,21 @@ it goes.
 Poker is named not after the card game but after [Wittgenstein's
 Poker](https://en.wikipedia.org/wiki/Wittgenstein%27s_Poker).
 
+Table of contents
+-----------------
+
+[How Poker works](#how-poker-works)
+[Example session with Poker](#example-session-with-poker)
+[Recursion and predicate invention](#recursion-and-predicate-invention)
+[Discovering new positive and negative examples](#discovering-new-positive-and-negative-examples)
+[Learning demonstration](#learning-demonstration)
+[Generating new examples](#generating-new-examples)
+[Avoiding infinite lists](#avoiding-infinite-lists)
+[Learning session](#learning-session)
+[Further discussion](#further-discussion)
+[Learning Parity](#learning-parity)
+[A more strict experiment](#a-more-strict-experiment)
+
 How Poker works
 ---------------
 
@@ -559,7 +574,7 @@ learning can now be revealed: the more specific an example, the more specific
 the hypotheses that can be learned. Let's see what happens if we learn with
 `aabb` as an example:
 
-```Poker
+```Prolog
 ?- time( poker:learn(s([a,a,b,b],[]),_Pos,_Neg,_Ps) ), auxiliaries:print_clauses(_Ps).
 % 1,795,372 inferences, 0.453 CPU in 0.742 seconds (61% CPU, 3962200 Lips)
 s(A,B):-inv_1_3(A,C),b(C,B).
@@ -573,7 +588,7 @@ true.
 Oh, er. Nothing changes. Well, that's interesting, isn't it? How about a more
 specific, i.e longer, example?
 
-```Poker
+```Prolog
 ?- time( poker:learn(s([a,a,a,a,b,b,b,b],[]),_Pos,_Neg,_Ps) ), auxiliaries:print_clauses(_Ps).
 % 3,788,623 inferences, 3.047 CPU in 4.877 seconds (62% CPU, 1243445 Lips)
 s(A,B):-inv_1_5(A,C),b(C,B).
@@ -587,7 +602,7 @@ true.
 Darn. That one works too. But I thought. OK, how about we try with more than one
 example? Surely that will cause over-generalisation?
 
-```Poker
+```Prolog
 ?- time( poker:learn([s([a,a,b,b],[]),s([a,a,a,b,b,b],[]),s([a,a,a,a,b,b,b,b],[])],_Pos,_Neg,_Ps) ), auxiliaries:print_clauses(_Ps).
 % 8,059,285 inferences, 18.500 CPU in 29.910 seconds (62% CPU, 435637 Lips)
 s([a,a,b,b],[]).
@@ -626,7 +641,7 @@ true.
 
 Ugh, what's this horror? Let's make that a little more clear:
 
-```Poker
+```Prolog
 ?- poker_configuration:reduction(R).
 R = subhypotheses.
 
@@ -683,7 +698,7 @@ learn here is over-general because many of its sub-hypotheses are
 _over-specialised_. We can avoid this if we set the configuration option
 `respecialise/1` to "true".  Like this:
 
-```Poker
+```Prolog
 ?- poker_configuration:respecialise(R).
 R = true.
 
@@ -755,7 +770,7 @@ feature is that each string has an even number of `1`s.
 Poker cannot learn this language from a single example! We start by
 demonstrating this:
 
-```Poker
+```Prolog
 % Ye olde magickal configuration options; use these to reproduce the experiment
 ?- configuration:(fetch_clauses(Fetch), table_meta_interpreter(Table), untable_meta_interpreter(Untable)), poker_configuration:(clause_limit(Limit), max_invented(Invented), gestalt(Gestalt), respecialise(Respecialise), unlabelled_examples(Unlabelled), unlabelled_examples_order(Order), reduction(Reduction)).
 Fetch = [builtins,bk,metarules],
@@ -857,7 +872,7 @@ If we load the hypothesis above into memory we can test the grammar learned by
 Poker, which then reveals itself to be "the set of strings of alternating `1`'s
 and `0`'s that end in `100`:
 
-```Poker
+```Prolog
 ?- between(1,10,_K), length(Xs,_K), parity:q0(Xs,[]).
 Xs = [1,0,0] ;
 Xs = [1,0,1,0,0] ;
@@ -870,7 +885,7 @@ This hypothesis is, indeed, consistent with our initial example and it is
 impossible to distinguish it from our intended interpretation of that example,
 just by looking at that example alone. We're gonna need more examples.
 
-```Poker
+```Prolog
 % Magickal hyperparameters.
 ?- configuration:(fetch_clauses(Fetch), table_meta_interpreter(Table), untable_meta_interpreter(Untable)), poker_configuration:(clause_limit(Limit), max_invented(Invented), gestalt(Gestalt), respecialise(Respecialise), unlabelled_examples(Unlabelled), unlabelled_examples_order(Order), reduction(Reduction)).
 Fetch = [builtins,bk,metarules],
@@ -981,7 +996,7 @@ true.
 
 Let's look at the hypothesis learned by Poker this time:
 
-```Poker
+```Prolog
 q0(A,B):-empty(A,B).
 q0(A,B):-zero(A,C),q0(C,B).
 q0(A,B):-one(A,C),inv_1(C,B).
