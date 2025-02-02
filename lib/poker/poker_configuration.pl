@@ -8,6 +8,7 @@
                               ,resolutions/1
                               ,respecialise/1
                               ,safe_example/1
+                              ,strict_clause_limit/1
                               ,tautology/1
                               ,unlabelled_examples/1
                               ,unlabelled_examples_order/1
@@ -225,6 +226,21 @@ respecialise(true).
 %
 :-dynamic safe_example/1.
 :-multifile safe_example/1.
+
+
+%!      strict_clause_limit(?Bool) is semidet.
+%
+%       Whether clause_limit/1 is an exact value or an upper bound.
+%
+%       When Bool is true sub-hypotheses in the Top Program will all
+%       have exactly the number of clauses defined in clause_limit/1.
+%
+%       When Bool is false, sub-hypotheses in the Top Program will all
+%       have a number of clauses from 1 to the number defined lin
+%       clause_limit/1.
+%
+strict_clause_limit(false).
+%strict_clause_limit(true).
 
 
 %!      tautology(+Clause) is det.

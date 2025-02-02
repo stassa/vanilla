@@ -571,7 +571,6 @@ respecialise(Ss_Neg,[E0|Pos],MS,Ss_Neg_):-
 %	Limit is the clause limit specified in the configuration option
 %	clause_limit/1.
 %
-%/*
 metasubstitutions(:-En,K,MS,Subs):-
 	 !
 	,signature(En,Ss)
@@ -583,36 +582,10 @@ metasubstitutions(:-En,K,MS,Subs):-
 	,debug(metasubstitutions,'Proved Example: ~w',[:-En])
 	,debug_clauses(metasubstitutions,'With Metasubs:',[Subs]).
 metasubstitutions(Ep,K,MS,Subs):-
-	signature(Ep,Ss)
+	poker_configuration:strict_clause_limit(S)
+	,signature(Ep,Ss)
 	,debug(signature,'Signature: ~w',[Ss])
-        ,vanilla:prove(Ep,K,MS,Ss,[],Subs_)
-	,debug(metasubstitutions,'Proved Example: ~w',[Ep])
-	,Subs_ \= []
-	,sort(Subs_,Subs_s)
-	,debug_clauses(metasubstitutions,'Proved Metasubs:',[Subs_s])
-	,findall(Sub-M
-		,(member(Sub,Subs_s)
-		 ,metasub_metarule(Sub,MS,M)
-		 )
-		,Subs).
-%*/
-/*
-metasubstitutions(:-En,K,MS,Subs):-
-	 !
-	,signature(En,Ss)
-	,debug(signature,'Signature: ~w',[Ss])
-	,S = setup_negatives(Fs,T,U)
-	,G = prove(En,K,MS,Ss,Subs,Subs)
-	,C = cleanup_negatives(Fs,T,U)
-	,setup_call_cleanup(S,G,C)
-	,debug(metasubstitutions,'Proved Example: ~w',[:-En])
-	,debug_clauses(metasubstitutions,'With Metasubs:',[Subs]).
-metasubstitutions(Ep,K,MS,Subs):-
-	signature(Ep,Ss)
-	,debug(signature,'Signature: ~w',[Ss])
-	% TODO: add option to enforce.
-	,length(Subs_,K)
-        ,vanilla:prove(Ep,K,MS,Ss,[],Subs_)
+        ,prove_with_clause_limit(S,Ep,K,MS,Ss,Subs_)
 	,debug(metasubstitutions,'Proved Example: ~w',[Ep])
 	,debug_length(metasubstitutions_c,'Proved ~w Metasubs:',Subs_)
 	,sort(Subs_,Subs_s)
@@ -622,7 +595,6 @@ metasubstitutions(Ep,K,MS,Subs):-
 		 ,metasub_metarule(Sub,MS,M)
 		 )
 		,Subs).
-*/
 
 
 %!	setup_negatives(-Fetch,-Table,-Untable) is det.
@@ -694,6 +666,35 @@ signature(L,[T|Ss]):-
                 ,invented_symbol(N,S)
                 ,Ss)
         ,L =.. [E,T|_].
+
+
+%!	prove_with_clause_limit(+Strict,+Ep,+Limit,+MS,+Sig,-Subs) is
+%!	nondet.
+%
+%	Prove an example with a limit on the size of a hypothesis.
+%
+%	Wrapper around prove/7 to call it according to the value of
+%	strict_clause_limit/1.
+%
+%	Strict is a boolean that determines whether the clause limit in
+%	Limit is to be treatred as an exact size or an upper bound.
+%	Strict inherits its value from the poker configuration option
+%	strict_clause_limit/1.
+%
+%	Limit is an integer, either an exact length of Subs or an upper
+%	bound, depending on Strict.
+%
+%	Ep is a positive example, MS is a set of metarules and Sig is
+%	the program signature, as returned by signature/1. Ep MS and Sig
+%	are passed to prove/7.
+%
+%	Subs is a list of metasubstitutions derived by prove/7 from Ep.
+%
+prove_with_clause_limit(true,Ep,K,MS,Ss,Subs):-
+	length(Subs,K)
+        ,vanilla:prove(Ep,K,MS,Ss,[],Subs).
+prove_with_clause_limit(false,Ep,K,MS,Ss,Subs):-
+	vanilla:prove(Ep,K,MS,Ss,[],Subs).
 
 
 %!	rename_all_invented(+Metasubs,-Renamed) is det.
