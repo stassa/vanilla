@@ -37,25 +37,6 @@ returned at the end.
 
 */
 
-% For development only.
-%:-nodebug(_).
-%:-debug(learn).
-%:-debug(top_program).
-%:-debug(reduction).
-%:-debug(label).
-%:-debug(label_full).
-%:-debug(generate).
-%:-debug(generate_full).
-%:-debug(label_more).
-%:-debug(prove_all).
-%:-debug(examples).
-%:-debug(generalise).
-%:-debug(sort).
-%:-debug(specialise).
-%:-debug(respecialise).
-%:-debug(metasubstitutions).
-%:-debug(signature).
-
 
 %!	learn(+Targets) is det.
 %
@@ -255,7 +236,8 @@ label(Ep,MS,K,Pos,Neg,Ps):-
 %	abuse this mechanism to generate specific examples.
 %
 generate(N,[Ep|Pos],K,MS,Subs,Neg):-
-	poker_configuration:unlabelled_examples_order(O)
+	debug(generate,'Generating new atoms...',[])
+	,poker_configuration:unlabelled_examples_order(O)
 	,S = setup_negatives(Fs,T,U)
 	,(   poker_configuration:safe_example(_)
 	 ->  G = generate(list_safe,N,[Ep|Pos],K,MS,Subs,Neg_)
@@ -352,23 +334,25 @@ generate(atomic,N,[Ep|Pos],K,MS,Subs,Neg_s):-
 %	negative examples in Neg.
 %
 label(Pos,[],_MS,_K,Ps,Pos,Neg,Neg,Ps):-
-        debug_clauses(label_more,'Final hypothesis:',Ps)
-        ,debug_clauses(label_more,'Positive examples:',Pos)
-        ,debug_clauses(label_more,'Negative examples:',Neg)
+        debug_clauses(label_results,'Final hypothesis:',Ps)
+        ,debug_clauses(label_results,'Positive examples:',Pos)
+        ,debug_clauses(label_results,'Negative examples:',Neg)
 	,!.
 label(Pos,[En|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
-        debug_clauses(label_more,'Specialising hypothesis:',Subs)
-	,debug(label_more,'With negative example: ~w',[En])
+        debug_length(label,'Specialising ~w sub-hypotheses.',Subs)
+	,debug_clauses(label_full,'Specialising hypothesis:',Subs)
+	,debug(label,'With negative example: ~w',[En])
 	,specialise(Subs,MS,[En],Subs_S)
-        ,debug_clauses(label_more,'Specialised hypothesis:',Subs_S)
-        ,debug_clauses(prove_all,'Re-proving positive examples:',Pos)
+        ,debug_clauses(label_full,'Specialised hypothesis:',Subs_S)
+        %,debug_clauses(label,'Re-proving positive examples:',Pos)
         ,prove_all(Pos,K,MS,[],Subs_S)
         ,!
-        ,debug(label_more,'Keeping negative example: ~w',[En])
+        ,debug(label,'Keeping negative example: ~w',[En])
         ,label(Pos,Neg,MS,K,Subs_S,Pos_Bind,[En|Neg_Acc],Neg_Bind,Ps).
 label(Pos,[:-Ep|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
-        debug_clauses(label_more,'Keeping hypothesis:',Subs)
-        ,debug(label_more,'Keeping as positive example: ~w',[Ep])
+        debug_clauses(label_full,'Keeping hypothesis:',Subs)
+        ,debug_length(label,'Keeping ~w sub-hypotheses:',Subs)
+        ,debug(label,'Keeping as positive example: ~w',[Ep])
 	,label([Ep|Pos],Neg,MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps).
 
 
@@ -415,12 +399,13 @@ prove_all(Pos,K,MS,Ss,Subs):-
 */
 %/*
 prove_all(Pos,K,MS,Ss,Subs):-
-	S = setup_negatives(Fs,T,U)
+	debug_clauses(prove_all,'Re-proving positive examples:',Pos)
+	,S = setup_negatives(Fs,T,U)
 	,G = forall(member(Sub,Subs)
 		   ,(setof(Sub_
 			  ,M^Sub^member(Sub_-M,Sub)
 			  ,Subs_)
-		    ,debug_clauses(prove_all,'With current metasubs: ',Subs_)
+		    ,debug_clauses(prove_all_full,'With current metasubs: ',Subs_)
 		    ,forall(member(Ep,Pos)
 			   ,prove(Ep,K,MS,Ss,Subs_,Subs_)
 			   )
@@ -464,23 +449,23 @@ prove_all(Pos,K,MS,Ss,Subs):-
 %	metasubstitutions and metarules returned by generalise/3.
 %
 generalise(Pos,MS,Ss_Pos):-
-% Hands proofs to Vanilla inductive meta-interpreter.
-	poker_configuration:clause_limit(K)
+	debug(generalise,'Generalising positive examples',[])
+	,poker_configuration:clause_limit(K)
 	% Used to name invented predicates apart in rename_invented/3.
 	,reset_gensym('_')
 	,findall(Subs
 		,(member(Ep,Pos)
-		 ,debug_clauses(examples,'Positive example:',Ep)
+		 ,debug(examples,'Positive example: ~w',[Ep])
 		 ,metasubstitutions(Ep,K,MS,Subs)
 		 ,forall(member(Sub-_M,Subs)
 			,constraints(Sub)
 			)
-		 ,debug_clauses(generalise,'Passed metasub constraints:',[Subs])
+		 ,debug_clauses(generalise_full,'Passed metasub constraints:',[Subs])
 		 )
 		,Ss_Pos_)
-	,debug_length(generalise_c,'Derived ~w sub-hypotheses (unsorted)',Ss_Pos_)
+	,debug_length(generalise,'Derived ~w sub-hypotheses (unsorted)',Ss_Pos_)
 	,once( skolem_sort(Ss_Pos_,Ss_Pos_s) )
-	,debug_length(generalise_c,'Derived ~w sub-hypotheses (sorted)',Ss_Pos_s)
+	,debug_length(generalise,'Derived ~w sub-hypotheses (sorted)',Ss_Pos_s)
 	,rename_all_invented(Ss_Pos_s,Ss_Pos).
 
 
@@ -500,17 +485,18 @@ specialise(Ss_Pos,_MS,[],Ss_Pos):-
 	!
        ,debug(examples,'No negative examples. Ca\t specialise',[]).
 specialise(Ss_Pos,MS,Neg,Ss_Neg):-
-	poker_configuration:clause_limit(K)
+	debug_length(generalise,'Generalising ~w negative examples',Neg)
+	,poker_configuration:clause_limit(K)
 	,findall(Subs
 	       ,(member(Subs,Ss_Pos)
 		,findall(Sub
 			,member(Sub-_M,Subs)
 			,Subs_)
-		,debug_clauses(specialise,'Ground metasubstitutions:',[Subs_])
+		,debug_clauses(specialise_full,'Ground metasubstitutions:',[Subs_])
 		,\+((member(En,Neg)
-		    ,debug_clauses(examples,'Negative example:',En)
+		    ,debug(examples,'Negative example: ~w',[En])
 		    ,once(metasubstitutions(En,K,MS,Subs_))
-		    ,debug_clauses(examples,'Proved negative example:',En)
+		    ,debug(examples,'Proved negative example: ~w',[En])
 		    )
 		   )
 		)
@@ -539,26 +525,26 @@ respecialise(Ss_Neg,[E0|Pos],MS,Ss_Neg_):-
 	poker_configuration:respecialise(true)
 	,poker_configuration:clause_limit(K)
 	,signature(E0,Ss)
-	,debug_length(respecialise_c,'Respecialising ~w sub-hypotheses',Ss_Neg)
+	,debug_length(respecialise,'Respecialising ~w sub-hypotheses',Ss_Neg)
 	,S = setup_negatives(Fs,T,U)
 	,G = findall(Subs
 		    ,(member(Subs, Ss_Neg)
 		     ,findall(Sub
 			     ,member(Sub-_M,Subs)
 			     ,Subs_)
-		     ,debug_clauses(respecialise,'Ground metasubstitutions:',Subs_)
+		     ,debug_clauses(respecialise_full,'Ground metasubstitutions:',Subs_)
 		     ,forall(member(Ep,[E0|Pos])
-			    ,(debug_clauses(examples,'Positive example:',Ep)
+			    ,(debug(examples,'Positive example: ~w',[Ep])
 			     ,vanilla:prove(Ep,K,MS,Ss,Subs_,Subs_)
-			     ,debug_clauses(examples,'Proved positive example:',Ep)
+			     ,debug(examples,'Proved positive example: ~w',[Ep])
 			     )
 			    )
-		     ,debug_clauses(respecialise,'Proved metasubstitutions:',Subs_)
+		     ,debug_clauses(respecialise_full,'Proved metasubstitutions:',Subs_)
 		     )
 		    ,Ss_Neg_)
 	,C = cleanup_negatives(Fs,T,U)
 	,setup_call_cleanup(S,G,C)
-	,debug_length(respecialise_c,'Kept ~w sub-hypotheses',Ss_Neg_).
+	,debug_length(respecialise,'Kept ~w sub-hypotheses',Ss_Neg_).
 
 
 
@@ -579,7 +565,7 @@ metasubstitutions(:-En,K,MS,Subs):-
 	,C = cleanup_negatives(Fs,T,U)
 	,setup_call_cleanup(S,G,C)
 	,debug(metasubstitutions,'Proved Example: ~w',[:-En])
-	,debug_clauses(metasubstitutions,'With Metasubs:',[Subs]).
+	,debug_clauses(metasubstitutions_full,'With Metasubs:',[Subs]).
 metasubstitutions(Ep,K,MS,Subs):-
 	poker_configuration:strict_clause_limit(S)
 	,poker_configuration:proof_samples(P)
@@ -588,9 +574,9 @@ metasubstitutions(Ep,K,MS,Subs):-
         ,G = prove_with_clause_limit(S,Ep,K,MS,Ss,Subs_)
 	,goal_sample(P,poker,G,_)
 	,debug(metasubstitutions,'Proved Example: ~w',[Ep])
-	,debug_length(metasubstitutions_c,'Proved ~w Metasubs:',Subs_)
+	,debug_length(metasubstitutions,'Derived ~w Metasubs.',Subs_)
 	,sort(Subs_,Subs_s)
-	,debug_clauses(metasubstitutions,'Proved Metasubs:',[Subs_s])
+	,debug_clauses(metasubstitutions_full,'Proved Metasubs:',[Subs_s])
 	,findall(Sub-M
 		,(member(Sub,Subs_s)
 		 ,metasub_metarule(Sub,MS,M)
