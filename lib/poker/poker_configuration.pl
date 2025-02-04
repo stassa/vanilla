@@ -3,6 +3,7 @@
                               ,gestalt/1
                               ,listing_limit/1
                               ,max_invented/1
+                              ,proof_samples/1
                               ,recursive_reduction/1
                               ,reduction/1
                               ,resolutions/1
@@ -133,6 +134,25 @@ listing_limit(10).
 %	Assumes clause_limit(K) where K > 1.
 %
 max_invented(0).
+
+
+%!      proof_samples(?Sample) is semidet.
+%
+%       Proportion of proofs sampled from prove/7 results.
+%
+%       Sample is a number, either a float in [0.0,1.0], interpreted as
+%       a probability, or an integer in [0,100], interpreted as a
+%       percentile chance.
+%
+%       Sample determines the probability that each set of
+%       metasubstitutions derived by an inductive proof with prove/7
+%       will be added to the Top Program or not.
+%
+%       This option is meant to reduce the number of sub-hypotheses in
+%       the initial Top Program. This number can be very, very large
+%       and when it is, Poker can run out of RAM.
+%
+proof_samples(1.0).
 
 
 %!	recursive_reduction(?Bool) is semidet.

@@ -9,6 +9,7 @@
 :-use_module(lib(poker/poker_auxiliaries)).
 :-use_module(lib(poker/program_reduction/program_reduction)).
 :-use_module(lib(poker/poker_configuration)).
+:-use_module(lib(poker/sampling/sampling)).
 
 /** <module> Self-supervised Meta-Interpretive Learning.
 
@@ -483,7 +484,6 @@ generalise(Pos,MS,Ss_Pos):-
 	,rename_all_invented(Ss_Pos_s,Ss_Pos).
 
 
-
 %!	specialise(+Generalised,+Metarules,+Negatives,-Specialised) is
 %!	det.
 %
@@ -517,7 +517,6 @@ specialise(Ss_Pos,MS,Neg,Ss_Neg):-
 	       ,Ss_Neg).
 
 
-
 %!	respecialise(+Metasubs,+Pos,+MS,-Specialised) is det.
 %
 %	Strongly specialise the Top Program against positive examples.
@@ -549,9 +548,9 @@ respecialise(Ss_Neg,[E0|Pos],MS,Ss_Neg_):-
 			     ,Subs_)
 		     ,debug_clauses(respecialise,'Ground metasubstitutions:',Subs_)
 		     ,forall(member(Ep,[E0|Pos])
-			    ,(debug_clauses(respecialise,'Positive example:',Ep)
+			    ,(debug_clauses(examples,'Positive example:',Ep)
 			     ,vanilla:prove(Ep,K,MS,Ss,Subs_,Subs_)
-			     ,debug_clauses(respecialise,'Proved positive example:',Ep)
+			     ,debug_clauses(examples,'Proved positive example:',Ep)
 			     )
 			    )
 		     ,debug_clauses(respecialise,'Proved metasubstitutions:',Subs_)
@@ -583,9 +582,11 @@ metasubstitutions(:-En,K,MS,Subs):-
 	,debug_clauses(metasubstitutions,'With Metasubs:',[Subs]).
 metasubstitutions(Ep,K,MS,Subs):-
 	poker_configuration:strict_clause_limit(S)
+	,poker_configuration:proof_samples(P)
 	,signature(Ep,Ss)
 	,debug(signature,'Signature: ~w',[Ss])
-        ,prove_with_clause_limit(S,Ep,K,MS,Ss,Subs_)
+        ,G = prove_with_clause_limit(S,Ep,K,MS,Ss,Subs_)
+	,goal_sample(P,poker,G,_)
 	,debug(metasubstitutions,'Proved Example: ~w',[Ep])
 	,debug_length(metasubstitutions_c,'Proved ~w Metasubs:',Subs_)
 	,sort(Subs_,Subs_s)
