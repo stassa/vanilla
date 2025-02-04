@@ -210,213 +210,6 @@ label(Ep,MS,K,Pos,Neg,Ps):-
         ,debug_clauses(label_full,'Final hypothesis:',Ps).
 
 
-%!	generate(+N,+Atoms,+Limit,+MS,+Sig,+Subs,-Neg) is det.
-%
-%	Generate a set assumed negative examples of a target predicate.
-%
-%	N is the maximum number of Atoms to generate.
-%
-%	Atoms is a set of atoms assumed to be positive examples of a
-%	target predicate.
-%
-%	Limit is the value of the configuration option clause_limit/1.
-%
-%	MS is a set of second-order definite clauses.
-%
-%	Subs is a set of metasubstitutions, an initial hypothesis
-%	derived from Atoms.
-%
-%	Neg is a set of atoms of the same predicates as Atoms, initially
-%	assumed to be negative examples of those predicates.
-%
-%	If Atoms include arguments that are lists the generation can go
-%	infinite. In that case the user must define safe_example/1
-%	(dynamic and multifile in module experiment_file) to limit the
-%	length of generated list arguments. It's up to the user to not
-%	abuse this mechanism to generate specific examples.
-%
-generate(N,[Ep|Pos],K,MS,Subs,Neg):-
-	debug(generate,'Generating new atoms...',[])
-	,poker_configuration:unlabelled_examples_order(O)
-	,S = setup_negatives(Fs,T,U)
-	,(   poker_configuration:safe_example(_)
-	 ->  G = generate(list_safe,N,[Ep|Pos],K,MS,Subs,Neg_)
-	 ;   G = generate(atomic,N,[Ep|Pos],K,MS,Subs,Neg_)
-	 )
-	,C = cleanup_negatives(Fs,T,U)
-	,setup_call_cleanup(S,G,C)
-	,(   O == deterministic
-	 ->  Neg = Neg_
-	 ;   O == random
-	 ->  random_permutation(Neg_,Neg)
-	 )
-	,debug_length(generate,'Generated ~w new atoms.',Neg)
-	,debug_clauses(generate_full,'Generated new atoms:',Neg).
-
-
-%!	generate(+How,+N,+Atoms,+Limit,+MS,+Sig,+Subs,-Neg) is det.
-%
-%	Business end of generate/6.
-%
-%	Clauses are selected according to the value of How, which can be
-%	one of: [list_safe, atomic].
-%
-%	If How is "list_safe" it means there is a definition of
-%	safe_example/1 in the current experiment file. In that case,
-%	that definintion will be used to safely generate examples with
-%	list arguments, without generating infinite list arguments.
-%
-%	If How is "atomic" then there is no need to worry about list
-%	arguments or generating infinite lists and generation will not
-%	take safe_example/1 into account.
-%
-generate(list_safe,N,[Ep|Pos],K,MS,Subs,Neg_s):-
-        !
-	,flatten(Subs,Subs_f)
-        ,setof(Sub
-               ,M^Subs_f^member(Sub-M,Subs_f)
-               ,Subs_)
-        ,findall(:-En
-		,(G = ( poker_configuration:safe_example(En)
-		      ,prove(En,K,MS,[],Subs_,Subs_)
-		      )
-		 ,limit(N,G)
-		 ,\+ memberchk(En,[Ep|Pos])
-		 ,debug_clauses(generate_full,'Generated new atom:',:-En)
-		 )
-		,Neg)
-	,sort(Neg, Neg_s).
-generate(atomic,N,[Ep|Pos],K,MS,Subs,Neg_s):-
-        configuration:encapsulation_predicate(Enc)
-        ,Ep =.. [Enc,S|_Args0]
-        ,functor(Ep,F,A)
-        ,functor(En,F,A)
-        ,En =.. [Enc,S|_Args1]
-	,flatten(Subs,Subs_f)
-        ,setof(Sub
-               ,M^Subs_f^member(Sub-M,Subs_f)
-               ,Subs_)
-        ,findall(:-En
-		,(G = prove(En,K,MS,[],Subs_,Subs_)
-		 ,limit(N,G)
-		 ,\+ memberchk(En,[Ep|Pos])
-		 ,debug_clauses(generate_full,'Generated new atom:',:-En)
-		 )
-		,Neg)
-	,sort(Neg, Neg_s).
-
-
-%!	label(+Pos,+Neg,+MS,+K,+Prog,+Acc1,+Acc2,-Neg,-Ps) is det.
-%
-%	Business end of label/5
-%
-%	Pos is a set of assumed-positive examples of one or more target
-%	predicates.
-%
-%	Neg is a list of assumed-negative examples of one or more
-%	target predicates.
-%
-%	MS is a set of second-order definite clauses in the background
-%	theory.
-%
-%	K is the value of the configuration option clause_limit/1.
-%
-%	Prog is a hypothesis learned from the examples in Pos
-%	specialised by the examples in Neg, and used to derive more
-%	positive examples in Pos and negative examples in Neg.
-%
-%	Acc1 is the accumulator of positive examples derived during the
-%	execution of this predicate.
-%
-%	Acc2 is the accumulator of negative examples derived during etc.
-%
-%	Ps is the final hypothesis, specialised by the assumed
-%	negative examples in Neg.
-%
-label(Pos,[],_MS,_K,Ps,Pos,Neg,Neg,Ps):-
-        debug_clauses(label_results,'Final hypothesis:',Ps)
-        ,debug_clauses(label_results,'Positive examples:',Pos)
-        ,debug_clauses(label_results,'Negative examples:',Neg)
-	,!.
-label(Pos,[En|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
-        debug_length(label,'Specialising ~w sub-hypotheses.',Subs)
-	,debug_clauses(label_full,'Specialising hypothesis:',Subs)
-	,debug(label,'With negative example: ~w',[En])
-	,specialise(Subs,MS,[En],Subs_S)
-        ,debug_clauses(label_full,'Specialised hypothesis:',Subs_S)
-        %,debug_clauses(label,'Re-proving positive examples:',Pos)
-        ,prove_all(Pos,K,MS,[],Subs_S)
-        ,!
-        ,debug(label,'Keeping negative example: ~w',[En])
-        ,label(Pos,Neg,MS,K,Subs_S,Pos_Bind,[En|Neg_Acc],Neg_Bind,Ps).
-label(Pos,[:-Ep|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
-        debug_clauses(label_full,'Keeping hypothesis:',Subs)
-        ,debug_length(label,'Keeping ~w sub-hypotheses:',Subs)
-        ,debug(label,'Keeping as positive example: ~w',[Ep])
-	,label([Ep|Pos],Neg,MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps).
-
-
-%!	prover_all(+Pos,+K,+MS,+Sig,+Subs) is det.
-%
-%	Prove a set of atoms with a set of metasubstitutions.
-%
-%	Pos is a set of atoms assumed to be positive examples of a
-%	target predicate.
-%
-%	K is the value of the configuration option clause_limit/1.
-%
-%	MS is a set of second-order definite clauses.
-%
-%	Sig is the predicate signature of Atoms.
-%
-%	Subs is a set of metasubstitutions, an initial hypothesis
-%	derived from Atoms.
-%
-%	This predicate proves all of the atoms in Pos, with the
-%	metasubstitutions in Subs, and fails if it can't do that, Dave.
-%
-prove_all(_Pos,_K,_MS,_Ss,[]):-
-        debug(prove_all,'Empty hypothesis. Proof fails',[])
-	,!
-	,fail.
-/*
-% TODO: Need to figure out the differences of these two versions.
-prove_all(Pos,K,MS,Ss,Subs):-
-	% Maybe not? Maybe specialise each sybhypothesis separately
-	% And check also the positive examples?
-	flatten(Subs,Subs_f)
-	,setof(Sub
-	      ,M^Subs_f^member(Sub-M,Subs_f)
-	      ,Subs_)
-	,debug_clauses(prove_all,'With current metasubs: ',Subs_)
-	,S = setup_negatives(Fs,T,U)
-	,G = forall(member(Ep,Pos)
-		   ,prove(Ep,K,MS,Ss,Subs_,Subs_)
-		   )
-	,C = cleanup_negatives(Fs,T,U)
-	,setup_call_cleanup(S,G,C)
-	,debug(prove_all,'Proof succeeded',[]).
-*/
-%/*
-prove_all(Pos,K,MS,Ss,Subs):-
-	debug_clauses(prove_all,'Re-proving positive examples:',Pos)
-	,S = setup_negatives(Fs,T,U)
-	,G = forall(member(Sub,Subs)
-		   ,(setof(Sub_
-			  ,M^Sub^member(Sub_-M,Sub)
-			  ,Subs_)
-		    ,debug_clauses(prove_all_full,'With current metasubs: ',Subs_)
-		    ,forall(member(Ep,Pos)
-			   ,prove(Ep,K,MS,Ss,Subs_,Subs_)
-			   )
-		    )
-		   )
-	,C = cleanup_negatives(Fs,T,U)
-	,setup_call_cleanup(S,G,C)
-	,debug(prove_all,'Proof succeeded',[]).
-%*/
-
-
 %!	generalise(+Positive,+Metarules,-Generalised) is det.
 %
 %	Generalisation step of Top program construction.
@@ -469,40 +262,6 @@ generalise(Pos,MS,Ss_Pos):-
 	,rename_all_invented(Ss_Pos_s,Ss_Pos).
 
 
-%!	specialise(+Generalised,+Metarules,+Negatives,-Specialised) is
-%!	det.
-%
-%	Specialisation step of Top program construction.
-%
-%	Specialises a set of metasubstitutions generalising the positive
-%	examples against the Negative examples by discarding each
-%	metasubstitution that entails a negative example.
-%
-%	Unlike the original, one-clause TPC version this one specialises
-%	sub-hypotheses derived by generalise/3.
-%
-specialise(Ss_Pos,_MS,[],Ss_Pos):-
-	!
-       ,debug(examples,'No negative examples. Ca\t specialise',[]).
-specialise(Ss_Pos,MS,Neg,Ss_Neg):-
-	debug_length(generalise,'Generalising ~w negative examples',Neg)
-	,poker_configuration:clause_limit(K)
-	,findall(Subs
-	       ,(member(Subs,Ss_Pos)
-		,findall(Sub
-			,member(Sub-_M,Subs)
-			,Subs_)
-		,debug_clauses(specialise_full,'Ground metasubstitutions:',[Subs_])
-		,\+((member(En,Neg)
-		    ,debug(examples,'Negative example: ~w',[En])
-		    ,once(metasubstitutions(En,K,MS,Subs_))
-		    ,debug(examples,'Proved negative example: ~w',[En])
-		    )
-		   )
-		)
-	       ,Ss_Neg).
-
-
 %!	respecialise(+Metasubs,+Pos,+MS,-Specialised) is det.
 %
 %	Strongly specialise the Top Program against positive examples.
@@ -545,7 +304,6 @@ respecialise(Ss_Neg,[E0|Pos],MS,Ss_Neg_):-
 	,C = cleanup_negatives(Fs,T,U)
 	,setup_call_cleanup(S,G,C)
 	,debug_length(respecialise,'Kept ~w sub-hypotheses',Ss_Neg_).
-
 
 
 %!	metasubstitutions(+Example,+Limit,+Metarules,-Metasubstitutions)
@@ -878,6 +636,247 @@ metasub_metarule(Sub,MS,Sub_:-M):-
 	,length(As_,N)
 	,Sub_ =.. [E,Id|As_]
 	,free_member(Sub_:-M,MS).
+
+
+%!	generate(+N,+Atoms,+Limit,+MS,+Sig,+Subs,-Neg) is det.
+%
+%	Generate a set assumed negative examples of a target predicate.
+%
+%	N is the maximum number of Atoms to generate.
+%
+%	Atoms is a set of atoms assumed to be positive examples of a
+%	target predicate.
+%
+%	Limit is the value of the configuration option clause_limit/1.
+%
+%	MS is a set of second-order definite clauses.
+%
+%	Subs is a set of metasubstitutions, an initial hypothesis
+%	derived from Atoms.
+%
+%	Neg is a set of atoms of the same predicates as Atoms, initially
+%	assumed to be negative examples of those predicates.
+%
+%	If Atoms include arguments that are lists the generation can go
+%	infinite. In that case the user must define safe_example/1
+%	(dynamic and multifile in module experiment_file) to limit the
+%	length of generated list arguments. It's up to the user to not
+%	abuse this mechanism to generate specific examples.
+%
+generate(N,[Ep|Pos],K,MS,Subs,Neg):-
+	debug(generate,'Generating new atoms...',[])
+	,poker_configuration:unlabelled_examples_order(O)
+	,S = setup_negatives(Fs,T,U)
+	,(   poker_configuration:safe_example(_)
+	 ->  G = generate(list_safe,N,[Ep|Pos],K,MS,Subs,Neg_)
+	 ;   G = generate(atomic,N,[Ep|Pos],K,MS,Subs,Neg_)
+	 )
+	,C = cleanup_negatives(Fs,T,U)
+	,setup_call_cleanup(S,G,C)
+	,(   O == deterministic
+	 ->  Neg = Neg_
+	 ;   O == random
+	 ->  random_permutation(Neg_,Neg)
+	 )
+	,debug_length(generate,'Generated ~w new atoms.',Neg)
+	,debug_clauses(generate_full,'Generated new atoms:',Neg).
+
+
+%!	generate(+How,+N,+Atoms,+Limit,+MS,+Sig,+Subs,-Neg) is det.
+%
+%	Business end of generate/6.
+%
+%	Clauses are selected according to the value of How, which can be
+%	one of: [list_safe, atomic].
+%
+%	If How is "list_safe" it means there is a definition of
+%	safe_example/1 in the current experiment file. In that case,
+%	that definintion will be used to safely generate examples with
+%	list arguments, without generating infinite list arguments.
+%
+%	If How is "atomic" then there is no need to worry about list
+%	arguments or generating infinite lists and generation will not
+%	take safe_example/1 into account.
+%
+generate(list_safe,N,[Ep|Pos],K,MS,Subs,Neg_s):-
+        !
+	,flatten(Subs,Subs_f)
+        ,setof(Sub
+               ,M^Subs_f^member(Sub-M,Subs_f)
+               ,Subs_)
+        ,findall(:-En
+		,(G = ( poker_configuration:safe_example(En)
+		      ,prove(En,K,MS,[],Subs_,Subs_)
+		      )
+		 ,limit(N,G)
+		 ,\+ memberchk(En,[Ep|Pos])
+		 ,debug_clauses(generate_full,'Generated new atom:',:-En)
+		 )
+		,Neg)
+	,sort(Neg, Neg_s).
+generate(atomic,N,[Ep|Pos],K,MS,Subs,Neg_s):-
+        configuration:encapsulation_predicate(Enc)
+        ,Ep =.. [Enc,S|_Args0]
+        ,functor(Ep,F,A)
+        ,functor(En,F,A)
+        ,En =.. [Enc,S|_Args1]
+	,flatten(Subs,Subs_f)
+        ,setof(Sub
+               ,M^Subs_f^member(Sub-M,Subs_f)
+               ,Subs_)
+        ,findall(:-En
+		,(G = prove(En,K,MS,[],Subs_,Subs_)
+		 ,limit(N,G)
+		 ,\+ memberchk(En,[Ep|Pos])
+		 ,debug_clauses(generate_full,'Generated new atom:',:-En)
+		 )
+		,Neg)
+	,sort(Neg, Neg_s).
+
+
+%!	label(+Pos,+Neg,+MS,+K,+Prog,+Acc1,+Acc2,-Neg,-Ps) is det.
+%
+%	Business end of label/5
+%
+%	Pos is a set of assumed-positive examples of one or more target
+%	predicates.
+%
+%	Neg is a list of assumed-negative examples of one or more
+%	target predicates.
+%
+%	MS is a set of second-order definite clauses in the background
+%	theory.
+%
+%	K is the value of the configuration option clause_limit/1.
+%
+%	Prog is a hypothesis learned from the examples in Pos
+%	specialised by the examples in Neg, and used to derive more
+%	positive examples in Pos and negative examples in Neg.
+%
+%	Acc1 is the accumulator of positive examples derived during the
+%	execution of this predicate.
+%
+%	Acc2 is the accumulator of negative examples derived during etc.
+%
+%	Ps is the final hypothesis, specialised by the assumed
+%	negative examples in Neg.
+%
+label(Pos,[],_MS,_K,Ps,Pos,Neg,Neg,Ps):-
+        debug_clauses(label_results,'Final hypothesis:',Ps)
+        ,debug_clauses(label_results,'Positive examples:',Pos)
+        ,debug_clauses(label_results,'Negative examples:',Neg)
+	,!.
+label(Pos,[En|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
+        debug_length(label,'Specialising ~w sub-hypotheses.',Subs)
+	,debug_clauses(label_full,'Specialising hypothesis:',Subs)
+	,debug(label,'With negative example: ~w',[En])
+	,specialise(Subs,MS,[En],Subs_S)
+        ,debug_clauses(label_full,'Specialised hypothesis:',Subs_S)
+        %,debug_clauses(label,'Re-proving positive examples:',Pos)
+        ,prove_all(Pos,K,MS,[],Subs_S)
+        ,!
+        ,debug(label,'Keeping negative example: ~w',[En])
+        ,label(Pos,Neg,MS,K,Subs_S,Pos_Bind,[En|Neg_Acc],Neg_Bind,Ps).
+label(Pos,[:-Ep|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
+        debug_clauses(label_full,'Keeping hypothesis:',Subs)
+        ,debug_length(label,'Keeping ~w sub-hypotheses:',Subs)
+        ,debug(label,'Keeping as positive example: ~w',[Ep])
+	,label([Ep|Pos],Neg,MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps).
+
+
+%!	prover_all(+Pos,+K,+MS,+Sig,+Subs) is det.
+%
+%	Prove a set of atoms with a set of metasubstitutions.
+%
+%	Pos is a set of atoms assumed to be positive examples of a
+%	target predicate.
+%
+%	K is the value of the configuration option clause_limit/1.
+%
+%	MS is a set of second-order definite clauses.
+%
+%	Sig is the predicate signature of Atoms.
+%
+%	Subs is a set of metasubstitutions, an initial hypothesis
+%	derived from Atoms.
+%
+%	This predicate proves all of the atoms in Pos, with the
+%	metasubstitutions in Subs, and fails if it can't do that, Dave.
+%
+prove_all(_Pos,_K,_MS,_Ss,[]):-
+        debug(prove_all,'Empty hypothesis. Proof fails',[])
+	,!
+	,fail.
+/*
+% TODO: Need to figure out the differences of these two versions.
+prove_all(Pos,K,MS,Ss,Subs):-
+	% Maybe not? Maybe specialise each sybhypothesis separately
+	% And check also the positive examples?
+	flatten(Subs,Subs_f)
+	,setof(Sub
+	      ,M^Subs_f^member(Sub-M,Subs_f)
+	      ,Subs_)
+	,debug_clauses(prove_all,'With current metasubs: ',Subs_)
+	,S = setup_negatives(Fs,T,U)
+	,G = forall(member(Ep,Pos)
+		   ,prove(Ep,K,MS,Ss,Subs_,Subs_)
+		   )
+	,C = cleanup_negatives(Fs,T,U)
+	,setup_call_cleanup(S,G,C)
+	,debug(prove_all,'Proof succeeded',[]).
+*/
+%/*
+prove_all(Pos,K,MS,Ss,Subs):-
+	debug_clauses(prove_all,'Re-proving positive examples:',Pos)
+	,S = setup_negatives(Fs,T,U)
+	,G = forall(member(Sub,Subs)
+		   ,(setof(Sub_
+			  ,M^Sub^member(Sub_-M,Sub)
+			  ,Subs_)
+		    ,debug_clauses(prove_all_full,'With current metasubs: ',Subs_)
+		    ,forall(member(Ep,Pos)
+			   ,prove(Ep,K,MS,Ss,Subs_,Subs_)
+			   )
+		    )
+		   )
+	,C = cleanup_negatives(Fs,T,U)
+	,setup_call_cleanup(S,G,C)
+	,debug(prove_all,'Proof succeeded',[]).
+%*/
+
+
+%!	specialise(+Generalised,+Metarules,+Negatives,-Specialised) is
+%!	det.
+%
+%	Specialisation step of Top program construction.
+%
+%	Specialises a set of metasubstitutions generalising the positive
+%	examples against the Negative examples by discarding each
+%	metasubstitution that entails a negative example.
+%
+%	Unlike the original, one-clause TPC version this one specialises
+%	sub-hypotheses derived by generalise/3.
+%
+specialise(Ss_Pos,_MS,[],Ss_Pos):-
+	!
+       ,debug(examples,'No negative examples. Can\'t specialise',[]).
+specialise(Ss_Pos,MS,Neg,Ss_Neg):-
+	debug_length(specialise,'Specialising with ~w negative examples.',Neg)
+	,poker_configuration:clause_limit(K)
+	,findall(Subs
+	       ,(member(Subs,Ss_Pos)
+		,findall(Sub
+			,member(Sub-_M,Subs)
+			,Subs_)
+		,debug_clauses(specialise_full,'Ground metasubstitutions:',[Subs_])
+		,\+((member(En,Neg)
+		    ,debug(examples,'Negative example: ~w',[En])
+		    ,once(metasubstitutions(En,K,MS,Subs_))
+		    ,debug(examples,'Proved negative example: ~w',[En])
+		    )
+		   )
+		)
+	       ,Ss_Neg).
 
 
 
