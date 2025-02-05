@@ -5,6 +5,8 @@
 			     ,list_learning_results/0
 			     ,list_mil_problem/1
 			     ,list_problem_statistics/1
+			     ,debug_length/3
+			     ,debug_clauses_length/3
 	                     % Experiment file auxiliaries
 			     ,cleanup_experiment/0
 			     ,experiment_data/4
@@ -13,7 +15,6 @@
 			     ,load_experiment_file/0
 			     ,edit_experiment_file/0
 			     % Configuration auxiliaries
-			     ,debug_length/3
 			     ,set_configuration_option/2
 			     % Program auxiliaries
 			     ,unifiable_compare/3
@@ -297,6 +298,32 @@ list_problem_statistics(T):-
 
 
 
+%!	debug_length(+Topic,+Message,+List) is det.
+%
+%	Log a Message about the length of a List.
+%
+%	Message is an atom passed to format/2 that should have an
+%	argument like "~w" to handle the length of the input List.
+%
+debug_length(T,M,Ls):-
+	length(Ls,N)
+	,debug(T,M,[N]).
+
+
+
+%!	debug_clauses_length(+Topic,+Message,+List) is det.
+%
+%	Log a Message and the length of a List.
+%
+%	Like debug_length/3 but also calls debug_clauses/3 on List.
+%
+debug_clauses_length(T,M,Ls):-
+	length(Ls,N)
+	,format(atom(A),M,[N])
+	,debug_clauses(T,A,Ls).
+
+
+
 
 % [sec_expr]
 % ================================================================================
@@ -518,16 +545,6 @@ edit_experiment_file:-
 % Configuration auxiliaries
 % ================================================================================
 % Predicates for inspecting and manipulating configuration options.
-
-
-%!	debug_length(+Topic,+Message,+List) is det.
-%
-%	Log a Message about the length of a List.
-%
-debug_length(T,M,Ls):-
-	length(Ls,N)
-	,debug(T,M,[N]).
-
 
 
 %!	set_configuration_option(+Option,+Value) is det.
