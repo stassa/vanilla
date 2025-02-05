@@ -198,16 +198,75 @@ top_program(_As,_BK,_MS,[],[],[]):-
 %	as negative examples.
 %
 label(Ep,MS,K,Pos,Neg,Ps):-
-        poker_configuration:unlabelled_examples(N)
-        ,debug_clauses(label,'Initial Examples:',Ep)
+	poker_configuration:greedy_generalisation(false)
+	,poker_configuration:unlabelled_examples(N)
+	,debug_clauses(label,'Initial Examples:',Ep)
 	,generalise(Ep,MS,Subs_)
 	,respecialise(Subs_,Ep,MS,Subs)
-        ,debug_length(label,'Constructed ~w initial sub-hypotheses.',Subs)
-        ,debug_clauses(label_full,'Initial hypothesis:',Subs)
-        ,generate(N,Ep,K,MS,Subs,As)
-        ,label(Ep,As,MS,K,Subs,Pos,[],Neg,Ps)
-        ,debug_length(label,'Kept ~w final sub-hypotheses.',Ps)
-        ,debug_clauses(label_full,'Final hypothesis:',Ps).
+	,debug_length(label,'Constructed ~w initial sub-hypotheses.',Subs)
+	,debug_clauses(label_full,'Initial hypothesis:',Subs)
+	,generate(N,Ep,K,MS,Subs,As)
+	,label(Ep,As,MS,K,Subs,Pos,[],Neg,Ps)
+	,debug_length(label,'Kept ~w final sub-hypotheses.',Ps)
+	,debug_clauses(label_full,'Final hypothesis:',Ps).
+label(Ep,MS,K,Pos,Neg,Ps):-
+        poker_configuration:greedy_generalisation(true)
+	,poker_configuration:unlabelled_examples(N)
+	,debug_clauses(label,'Initial Examples:',Ep)
+	,generalise_greedy(Ep,Ep,K,MS,Subs_)
+	,respecialise(Subs_,Ep,MS,Subs)
+	,debug_length(label,'Constructed ~w initial sub-hypotheses.',Subs)
+	,debug_clauses(label_full,'Initial hypothesis:',Subs)
+	,generate(N,Ep,K,MS,Subs,As)
+	,label(Ep,As,MS,K,Subs,Pos,[],Neg,Ps)
+	,debug_length(label,'Kept ~w final sub-hypotheses.',Ps)
+	,debug_clauses(label_full,'Final hypothesis:',Ps).
+
+
+%!	generalise_greedy(+Es,+Cs,+K,+Metarules,-Subs) is det.
+%
+%	Gonstruct a single Top Program from one of the initial examples.
+%
+%	Es is the set of initial examples.
+%
+%	Cs is the set of initial examples in Es, kept unchanged through
+%	execution.
+%
+%	K is the value of poker_configuration:clause_limit/1.
+%
+%	Metarules is the set of metarules for the learning problem.
+%
+%	Subs is a Top Program learned by one of the examples in Es.
+%
+%	This program walks through the list of examples in Es and
+%	constructs a Top Program from each, with a call to genralise/3
+%	(but not specialise/4). Then it tests this Top Program against
+%	all the initial examples kept constant in Cs, with a call to
+%	prove_all/6. If this succeeds, the Top Program constructed is
+%	returned, as the initial hypothesis, to label/6. If the test
+%	fails, the Top Prograam is discarded and the next example in Es
+%	is tried, until there are no more examples remaining.
+%
+%	If no Top Program can be learned this way, generalise_greedy/5
+%	returns an empty Top Program.
+%
+%	@tbd That's not great when it's not possible to create a
+%	complete Top Program. Maybe make it so it's possible to return a
+%	Top Program that allows some examples to not be covered?
+%
+generalise_greedy([],_Pos,_K,_MS,[]):-
+	!
+	,debug(generalise_greedy,'Greedy generalisation failed.',[]).
+generalise_greedy([Ep|_Es],Pos,K,MS,Subs):-
+	debug(generalise_greedy,'Greedy-generalising example ~w',[Ep])
+	,generalise([Ep],MS,Subs)
+	,debug_clauses(generalise_greedy_full,'Greedy hypothesis:',Subs)
+	,prove_all(flat,Pos,K,MS,[],Subs)
+	,debug(generalise_greedy,'Proved all examples.',[])
+	,!.
+generalise_greedy([Ep|Es],Pos,K,MS,Subs):-
+	debug(generalise_greedy,'Dropped example ~w',[Ep])
+	,generalise_greedy(Es,Pos,K,MS,Subs).
 
 
 %!	generalise(+Positive,+Metarules,-Generalised) is det.
@@ -772,8 +831,7 @@ label(Pos,[En|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
 	,debug(label,'With negative example: ~w',[En])
 	,specialise(Subs,MS,[En],Subs_S)
         ,debug_clauses(label_full,'Specialised hypothesis:',Subs_S)
-        %,debug_clauses(label,'Re-proving positive examples:',Pos)
-        ,prove_all(Pos,K,MS,[],Subs_S)
+        ,prove_all(nested,Pos,K,MS,[],Subs_S)
         ,!
         ,debug(label,'Keeping negative example: ~w',[En])
         ,label(Pos,Neg,MS,K,Subs_S,Pos_Bind,[En|Neg_Acc],Neg_Bind,Ps).
@@ -784,9 +842,13 @@ label(Pos,[:-Ep|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
 	,label([Ep|Pos],Neg,MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps).
 
 
-%!	prover_all(+Pos,+K,+MS,+Sig,+Subs) is det.
+%!	prove_all(+Flatten,+Pos,+K,+MS,+Sig,+Subs) is det.
 %
 %	Prove a set of atoms with a set of metasubstitutions.
+%
+%	Flatten is one of [flat,nested], and is used to determines
+%	whether the Top Program is flattened into one big union of
+%	sub-hypotheses, or not, before proving the positive examples.
 %
 %	Pos is a set of atoms assumed to be positive examples of a
 %	target predicate.
@@ -803,20 +865,20 @@ label(Pos,[:-Ep|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
 %	This predicate proves all of the atoms in Pos, with the
 %	metasubstitutions in Subs, and fails if it can't do that, Dave.
 %
-prove_all(_Pos,_K,_MS,_Ss,[]):-
+%	@tbd Better document Flatten and turn it into a boolean.
+%
+prove_all(_F,_Pos,_K,_MS,_Ss,[]):-
         debug(prove_all,'Empty hypothesis. Proof fails',[])
 	,!
 	,fail.
-/*
-% TODO: Need to figure out the differences of these two versions.
-prove_all(Pos,K,MS,Ss,Subs):-
+prove_all(flat,Pos,K,MS,Ss,Subs):-
 	% Maybe not? Maybe specialise each sybhypothesis separately
 	% And check also the positive examples?
 	flatten(Subs,Subs_f)
 	,setof(Sub
 	      ,M^Subs_f^member(Sub-M,Subs_f)
 	      ,Subs_)
-	,debug_clauses(prove_all,'With current metasubs: ',Subs_)
+	,debug_clauses(prove_all_full,'With current metasubs: ',Subs_)
 	,S = setup_negatives(Fs,T,U)
 	,G = forall(member(Ep,Pos)
 		   ,prove(Ep,K,MS,Ss,Subs_,Subs_)
@@ -824,9 +886,7 @@ prove_all(Pos,K,MS,Ss,Subs):-
 	,C = cleanup_negatives(Fs,T,U)
 	,setup_call_cleanup(S,G,C)
 	,debug(prove_all,'Proof succeeded',[]).
-*/
-%/*
-prove_all(Pos,K,MS,Ss,Subs):-
+prove_all(nested,Pos,K,MS,Ss,Subs):-
 	debug_clauses(prove_all,'Re-proving positive examples:',Pos)
 	,S = setup_negatives(Fs,T,U)
 	,G = forall(member(Sub,Subs)
@@ -842,7 +902,6 @@ prove_all(Pos,K,MS,Ss,Subs):-
 	,C = cleanup_negatives(Fs,T,U)
 	,setup_call_cleanup(S,G,C)
 	,debug(prove_all,'Proof succeeded',[]).
-%*/
 
 
 %!	specialise(+Generalised,+Metarules,+Negatives,-Specialised) is

@@ -1,6 +1,7 @@
 :-module(poker_configuration, [clause_limit/1
                               ,experiment_file/2
                               ,gestalt/1
+                              ,greedy_generalisation/1
                               ,listing_limit/1
                               ,max_invented/1
                               ,proof_samples/1
@@ -107,8 +108,30 @@ experiment_file(data('examples/hello_world_poker.pl'),hello_world_poker).
 %       is used to describe how the Top Program can be more general than
 %       the sum of its parts, i.e. its component sub-hypotheses.
 %
-gestalt(true).
-%gestalt(false).
+gestalt(false).
+%gestalt(true).
+
+
+%!      greedy_generalisation(?Bool) is semidet.
+%
+%       Whether to construct an initial hypothesis greedily or not.
+%
+%       This option is used to select the clauses of label/6.
+%
+%       When this option is set to "true", label/6 will only construct
+%       the Top Program for a single example in the set of initial
+%       examples, by looping through the examples, constructing a Top
+%       Program and discarding it, until it can construct a Top Program
+%       that covers all the initial examples. The first Top Program that
+%       satisfies this condition will be used as the initial hypothesis
+%       to be specialised by generation of new examples.
+%
+%       When this option is set to "false", label/6 will construct a Top
+%       Program for each of the initial examples and take their
+%       conjunction as the initial hypothesis.
+%
+greedy_generalisation(false).
+%greedy_generalisation(true).
 
 
 %!      listing_limit(?Limit) is semidet.
@@ -124,7 +147,7 @@ gestalt(true).
 %       'inf' representing positive infinity. If Limit is 'inf', then no
 %       limit is imposed on the printed information.
 %
-listing_limit(10).
+listing_limit(15).
 
 
 %!	max_invented(?Number) is semidet.
@@ -229,8 +252,8 @@ resolutions(5000).
 %       nearly. In such cases the Top Program might grow too large and
 %       unwieldy.
 %
-respecialise(true).
-%respecialise(false).
+respecialise(false).
+%respecialise(true).
 
 
 %!     safe_example(-Example) is nondet.
