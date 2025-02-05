@@ -261,7 +261,7 @@ generalise_greedy([Ep|_Es],Pos,K,MS,Subs):-
 	debug(generalise_greedy,'Greedy-generalising example ~w',[Ep])
 	,generalise([Ep],MS,Subs)
 	,debug_clauses(generalise_greedy_full,'Greedy hypothesis:',Subs)
-	,prove_all(flat,Pos,K,MS,[],Subs)
+	,prove_all(true,Pos,K,MS,[],Subs)
 	,debug(generalise_greedy,'Proved all examples.',[])
 	,!.
 generalise_greedy([Ep|Es],Pos,K,MS,Subs):-
@@ -831,7 +831,7 @@ label(Pos,[En|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
 	,debug(label,'With negative example: ~w',[En])
 	,specialise(Subs,MS,[En],Subs_S)
         ,debug_clauses(label_full,'Specialised hypothesis:',Subs_S)
-        ,prove_all(nested,Pos,K,MS,[],Subs_S)
+        ,prove_all(false,Pos,K,MS,[],Subs_S)
         ,!
         ,debug(label,'Keeping negative example: ~w',[En])
         ,label(Pos,Neg,MS,K,Subs_S,Pos_Bind,[En|Neg_Acc],Neg_Bind,Ps).
@@ -846,9 +846,10 @@ label(Pos,[:-Ep|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
 %
 %	Prove a set of atoms with a set of metasubstitutions.
 %
-%	Flatten is one of [flat,nested], and is used to determines
-%	whether the Top Program is flattened into one big union of
-%	sub-hypotheses, or not, before proving the positive examples.
+%	Flatten is a boolean that determines whether the Top Program is
+%	flattened into one big union of sub-hypotheses, or not, before
+%	proving the positive examples. Clauses of prove_all/6 are
+%	selected according to the value of Flatten.
 %
 %	Pos is a set of atoms assumed to be positive examples of a
 %	target predicate.
@@ -865,13 +866,11 @@ label(Pos,[:-Ep|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
 %	This predicate proves all of the atoms in Pos, with the
 %	metasubstitutions in Subs, and fails if it can't do that, Dave.
 %
-%	@tbd Better document Flatten and turn it into a boolean.
-%
 prove_all(_F,_Pos,_K,_MS,_Ss,[]):-
         debug(prove_all,'Empty hypothesis. Proof fails',[])
 	,!
 	,fail.
-prove_all(flat,Pos,K,MS,Ss,Subs):-
+prove_all(true,Pos,K,MS,Ss,Subs):-
 	% Maybe not? Maybe specialise each sybhypothesis separately
 	% And check also the positive examples?
 	flatten(Subs,Subs_f)
@@ -886,7 +885,7 @@ prove_all(flat,Pos,K,MS,Ss,Subs):-
 	,C = cleanup_negatives(Fs,T,U)
 	,setup_call_cleanup(S,G,C)
 	,debug(prove_all,'Proof succeeded',[]).
-prove_all(nested,Pos,K,MS,Ss,Subs):-
+prove_all(false,Pos,K,MS,Ss,Subs):-
 	debug_clauses(prove_all,'Re-proving positive examples:',Pos)
 	,S = setup_negatives(Fs,T,U)
 	,G = forall(member(Sub,Subs)
