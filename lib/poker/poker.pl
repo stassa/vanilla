@@ -260,13 +260,14 @@ generalise_greedy([],_Pos,_K,_MS,[]):-
 generalise_greedy([Ep|_Es],Pos,K,MS,Subs):-
 	debug(generalise_greedy,'Greedy-generalising example ~w',[Ep])
 	,generalise([Ep],MS,Subs)
-	,debug_clauses(generalise_greedy_full,'Greedy hypothesis:',Subs)
-	,prove_all(true,Pos,K,MS,[],Subs)
+	,prove_all(false,Pos,K,MS,[],Subs)
 	,debug(generalise_greedy,'Proved all examples.',[])
+	,debug_clauses(generalise_greedy_full,'With greedy hypothesis:',Subs)
 	,!.
 generalise_greedy([Ep|Es],Pos,K,MS,Subs):-
 	debug(generalise_greedy,'Dropped example ~w',[Ep])
 	,generalise_greedy(Es,Pos,K,MS,Subs).
+
 
 
 %!	generalise(+Positive,+Metarules,-Generalised) is det.
@@ -312,7 +313,7 @@ generalise(Pos,MS,Ss_Pos):-
 		 ,forall(member(Sub-_M,Subs)
 			,constraints(Sub)
 			)
-		 ,debug_clauses(generalise_full,'Passed metasub constraints:',[Subs])
+		 ,debug_metasubs(generalise_full,'Passed metasub constraints:',Subs,Pos,MS)
 		 )
 		,Ss_Pos_)
 	,debug_length(generalise,'Derived ~w sub-hypotheses (unsorted)',Ss_Pos_)
@@ -377,10 +378,7 @@ metasubstitutions(:-En,K,MS,Subs):-
 	 !
 	,signature(En,Ss)
 	,debug(signature,'Signature: ~w',[Ss])
-	,S = setup_negatives(Fs,T,U)
-	,G = prove(En,K,MS,Ss,Subs,Subs)
-	,C = cleanup_negatives(Fs,T,U)
-	,setup_call_cleanup(S,G,C)
+	,prove(En,K,MS,Ss,Subs,Subs)
 	,debug(metasubstitutions,'Proved Example: ~w',[:-En])
 	,debug_clauses(metasubstitutions_full,'With Metasubs:',[Subs]).
 metasubstitutions(Ep,K,MS,Subs):-
@@ -392,10 +390,9 @@ metasubstitutions(Ep,K,MS,Subs):-
 	,goal_sample(P,poker,G,_)
 	,debug(metasubstitutions,'Proved Example: ~w',[Ep])
 	,debug_length(metasubstitutions,'Derived ~w Metasubs.',Subs_)
-	,sort(Subs_,Subs_s)
-	,debug_clauses(metasubstitutions_full,'Proved Metasubs:',[Subs_s])
+	,debug_clauses(metasubstitutions_full,'Proved Metasubs:',[Subs_])
 	,findall(Sub-M
-		,(member(Sub,Subs_s)
+		,(member(Sub,Subs_)
 		 ,metasub_metarule(Sub,MS,M)
 		 )
 		,Subs).
@@ -439,6 +436,7 @@ setup_negatives(Fs,T,U):-
 	,configuration:untable_meta_interpreter(U)
 	,set_configuration_option(fetch_clauses, [[builtins,bk,hypothesis]])
 	,set_configuration_option(table_meta_interpreter, [true])
+	,set_configuration_option(untable_meta_interpreter, [true])
 	,refresh_tables(untable)
 	,refresh_tables(table).
 
@@ -494,11 +492,24 @@ signature(L,[T|Ss]):-
 %
 %	Subs is a list of metasubstitutions derived by prove/7 from Ep.
 %
-prove_with_clause_limit(true,Ep,K,MS,Ss,Subs):-
-	length(Subs,K)
-        ,vanilla:prove(Ep,K,MS,Ss,[],Subs).
-prove_with_clause_limit(false,Ep,K,MS,Ss,Subs):-
-	vanilla:prove(Ep,K,MS,Ss,[],Subs).
+%	Limit is measured on Subs only once Subs is sorted. This is to
+%	remove duplicaters that may be included when fetch_clauses/1
+%	does not include "hypothesis", in which case multiple copies of
+%	the same metasubstitution atom indicate recursion over the same
+%	instances of metarules.
+%
+%	Subs _is_ sorted when Strict is "false".
+%
+prove_with_clause_limit(true,Ep,K,MS,Ss,Subs_s):-
+	!
+	,vanilla:prove(Ep,K,MS,Ss,[],Subs)
+	,sort(Subs,Subs_s)
+	,length(Subs_s,K)
+        ,debug_length(prove_limit,'Derived ~w clause hypothesis.',Subs_s).
+prove_with_clause_limit(false,Ep,K,MS,Ss,Subs_s):-
+	vanilla:prove(Ep,K,MS,Ss,[],Subs)
+	,sort(Subs,Subs_s).
+
 
 
 %!	rename_all_invented(+Metasubs,-Renamed) is det.
@@ -871,9 +882,8 @@ prove_all(_F,_Pos,_K,_MS,_Ss,[]):-
 	,!
 	,fail.
 prove_all(true,Pos,K,MS,Ss,Subs):-
-	% Maybe not? Maybe specialise each sybhypothesis separately
-	% And check also the positive examples?
-	flatten(Subs,Subs_f)
+	debug_clauses(prove_all,'Re-proving positive examples:',Pos)
+	,flatten(Subs,Subs_f)
 	,setof(Sub
 	      ,M^Subs_f^member(Sub-M,Subs_f)
 	      ,Subs_)
@@ -921,21 +931,23 @@ specialise(Ss_Pos,_MS,[],Ss_Pos):-
 specialise(Ss_Pos,MS,Neg,Ss_Neg):-
 	debug_length(specialise,'Specialising with ~w negative examples.',Neg)
 	,poker_configuration:clause_limit(K)
-	,findall(Subs
-	       ,(member(Subs,Ss_Pos)
-		,findall(Sub
-			,member(Sub-_M,Subs)
-			,Subs_)
-		,debug_clauses(specialise_full,'Ground metasubstitutions:',[Subs_])
-		,\+((member(En,Neg)
-		    ,debug(examples,'Negative example: ~w',[En])
-		    ,once(metasubstitutions(En,K,MS,Subs_))
-		    ,debug(examples,'Proved negative example: ~w',[En])
-		    )
-		   )
-		)
-	       ,Ss_Neg).
-
+	,S = setup_negatives(Fs,T,U)
+	,G = findall(Subs
+		    ,(member(Subs,Ss_Pos)
+		     ,findall(Sub
+			     ,member(Sub-_M,Subs)
+			     ,Subs_)
+		     ,debug_clauses(specialise_full,'Ground metasubstitutions:',[Subs_])
+		     ,\+((member(En,Neg)
+			 ,debug(examples,'Negative example: ~w',[En])
+			 ,once(metasubstitutions(En,K,MS,Subs_))
+			 ,debug(examples,'Proved negative example: ~w',[En])
+			 )
+			)
+		     )
+		    ,Ss_Neg)
+	,C = cleanup_negatives(Fs,T,U)
+	,setup_call_cleanup(S,G,C).
 
 
 %!	reduced_top_program(+Pos,+BK,+Metarules,+Program,-Reduced)

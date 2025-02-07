@@ -7,6 +7,7 @@
 			     ,list_problem_statistics/1
 			     ,debug_length/3
 			     ,debug_clauses_length/3
+			     ,debug_metasubs/5
 	                     % Experiment file auxiliaries
 			     ,cleanup_experiment/0
 			     ,experiment_data/4
@@ -322,6 +323,26 @@ debug_clauses_length(T,M,Ls):-
 	,format(atom(A),M,[N])
 	,debug_clauses(T,A,Ls).
 
+
+
+%!	debug_metasubs(+Topic,+Message,+Subs,+Examples,+Metarules) is
+%!      det.
+%
+%	Log a list of metasubstitutions, applied to their Metarules.
+%
+%	Subs should be a list of metasubstitutions.
+%
+%	Applies the given meta Subs to their Metarules, excapsulates
+%	them and logs the given Message for the given Topic.
+%
+%	Examples are used to extract learning targets for the
+%	excapsulation.
+%
+debug_metasubs(T,M,Subs,Es,MS):-
+	applied_metarules(Subs,MS,Cs)
+	,examples_targets(Es,Ss)
+	,excapsulated_clauses(Ss,Cs,Cs_e)
+	,debug_clauses(T,M,Cs_e).
 
 
 
