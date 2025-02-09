@@ -39,8 +39,8 @@ clause_limit(2).
 %	The Path and Module name of an experiment file.
 %
 experiment_file(data('poker_examples/hello_world_poker.pl'),hello_world_poker).
-%experiment_file(data('examples/anbn.pl'),anbn).
-%experiment_file(data('examples/parity.pl'),parity).
+%experiment_file(data('poker_examples/anbn.pl'),anbn).
+%experiment_file(data('poker_examples/parity.pl'),parity).
 
 
 %!      gestalt(?Bool) is semidet.
