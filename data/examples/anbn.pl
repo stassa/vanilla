@@ -1,7 +1,6 @@
 :-module(anbn, [program_signature/3
 	       ,background_knowledge/2
 	       ,metarules/2
-	       ,initial_example/2
 	       ,positive_example/2
 	       ,negative_example/2
 	       ,a/2
@@ -9,12 +8,9 @@
 	       ]).
 
 :-use_module(project_root(configuration)).
-:-use_module(lib(poker/poker_configuration),[]).
 
-/** <module> Learn an a^nb^n CFG with Poker.
+/** <module> Learn an a^nb^n CFG with MIL.
 
-Copy of data/examples/anbn.pl with added Poker predicates
-(initial_example/2).
 
 */
 
@@ -26,22 +22,7 @@ configuration:metarule_constraints(m(chain,P0,P1,_P2),fail):-
 configuration:metarule_constraints(m(chain,_P0,P1,P2),fail):-
         P1 == P2.
 
-
-%!	safe_example(-Example) is nondet.
-%
-%	Generate a safe scaffold for unlabelled examples.
-%
-%	For examples with list arguments, generating unlabelled examples
-%	during learning can "go infinite". This predicate ensures that
-%	list arguments in examples are limited in length.
-%
-%	This argument should not itself be a generator of ground
-%	examples. This is left to the user to avoid.
-%
-poker_configuration:safe_example(m(s,Ls,[])):-
-	between(1,9,L)
-	,length(Ls,L).
-
+% Used by Metagol
 program_signature(s/2,[s,a,'inv_1',b],[[a,a,b,b],[a,b,b],[b,b],[b],[]]).
 program_signature(inv_1/2,['inv_1',s,b],[[a,a,b,b],[a,b,b],[b,b],[b],[]]).
 
@@ -68,9 +49,6 @@ configuration:metarule_constraints(m(_ID,P,Q,_R)/_U,fail):-
 background_knowledge(s/2,[a/2,b/2]).
 
 metarules(s/2,[chain]).
-
-% For Poker
-initial_example(s/2,s([a,a,a,b,b,b],[])).
 
 % For Metagol, Simpleton and Louise.
 positive_example(s/2,E):-
@@ -101,5 +79,6 @@ negative_example(s/2,E):-
 		 ]).
 :- endif.
 
-a([a|T],T).
-b([b|T],T).
+% The background knowledge is the set of pre-terminals in the language.
+a --> [a].
+b --> [b].
