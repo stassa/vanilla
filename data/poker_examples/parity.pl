@@ -11,7 +11,7 @@
 :-use_module(project_root(configuration),[]).
 :-use_module(lib(poker/poker_configuration),[]).
 
-:-use_module(data(examples/test_harness)).
+:-use_module(data(poker_examples/test_harness)).
 
 /** <poker> Learn even parity by inventing odd parity with Poker.
 
