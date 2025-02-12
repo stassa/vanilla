@@ -316,6 +316,7 @@ generalise(Pos,MS,Ss_Pos):-
 		 ,debug_metasubs(generalise_full,'Passed metasub constraints:',Subs,Pos,MS)
 		 )
 		,Ss_Pos_)
+	,abolish_all_tables
 	,debug_length(generalise,'Derived ~w sub-hypotheses (unsorted)',Ss_Pos_)
 	,once( skolem_sort(Ss_Pos_,Ss_Pos_s) )
 	,debug_length(generalise,'Derived ~w sub-hypotheses (sorted)',Ss_Pos_s)
