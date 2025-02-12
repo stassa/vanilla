@@ -2,6 +2,7 @@
                               ,experiment_file/2
                               ,gestalt/1
                               ,greedy_generalisation/1
+                              ,flatten_prove_all/1
                               ,listing_limit/1
                               ,max_invented/1
                               ,proof_samples/1
@@ -41,6 +42,24 @@ clause_limit(2).
 experiment_file(data('poker_examples/hello_world_poker.pl'),hello_world_poker).
 %experiment_file(data('poker_examples/anbn_poker.pl'),anbn).
 %experiment_file(data('poker_examples/parity.pl'),parity).
+
+
+%!      flatten_prove_all(?Bool) is semidet.
+%
+%       Whether to flatten the Top Program when reproving or not.
+%
+%       When Bool is "true", the Top Program will be flattened into the
+%       union of all clauses in sub-hypotheses, before re-proving the
+%       positive examples so-far, in prove_all/6. When Bool is "false"
+%       the Top Program will not be flattened and examples will be
+%       proved with a set of distinct sub-hypotheses instead.
+%
+%       Experimental. Flattening the Top Program can improve results
+%       when there are too many over-general sub-hypotheses that hide
+%       more specialised, but correct sub-hypotheses.
+%
+flatten_prove_all(false).
+%flatten_prove_all(true).
 
 
 %!      gestalt(?Bool) is semidet.

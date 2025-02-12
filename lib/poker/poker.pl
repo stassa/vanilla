@@ -845,7 +845,7 @@ label(Pos,[En|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
 	,debug(label,'With negative example: ~w',[En])
 	,specialise(Subs,MS,[En],Subs_S)
         ,debug_clauses(label_full,'Specialised hypothesis:',Subs_S)
-        ,prove_all(false,Pos,K,MS,[],Subs_S)
+        ,prove_all(Pos,K,MS,[],Subs_S)
         ,!
         ,debug(label,'Keeping negative example: ~w',[En])
         ,label(Pos,Neg,MS,K,Subs_S,Pos_Bind,[En|Neg_Acc],Neg_Bind,Ps).
@@ -856,9 +856,36 @@ label(Pos,[:-Ep|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
 	,label([Ep|Pos],Neg,MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps).
 
 
-%!	prove_all(+Flatten,+Pos,+K,+MS,+Sig,+Subs) is det.
+%!	prove_all(+Pos,+K,+MS,+Sig,+Subs) is det.
 %
 %	Prove a set of atoms with a set of metasubstitutions.
+%
+%	Pos is a set of atoms assumed to be positive examples of a
+%	target predicate.
+%
+%	K is the value of the configuration option clause_limit/1.
+%
+%	MS is a set of second-order definite clauses.
+%
+%	Sig is the predicate signature of Atoms.
+%
+%	Subs is a set of metasubstitutions, an initial hypothesis
+%	derived from Atoms.
+%
+%	Delegates work to prove_all/6 passing it the value of the Poker
+%	configuration option flatten_prove_all1/1.
+%
+prove_all(Pos,K,MS,Ss,Subs):-
+	poker_configuration:flatten_prove_all(B)
+	,prove_all(B,Pos,K,MS,Ss,Subs).
+
+
+%!	prove_all(+Flatten,+Pos,+K,+MS,+Sig,+Subs) is det.
+%
+%	Business end of prove_all/5.
+%
+%	Clauses of this predicate are selected according to the value of
+%	Flatten.
 %
 %	Flatten is a boolean that determines whether the Top Program is
 %	flattened into one big union of sub-hypotheses, or not, before
