@@ -352,14 +352,16 @@ respecialise(Ss_Neg,[E0|Pos],MS,Ss_Neg_):-
 		     ,findall(Sub
 			     ,member(Sub-_M,Subs)
 			     ,Subs_)
-		     ,debug_clauses(respecialise_full,'Ground metasubstitutions:',Subs_)
+		     ,debug_metasubs(respecialise_full
+				    ,'Proving metasubstitutions:',Subs,[E0|Pos],MS)
 		     ,forall(member(Ep,[E0|Pos])
 			    ,(debug(examples,'Positive example: ~w',[Ep])
 			     ,vanilla:prove(Ep,K,MS,Ss,Subs_,Subs_)
 			     ,debug(examples,'Proved positive example: ~w',[Ep])
 			     )
 			    )
-		     ,debug_clauses(respecialise_full,'Proved metasubstitutions:',Subs_)
+		     ,debug_metasubs(respecialise_full
+				    ,'Proved metasubstitutions:',Subs,[E0|Pos],MS)
 		     )
 		    ,Ss_Neg_)
 	,C = cleanup_negatives(Fs,T,U)
@@ -883,7 +885,8 @@ prove_all(_F,_Pos,_K,_MS,_Ss,[]):-
 	,!
 	,fail.
 prove_all(true,Pos,K,MS,Ss,Subs):-
-	debug_clauses(prove_all,'Re-proving positive examples:',Pos)
+	debug(flattening,'Flattening the Top Program',[])
+	,debug_clauses(prove_all,'Re-proving positive examples:',Pos)
 	,flatten(Subs,Subs_f)
 	,setof(Sub
 	      ,M^Subs_f^member(Sub-M,Subs_f)
@@ -897,7 +900,8 @@ prove_all(true,Pos,K,MS,Ss,Subs):-
 	,setup_call_cleanup(S,G,C)
 	,debug(prove_all,'Proof succeeded',[]).
 prove_all(false,Pos,K,MS,Ss,Subs):-
-	debug_clauses(prove_all,'Re-proving positive examples:',Pos)
+	debug(flattening,'Not flattening the Top Program',[])
+	,debug_clauses(prove_all,'Re-proving positive examples:',Pos)
 	,S = setup_negatives(Fs,T,U)
 	,G = forall(member(Sub,Subs)
 		   ,(setof(Sub_
@@ -938,17 +942,21 @@ specialise(Ss_Pos,MS,Neg,Ss_Neg):-
 		     ,findall(Sub
 			     ,member(Sub-_M,Subs)
 			     ,Subs_)
-		     ,debug_clauses(specialise_full,'Ground metasubstitutions:',[Subs_])
+		     ,debug_metasubs(specialise_full
+				    ,'Specialising metasubstitutions:',Subs,Neg,MS)
 		     ,\+((member(En,Neg)
 			 ,debug(examples,'Negative example: ~w',[En])
 			 ,once(metasubstitutions(En,K,MS,Subs_))
 			 ,debug(examples,'Proved negative example: ~w',[En])
 			 )
 			)
+		     ,debug_metasubs(specialise_full
+				    ,'Keeping metasubstitutions:',Subs,Neg,MS)
 		     )
 		    ,Ss_Neg)
 	,C = cleanup_negatives(Fs,T,U)
-	,setup_call_cleanup(S,G,C).
+	,setup_call_cleanup(S,G,C)
+	,debug_length(specialise,'Kept ~w sub-hypotheses',Ss_Neg).
 
 
 %!	reduced_top_program(+Pos,+BK,+Metarules,+Program,-Reduced)
