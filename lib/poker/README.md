@@ -1127,9 +1127,10 @@ TNR = 0.6.
 
 That is not perfect, but not that bad given the difficulty of the task. Note in
 particular that Poker is not a classifier, but learns arbitrary programs. Poker
-is the only system its author (me!) knows that can do that. Modern Large
-Language Models (LLMs) can of course generate precise parity definitions on
-demand, even zero-shot, but for an LLM to be able to generate any program it
-must be trained on examples of similar programs. Poker is an inductive program
-synthesis system that never sees examples of the _programs_ it has to learn
-during training; only examples of their inputs and outputs.
+is the only system its author (me!) knows that can learn programs in a
+self-superised manner. Modern Large Language Models (LLMs) can of course
+generate precise parity definitions on demand, even zero-shot, but for an LLM to
+be able to generate any program it must be trained on examples of similar
+programs. Poker is an inductive program synthesis system that never sees
+examples of the _programs_ it has to learn during training; only examples of
+their inputs and outputs.
