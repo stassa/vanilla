@@ -741,8 +741,10 @@ generate(N,[Ep|Pos],K,MS,Subs,Neg):-
 	,poker_configuration:unlabelled_examples_order(O)
 	,S = setup_negatives(Fs,T,U)
 	,(   poker_configuration:safe_example(_)
-	 ->  G = generate(list_safe,N,[Ep|Pos],K,MS,Subs,Neg_)
-	 ;   G = generate(atomic,N,[Ep|Pos],K,MS,Subs,Neg_)
+	 ->  debug(generate,'Found safe_example/2.',[])
+	    ,G = generate(list_safe,N,[Ep|Pos],K,MS,Subs,Neg_)
+	 ;   debug(generate,'No safe_example/2.',[])
+	    ,G = generate(atomic,N,[Ep|Pos],K,MS,Subs,Neg_)
 	 )
 	,C = cleanup_negatives(Fs,T,U)
 	,setup_call_cleanup(S,G,C)
@@ -771,40 +773,55 @@ generate(N,[Ep|Pos],K,MS,Subs,Neg):-
 %	arguments or generating infinite lists and generation will not
 %	take safe_example/1 into account.
 %
-generate(list_safe,N,[Ep|Pos],K,MS,Subs,Neg_s):-
+generate(list_safe,N,Pos,K,MS,Subs,Neg_):-
         !
 	,flatten(Subs,Subs_f)
+	,skolem_sort(Subs_f, Subs_s)
+	,debug_metasubs(generate_full,'Generating atoms with metasubs:',Subs_s,Pos,MS)
         ,setof(Sub
-               ,M^Subs_f^member(Sub-M,Subs_f)
+               ,M^Subs_s^member(Sub-M,Subs_s)
                ,Subs_)
-        ,findall(:-En
+        ,findall(En
 		,(G = ( poker_configuration:safe_example(En)
 		      ,prove(En,K,MS,[],Subs_,Subs_)
 		      )
 		 ,limit(N,G)
-		 ,\+ memberchk(En,[Ep|Pos])
 		 ,debug_clauses(generate_full,'Generated new atom:',:-En)
 		 )
 		,Neg)
-	,sort(Neg, Neg_s).
-generate(atomic,N,[Ep|Pos],K,MS,Subs,Neg_s):-
+	,maplist(sort,[Pos,Neg],[Pos_s,Neg_s])
+	,ord_subtract(Neg_s,Pos_s,Neg_d)
+	,negated(Neg_d,Neg_).
+generate(atomic,N,[Ep|Pos],K,MS,Subs,Neg_):-
         configuration:encapsulation_predicate(Enc)
         ,Ep =.. [Enc,S|_Args0]
         ,functor(Ep,F,A)
         ,functor(En,F,A)
         ,En =.. [Enc,S|_Args1]
 	,flatten(Subs,Subs_f)
+	,skolem_sort(Subs_f, Subs_s)
         ,setof(Sub
-               ,M^Subs_f^member(Sub-M,Subs_f)
+               ,M^Subs_s^member(Sub-M,Subs_s)
                ,Subs_)
-        ,findall(:-En
+        ,findall(En
 		,(G = prove(En,K,MS,[],Subs_,Subs_)
 		 ,limit(N,G)
-		 ,\+ memberchk(En,[Ep|Pos])
 		 ,debug_clauses(generate_full,'Generated new atom:',:-En)
 		 )
 		,Neg)
-	,sort(Neg, Neg_s).
+	,maplist(sort,[[Ep|Pos],Neg],[Pos_s,Neg_s])
+	,ord_subtract(Neg_s,Pos_s,Neg_d)
+	,negated(Neg_d,Neg_).
+
+
+%!	negated(+Atoms,-Negated) is semidet.
+%
+%	Turn a list of Atoms into goals by prefixing with ":-".
+%
+negated(As,Neg):-
+	findall(:-A
+	       ,member(A,As)
+	       ,Neg).
 
 
 %!	label(+Pos,+Neg,+MS,+K,+Prog,+Acc1,+Acc2,-Neg,-Ps) is det.
