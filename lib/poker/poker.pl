@@ -302,9 +302,10 @@ generalise_greedy([Ep|Es],Pos,K,MS,Subs):-
 %	metasubstitutions and metarules returned by generalise/3.
 %
 generalise(Pos,MS,Ss_Pos):-
-	debug(generalise,'Generalising positive examples',[])
+	\+ poker_configuration:multithreading(generalise)
 	,poker_configuration:clause_limit(K)
 	% Used to name invented predicates apart in rename_invented/3.
+	,debug(generalise,'Generalising positive examples',[])
 	,reset_gensym('_')
 	,findall(Subs
 		,(member(Ep,Pos)
@@ -321,6 +322,54 @@ generalise(Pos,MS,Ss_Pos):-
 	,once( skolem_sort(Ss_Pos_,Ss_Pos_s) )
 	,debug_length(generalise,'Derived ~w sub-hypotheses (sorted)',Ss_Pos_s)
 	,rename_all_invented(Ss_Pos_s,Ss_Pos).
+generalise(Pos,MS,Ss_Pos):-
+	poker_configuration:multithreading(generalise)
+	,poker_configuration:clause_limit(K)
+	,debug(generalise,'Generalising positive examples',[])
+	,reset_gensym('_')
+	,findall(Subs
+		,(concurrent_maplist(prove_positives(K,MS),Pos,Ss1)
+		 ,member(Ss2,Ss1)
+		 ,member(Subs,Ss2)
+		 )
+		,Ss_Pos_)
+	,debug_length(generalise_c,'Derived ~w sub-hypotheses (unsorted)',Ss_Pos_)
+	,once( skolem_sort(Ss_Pos_,Ss_Pos_s) )
+	,debug_length(generalise_c,'Derived ~w sub-hypotheses (sorted)',Ss_Pos_s)
+	,rename_all_invented(Ss_Pos_s,Ss_Pos).
+
+
+prove_positives(K,MS,Ep,SUBS):-
+	ground(Ep)
+	,debug_clauses(examples,'Positive example:',Ep)
+	,findall(Subs
+	       ,(metasubstitutions(Ep,K,MS,Subs)
+		,concurrent_forall(member(Sub-_M,Subs)
+				  ,constraints(Sub)
+				  )
+		,debug_metasubs(generalise_full,'Passed metasub constraints:',Subs,[Ep],MS)
+		)
+	       ,SUBS).
+/*
+generalise(Pos,MS,Ss_Pos):-
+% Hands proofs to Vanilla inductive meta-interpreter.
+	poker_configuration:clause_limit(K)
+	,reset_gensym('_')
+	,findall(Subs
+		,(concurrent_and((member(Ep,Pos)
+				 ,debug_clauses(examples,'Positive example:',Ep)
+				 )
+				,metasubstitutions(Ep,K,MS,Subs)
+				)
+		 ,concurrent_forall(member(Sub-_M,Subs)
+				   ,constraints(Sub)
+				   )
+		 )
+		,Ss_Pos_)
+	,once( skolem_sort(Ss_Pos_,Ss_Pos_s) )
+	,rename_all_invented(Ss_Pos_s,Ss_Pos).
+*/
+
 
 
 %!	respecialise(+Metasubs,+Pos,+MS,-Specialised) is det.
@@ -343,6 +392,7 @@ respecialise(Ss_Neg,_,_MS,Ss_Neg):-
 	,!.
 respecialise(Ss_Neg,[E0|Pos],MS,Ss_Neg_):-
 	poker_configuration:respecialise(true)
+	,\+ poker_configuration:multithreading(respecialise)
 	,poker_configuration:clause_limit(K)
 	,signature(E0,Ss)
 	,debug_length(respecialise,'Respecialising ~w sub-hypotheses',Ss_Neg)
@@ -360,6 +410,36 @@ respecialise(Ss_Neg,[E0|Pos],MS,Ss_Neg_):-
 			     ,debug(examples,'Proved positive example: ~w',[Ep])
 			     )
 			    )
+		     ,debug_metasubs(respecialise_full
+				    ,'Proved metasubstitutions:',Subs,[E0|Pos],MS)
+		     )
+		    ,Ss_Neg_)
+	,C = cleanup_negatives(Fs,T,U)
+	,setup_call_cleanup(S,G,C)
+	,debug_length(respecialise,'Kept ~w sub-hypotheses',Ss_Neg_).
+respecialise(Ss_Neg,_,_MS,Ss_Neg):-
+	poker_configuration:respecialise(false)
+	,!.
+respecialise(Ss_Neg,[E0|Pos],MS,Ss_Neg_):-
+	poker_configuration:respecialise(true)
+	,poker_configuration:multithreading(respecialise)
+	,poker_configuration:clause_limit(K)
+	,signature(E0,Ss)
+	,debug_length(respecialise,'Respecialising ~w sub-hypotheses',Ss_Neg)
+	,S = setup_negatives(Fs,T,U)
+	,G = findall(Subs
+		    ,(member(Subs, Ss_Neg)
+		     ,findall(Sub
+			     ,member(Sub-_M,Subs)
+			     ,Subs_)
+		     ,debug_metasubs(respecialise_full
+				    ,'Proving metasubstitutions:',Subs,[E0|Pos],MS)
+		     ,concurrent_forall(member(Ep,[E0|Pos])
+				       ,(debug(examples,'Positive example: ~w',[Ep])
+					,vanilla:prove(Ep,K,MS,Ss,Subs_,Subs_)
+					,debug(examples,'Proved positive example: ~w',[Ep])
+					)
+				       )
 		     ,debug_metasubs(respecialise_full
 				    ,'Proved metasubstitutions:',Subs,[E0|Pos],MS)
 		     )
@@ -978,8 +1058,9 @@ specialise(Ss_Pos,_MS,[],Ss_Pos):-
 	!
        ,debug(examples,'No negative examples. Can\'t specialise',[]).
 specialise(Ss_Pos,MS,Neg,Ss_Neg):-
-	debug_length(specialise,'Specialising with ~w negative examples.',Neg)
+	\+ poker_configuration:multithreading(specialise)
 	,poker_configuration:clause_limit(K)
+	,debug_length(specialise,'Specialising with ~w negative examples.',Neg)
 	,S = setup_negatives(Fs,T,U)
 	,G = findall(Subs
 		    ,(member(Subs,Ss_Pos)
@@ -992,6 +1073,36 @@ specialise(Ss_Pos,MS,Neg,Ss_Neg):-
 			 ,debug(examples,'Negative example: ~w',[En])
 			 ,once(metasubstitutions(En,K,MS,Subs_))
 			 ,debug(examples,'Proved negative example: ~w',[En])
+			 )
+			)
+		     ,debug_metasubs(specialise_full
+				    ,'Keeping metasubstitutions:',Subs,Neg,MS)
+		     )
+		    ,Ss_Neg)
+	,C = cleanup_negatives(Fs,T,U)
+	,setup_call_cleanup(S,G,C)
+	,debug_length(specialise,'Kept ~w sub-hypotheses',Ss_Neg).
+specialise(Ss_Pos,_MS,[],Ss_Pos):-
+	!
+       ,debug(examples,'No negative examples. Ca\t specialise',[]).
+specialise(Ss_Pos,MS,Neg,Ss_Neg):-
+	poker_configuration:multithreading(specialise)
+	,poker_configuration:clause_limit(K)
+	,debug_length(specialise,'Specialising with ~w negative examples.',Neg)
+	,S = setup_negatives(Fs,T,U)
+	,G = findall(Subs
+		    ,(member(Subs,Ss_Pos)
+		     ,findall(Sub
+			     ,member(Sub-_M,Subs)
+			     ,Subs_)
+		     ,debug_metasubs(specialise_full
+				    ,'Specialising metasubstitutions:',Subs_,Neg,MS)
+		     ,\+((concurrent_and((member(En,Neg)
+					 ,debug_clauses(examples,'Negative example:',En))
+					,(once(metasubstitutions(En,K,MS,Subs_))
+					 ,debug_clauses(examples
+						       ,'Proved negative example:',En))
+					)
 			 )
 			)
 		     ,debug_metasubs(specialise_full

@@ -5,6 +5,7 @@
                               ,flatten_prove_all/1
                               ,listing_limit/1
                               ,max_invented/1
+                              ,multithreading/1
                               ,proof_samples/1
                               ,recursive_reduction/1
                               ,reduction/1
@@ -176,6 +177,28 @@ listing_limit(15).
 %	Assumes clause_limit(K) where K > 1.
 %
 max_invented(0).
+
+
+%!      multithreading(?Procedure) is semidet.
+%
+%       The named Procedure will be spread over multiple threads.
+%
+%       Proceudre is mapped to poker.pl terminals as follows:
+%       * generalise: generalise/3
+%       * respecialise: respecialise/4
+%       * specialise: specialise/4
+%
+%       To turn all multithreading off set it to false:
+%       ==
+%       multithreading(false).
+%       ==
+%
+%       Experimental.
+%
+multithreading(false).
+%multithreading(generalise).
+%multithreading(respecialise).
+%multithreading(specialise).
 
 
 %!      proof_samples(?Sample) is semidet.
