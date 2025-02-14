@@ -42,7 +42,9 @@ clause_limit(2).
 %
 experiment_file(data('poker_examples/hello_world_poker.pl'),hello_world_poker).
 %experiment_file(data('poker_examples/anbn_poker.pl'),anbn).
+%experiment_file(data('poker_examples/anbn_poker_strong_setting.pl'),anbn).
 %experiment_file(data('poker_examples/parity.pl'),parity).
+%experiment_file(data('poker_examples/palindrome_triadic.pl'),palindrome).
 
 
 %!      flatten_prove_all(?Bool) is semidet.

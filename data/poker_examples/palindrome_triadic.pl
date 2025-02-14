@@ -4,7 +4,7 @@
                     ,zero/2
                     ,one/2
                     ,empty/2
-		    ,generate_examples/6
+		    ,generate_examples/5
                     ]).
 
 :-use_module(project_root(configuration)).
@@ -313,5 +313,5 @@ zero --> [0].
 one --> [1].
 empty --> [].
 
-generate_examples(pos,all,palindrome,10,0,4).
-generate_examples(neg,all,not_palindrome,10,0,4).
+generate_examples(pos,palindrome,all,0,4).
+generate_examples(neg,not_palindrome,all,0,4).

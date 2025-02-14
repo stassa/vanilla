@@ -4,7 +4,7 @@
 	       ,a/2
 	       ,b/2
                ,empty/2
-	       ,generate_examples/6
+	       ,generate_examples/5
 	       ]).
 
 :-use_module(project_root(configuration)).
@@ -173,5 +173,5 @@ a --> [a].
 b --> [b].
 empty --> [].
 
-generate_examples(pos,all,anbn,10,0,4).
-generate_examples(neg,all,not_anbn,10,0,4).
+generate_examples(pos,anbn,all,4,8).
+generate_examples(neg,not_anbn,all,4,8).
