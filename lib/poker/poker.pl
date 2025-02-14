@@ -858,15 +858,17 @@ generate(list_safe,N,Pos,K,MS,Subs,Neg_):-
 	,flatten(Subs,Subs_f)
 	,skolem_sort(Subs_f, Subs_s)
 	,debug_metasubs(generate_full,'Generating atoms with metasubs:',Subs_s,Pos,MS)
+	,Pos = [Ep|_]
+	,signature(Ep,Ss)
         ,setof(Sub
                ,M^Subs_s^member(Sub-M,Subs_s)
                ,Subs_)
         ,findall(En
-		,(G = ( poker_configuration:safe_example(En)
-		      ,prove(En,K,MS,[],Subs_,Subs_)
+		,(G = (poker_configuration:safe_example(En)
+		      ,prove(En,K,MS,Ss,Subs_,Subs_)
 		      )
 		 ,limit(N,G)
-		 ,debug_clauses(generate_full,'Generated new atom:',:-En)
+		 ,debug_clauses(generate_full,'Generated new atom:',En)
 		 )
 		,Neg)
 	,maplist(sort,[Pos,Neg],[Pos_s,Neg_s])
@@ -880,13 +882,15 @@ generate(atomic,N,[Ep|Pos],K,MS,Subs,Neg_):-
         ,En =.. [Enc,S|_Args1]
 	,flatten(Subs,Subs_f)
 	,skolem_sort(Subs_f, Subs_s)
+	,Pos = [Ep|_]
+	,signature(Ep,Ss)
         ,setof(Sub
                ,M^Subs_s^member(Sub-M,Subs_s)
                ,Subs_)
         ,findall(En
-		,(G = prove(En,K,MS,[],Subs_,Subs_)
+		,(G = prove(En,K,MS,Ss,Subs_,Subs_)
 		 ,limit(N,G)
-		 ,debug_clauses(generate_full,'Generated new atom:',:-En)
+		 ,debug_clauses(generate_full,'Generated new atom:',En)
 		 )
 		,Neg)
 	,maplist(sort,[[Ep|Pos],Neg],[Pos_s,Neg_s])
@@ -902,6 +906,7 @@ negated(As,Neg):-
 	findall(:-A
 	       ,member(A,As)
 	       ,Neg).
+
 
 
 %!	label(+Pos,+Neg,+MS,+K,+Prog,+Acc1,+Acc2,-Neg,-Ps) is det.
