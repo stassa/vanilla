@@ -2,6 +2,7 @@
                       ,experiment/5
                       ,generate_initial/5
                       ,generate_all_initial/4
+                      ,test_program/3
                       ]).
 
 :-use_module(lib(poker/poker)).
@@ -12,9 +13,10 @@
 /** <module> A test harness for Poker.
 
 Run experiments evaluating the labelling of initial and new atoms
-labelled by Poker.
+labelled by Poker, or the programs it learns to label them.
 
 */
+
 
 %!      experiments(+Target,+N,+M,+J,+K,-Means) is det.
 %
@@ -133,91 +135,94 @@ sum(A,B,C):-
 %       * TNR is the True Negative Rate of the labelling in Pos and Neg.
 %
 experiment(S,N,J,K,[Ps,Pos,Neg,Acc,TPR,TNR]):-
-        generate_initial(S,N,J,K,Es)
-        %,debug_clauses(experiment_initial,'Generated initial examples.',Es)
+        (   number(N)
+        ->  generate_initial(S,N,J,K,Es)
+        ;   N == all
+        ->  generate_all_initial(S,J,K,Es)
+        )
         ,debug_clauses_length(experiment_initial,'Generated ~w initial examples:',Es)
         ,time( learn(Es,Pos,Neg,Ps) )
         ,debug_clauses(experiment_learned,'Learned hypothesis:',Ps)
         ,debug_clauses_length(experiment_examples,'~w Positive examples:',Pos)
         ,debug_clauses_length(experiment_examples,'~w Negative examples:',Neg)
-        ,accuracy(S,Pos,Neg,Acc)
-        ,tpr(S,Pos,TPR)
-        ,tnr(S,Neg,TNR)
+        ,accuracy(test_harness,S,Pos,Neg,Acc)
+        ,tpr(test_harness,S,Pos,TPR)
+        ,tnr(test_harness,S,Neg,TNR)
         ,debug(experiment_result,'Measured Acc: ~w TPR: ~w TNR: ~w',[Acc,TPR,TNR]).
 
 
-%!      accuracy(Target,+Pos,+Neg,-Accuracy) is det.
+%!      accuracy(+Module,+Target,+Pos,+Neg,-Accuracy) is det.
 %
 %       Calculate the Accuracy of labelling a set of atoms.
 %
-accuracy(S,[],Neg,Acc):-
+accuracy(M,S,[],Neg,Acc):-
         !
-        ,tnr(S,Neg,Acc).
-accuracy(S,Pos,[],Acc):-
+        ,tnr(M,S,Neg,Acc).
+accuracy(M,S,Pos,[],Acc):-
         !
-        ,tpr(S,Pos,Acc).
-accuracy(S,Pos,Neg,Acc):-
-        true_positives(S,Pos,TP)
-        ,true_negatives(S,Neg,TN)
+        ,tpr(M,S,Pos,Acc).
+accuracy(PM,S,Pos,Neg,Acc):-
+        true_positives(PM,S,Pos,TP)
+        ,true_negatives(PM,S,Neg,TN)
         ,maplist(length,[Pos,Neg],[N,M])
         ,Acc_ is (TP + TN) / (N + M)
         ,atomize(Acc_,Acc).
 
 
-%!      tpr(Target,+Pos,-TPR) is det.
+%!      tpr(+Module,+Target,+Pos,-TPR) is det.
 %
 %       Calculate the True Positive Rate of labelling a set of atoms.
 %
-tpr(_S,[],0):-
+tpr(_M,_S,[],0):-
         !.
-tpr(S,Pos,TPR):-
-        true_positives(S,Pos,TP)
+tpr(M,S,Pos,TPR):-
+        true_positives(M,S,Pos,TP)
         ,length(Pos,N)
         ,TPR_ is TP / N
         ,atomize(TPR_,TPR).
 
 
-%!      tnr(Target,+Neg,-TNR) is det.
+%!      tnr(+Module,+Target,+Neg,-TNR) is det.
 %
 %       Calculate the True Negative Rate of labelling a set of atoms.
 %
-tnr(_S,[],0):-
+tnr(_M,_S,[],0):-
         !.
-tnr(S,Neg,TNR):-
-        true_negatives(S,Neg,TN)
+tnr(M,S,Neg,TNR):-
+        true_negatives(M,S,Neg,TN)
         ,length(Neg,N)
         ,TNR_ is TN / N
         ,atomize(TNR_,TNR).
 
 
-%!      true_positives(+Target,+Pos,-True) is det.
+%!      true_positives(+Module,+Target,+Pos,-True) is det.
 %
 %       Collect all True positives in a set of atoms labelled positive.
 %
-true_positives(_S,[],0):-
+true_positives(_M,_S,[],0):-
         !.
-true_positives(S,Pos,TP):-
+true_positives(M,S,Pos,TP):-
         aggregate_all(count
                      ,(member(Ep,Pos)
                       ,Ep =.. [_S|As]
                       ,Ep_ =.. [S|As]
-                      ,call(Ep_)
+                      ,once( call(M:Ep_) )
                       )
                      ,TP).
 
 
-%!      true_negatives(+Target,+Neg,-True) is det.
+%!      true_negatives(+Module,+Target,+Neg,-True) is det.
 %
 %       Collect all True positives in a set of atoms labelled negative.
 %
-true_negatives(_,[],0):-
+true_negatives(_M,_,[],0):-
         !.
-true_negatives(S,Neg,TN):-
+true_negatives(M,S,Neg,TN):-
         aggregate_all(count
                      ,(member(En,Neg)
                       ,En =.. [_S|As]
                       ,En_ =.. [S|As]
-                      ,\+ call(En_)
+                      ,\+ M:call(En_)
                       )
                      ,TN).
 
@@ -251,6 +256,9 @@ atomize(N,An):-
 %       with a call to k_list_samples/3. The sampled atoms are returned
 %       in Atoms.
 %
+%       @tbd This and generate_all_initial can be merged with N
+%       accepting the value "all". Just saying.
+%
 generate_initial(S,N,J,K,Es):-
         findall(E
                ,(between(J,K,I)
@@ -273,13 +281,27 @@ generate_initial(S,N,J,K,Es):-
 %       generate_example_all/3. If filtering is really not needed, the
 %       two should be merged.
 %
-generate_example(S,N,q0(Xs,[])):-
-        length(Xs,N)
+generate_example(S,N,E_):-
+        internal_symbol(S,S_)
+        ,length(Xs,N)
         ,E =.. [S,Xs,[]]
         ,call(E)
-        % Avoid all-0', all-1 strings.
-        %,\+ sort(Xs,[_])
-        .
+        ,E_ =.. [S_,Xs,[]].
+
+
+%!      internal_symbol(?Internal,?External) is semidet.
+%
+%       Mapping between names of External and Internal predicate defs.
+%
+%       Needed because the grammars used to generate ground-truth
+%       strings are given more descriptive names than the ones in
+%       experiment files. Experiment files are putting it on to
+%       underline the self-supervised capabilities of Poker.
+%
+internal_symbol(even,q0).
+internal_symbol(palindrome,q0).
+internal_symbol(anbn,s).
+
 
 
 %!      generate_all_initial(+Target,+Min,+Max,-Atoms) is det.
@@ -311,14 +333,72 @@ generate_all_initial(S,J,K,Es):-
 %
 %       Generate an Atom with a list of characters of the given Length.
 %
-generate_example_all(S,N,q0(Xs,[])):-
-        length(Xs,N)
+generate_example_all(S,N,E_):-
+        internal_symbol(S,S_)
+        ,length(Xs,N)
         ,E =.. [S,Xs,[]]
-        ,call(E).
+        ,call(E)
+        ,E_ =.. [S_,Xs,[]].
 
 
 
-:-table even/2, odd/2.
+%!      test_program(+Language,+Program,-Results) is det.
+%
+%       Test a Program on positive and negative examples.
+%
+%       Language is a predicate symbol, but not arity, of the grammar to
+%       use to generate positive and negative example strings.
+%
+%       Program is the learned program to test against the examples
+%       generated by Language.
+%
+%       Results is a list [Acc, TPR, TNR], the accuracy, True Positive
+%       Rate and True Negative Rate, respectively, of the Program's
+%       labelling of examples generated by Language.
+%
+test_program(T,Cs,[Acc,TPR,TNR]):-
+        Program_module = experiment_file
+        ,S = assert_program(Program_module,Cs,Rs)
+        ,G = (generate_positives(Pos)
+             ,generate_negatives(Neg)
+             ,accuracy(Program_module,T,Pos,Neg,Acc)
+             ,tpr(Program_module,T,Pos,TPR)
+             ,tnr(Program_module,T,Neg,TNR)
+             )
+        ,C = erase_program_clauses(Rs)
+        ,setup_call_cleanup(S,G,C).
+
+
+%!      generate_positives(-Examples) is det.
+%
+%       Generate positive Examples to test a learned program.
+%
+%       @tbd You don't need two predicates to generate positives and
+%       negatives- you can use the first argument of
+%       generate_examples/6.
+%
+generate_positives(Pos):-
+        experiment_file:generate_examples(pos,N,S,_N,J,K)
+        ,(   number(N)
+         ->  generate_initial(S,N,J,K,Pos)
+         ;   N == all
+         ->   generate_all_initial(S,J,K,Pos)
+         ).
+
+
+%!      generate_negatives(-Examples) is det.
+%
+%       Generate negative Examples to test a learned program.
+%
+generate_negatives(Neg):-
+        experiment_file:generate_examples(neg,N,S,_N,J,K)
+        ,(   number(N)
+         ->  generate_initial(S,N,J,K,Neg)
+         ;   N == all
+         ->   generate_all_initial(S,J,K,Neg)
+         ).
+
+
 
 %!      even(+Input,-Output) is nondet.
 %
@@ -352,7 +432,7 @@ one --> [1].
 empty --> [].
 
 
-%!      palindrome//0 is nondet.
+%!      palindrome is nondet.
 %
 %       A grammar for the language of palindromic bit-strings.
 %
@@ -361,3 +441,63 @@ palindrome --> one.
 palindrome --> zero.
 palindrome --> one, palindrome, one.
 palindrome --> zero, palindrome, zero.
+
+
+%!      not_palindrome is nondet.
+%
+%       A grammar for the language of non-palindromic bit-strings.
+%
+not_palindrome --> bit_string(Ss), { \+ phrase(palindrome, Ss) }.
+
+bit_string([B]) --> bit(B).
+bit_string([B|Bs]) --> bit(B), bit_string(Bs).
+
+bit(1) --> [1].
+bit(0) --> [0].
+
+
+
+%!      s0 is nondet.
+%
+%       Grammar for the a^nb^n context-free language.
+%
+anbn --> a,b.
+anbn --> a,anbn,b.
+
+
+%!      not_s0 is nondet.
+%
+%       A grammar for the language of non-a^nb^n a-b strings.
+%
+not_anbn --> ab_string(Ss), { \+ phrase(anbn,Ss) }.
+
+ab_string([S]) --> ab(S).
+ab_string([S|Ss]) --> ab(S), ab_string(Ss).
+
+ab(a) --> a.
+ab(b) --> b.
+
+
+% Grammar for the langauge {a^nb^n|n >= m >= 0}
+s1 --> a,s1,b.
+s1 --> a,s1.
+s1 --> empty.
+
+a --> [a].
+b --> [b].
+
+% Grammar for the language of equal numbers of as and bs in any order.
+% L = {w in {a,b}* | n_a(w) = n_b(w)} (n_a is n with underscore a, so
+% "the n for a".
+s2 --> a,s2,b.
+s2 --> b,s2,a.
+s2 --> s2, s2.
+s2 --> empty.
+
+% Language of balanced parentheses.
+parens --> lp, parens, rp.
+parens --> parens, parens.
+parens --> empty.
+
+lp --> ['('].
+rp --> [')'].

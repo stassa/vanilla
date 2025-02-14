@@ -4,11 +4,13 @@
 	       ,a/2
 	       ,b/2
                ,empty/2
+	       ,generate_examples/6
 	       ]).
 
 :-use_module(project_root(configuration)).
 :-use_module(lib(poker/poker_configuration),[]).
 :-use_module(grammar_constraints).
+:-use_module(data(poker_examples/test_harness)).
 
 /** <module> Learn an a^nb^n CFG with Poker.
 
@@ -275,3 +277,6 @@ initial_example(s/2,s([a,a,a,b,b,b],[])).
 a --> [a].
 b --> [b].
 empty --> [].
+
+generate_examples(pos,all,anbn,10,0,4).
+generate_examples(neg,all,not_anbn,10,0,4).
