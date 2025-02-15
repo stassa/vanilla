@@ -183,7 +183,8 @@ experiment(S,N,J,K,[Ps,Pos,Neg,Rs_l,Rs_p]):-
 %       by Language.
 %
 test_labelling(S,Pos,Neg,[Acc,TPR,TNR]):-
-        accuracy(test_harness,S,Pos,Neg,Acc)
+        debug(test_labelling,'Testing labelling for target: ~w',[S])
+        ,accuracy(test_harness,S,Pos,Neg,Acc)
         ,tpr(test_harness,S,Pos,TPR)
         ,tnr(test_harness,S,Neg,TNR)
         ,debug(test_labelling,'Labelling: Measured Acc: ~w TPR: ~w TNR: ~w',[Acc,TPR,TNR]).
@@ -212,10 +213,14 @@ test_program(T/_,Cs,[Acc,TPR,TNR]):-
         test_program(T,Cs,[Acc,TPR,TNR])
         ,!.
 test_program(T,Cs,[Acc,TPR,TNR]):-
-        Program_module = experiment_file
-        ,internal_symbol(T,T_)
+        debug(test_program,'Testing learned program for target: ~w',[T])
+        ,debug_clauses(test_program_full,'Testing learned program:',Cs)
+        ,Program_module = experiment_file
+        ,once( internal_symbol(T,T_) )
         ,S = assert_program(Program_module,Cs,Rs)
-        ,G = (generate_examples(pos,Pos)
+        ,G = (debug(test_program,'Generating positive testing examples.',[])
+             ,generate_examples(pos,Pos)
+             ,debug(test_program,'Generating negative testing examples.',[])
              ,generate_examples(neg,Neg)
              ,accuracy(Program_module,T_,Pos,Neg,Acc)
              ,tpr(Program_module,T_,Pos,TPR)
@@ -240,7 +245,8 @@ test_program(T,Cs,[Acc,TPR,TNR]):-
 %
 generate_examples(Sign,Es):-
         experiment_file:generate_examples(Sign,S,N,J,K)
-        ,generate_initial(S,N,J,K,Es).
+        ,generate_initial(S,N,J,K,Es)
+        ,debug_clauses_length(generate_examples,'Generated ~w testing examples',Es).
 
 
 
@@ -293,7 +299,7 @@ generate_initial(S,N,J,K,Es):-
 %       two should be merged.
 %
 generate_example(S,N,E_):-
-        internal_symbol(S,S_)
+        once( internal_symbol(S,S_) )
         ,length(Xs,N)
         ,E =.. [S,Xs,[]]
         ,call(E)
@@ -309,9 +315,29 @@ generate_example(S,N,E_):-
 %       experiment files. Experiment files are putting it on to
 %       underline the self-supervised capabilities of Poker.
 %
-internal_symbol(even,q0).
-internal_symbol(palindrome,q0).
-internal_symbol(anbn,s).
+%       Raises type error if Internal is not a language defined in this
+%       module.
+%
+internal_symbol(L,S):-
+        internal_symbol_(L,S)
+        ,!.
+internal_symbol(L,_S):-
+        findall(Li
+               ,internal_symbol_(Li,_)
+               ,Ls)
+        ,writeln(Ls)
+        ,must_be(oneof(Ls),L).
+
+%!      internal_symbol_(?Language,?Symbol) is semidet.
+%
+%       Business end of internal_symbol/2.
+%
+internal_symbol_(even,q0).
+internal_symbol_(odd,q0).
+internal_symbol_(palindrome,q0).
+internal_symbol_(not_palindrome,q0).
+internal_symbol_(anbn,s).
+internal_symbol_(not_anbn,s).
 
 
 %!      accuracy(+Module,+Target,+Pos,+Neg,-Accuracy) is det.
@@ -459,7 +485,6 @@ bit_string([B|Bs]) --> bit(B), bit_string(Bs).
 
 bit(1) --> [1].
 bit(0) --> [0].
-
 
 
 %!      s0 is nondet.
