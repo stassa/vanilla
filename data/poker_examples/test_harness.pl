@@ -1,7 +1,7 @@
 :-module(test_harness,[experiments/6
                       ,experiment/5
                       ,generate_initial/5
-                      ,generate_all_initial/4
+                      ,test_labelling/4
                       ,test_program/3
                       ]).
 
@@ -20,37 +20,44 @@ labelled by Poker, or the programs it learns to label them.
 
 %!      experiments(+Target,+N,+M,+J,+K,-Means) is det.
 %
-%       Run N experiments learning a Target predicate.
+%       Run N experiments learning a program and labelling with Poker.
 %
-%       Target is the symbol, but not arity, of the target theory used
+%       Language is the symbol, but not arity, of the target theory used
 %       to verify examples learned by Poker.
 %
 %       N is the number of experiments to run.
 %
-%       M is the number of initial examples to generate, with
+%       M is the number of initial (training) examples to generate, with
 %       generate_initial/5.
 %
 %       J and K are the upper and lower bounds of the length of input
-%       lists in generated initial example strings of Target. Each
-%       initial example will have an input list of length between J and
-%       K.
+%       lists in generated initial example strings of Language. Examples
+%       are in atomic Definite Clause Grammars form, with two lists:
+%       an input list and output list; like this- p(Xs,[]), where Xs is
+%       the input list and [] the output list. Each initial example will
+%       have an input list of length between J and K.
 %
-%       Means is a list [Acc,TPR,TNR], where each is the mean accuracy,
-%       true positive rate and true negative rate of the N hypotheses
-%       learned from the sets of N examples generated in the N steps of
-%       the experiment.
+%       Means is a list of two lists [Ms_L, Ms_P], each of which is a
+%       list [Acc,TPR,TNR], where Acc is the mean accuracy, TPR the
+%       mean true positive rate and TNR the mean true negative rate of
+%       the N hypotheses learned from the sets of N examples generated
+%       in the N steps of the experiment. The first sub-list, Ms_L holds
+%       the means of the labelling results, and Ms_P holds the means of
+%       the program testing results.
 %
 %       This predicate runs N experiments calling experiment/5 with
 %       Target, M, J, and K as input.
 %
-experiments(S,N,M,J,K,Ms):-
-        findall([Acc,TPR,TNR]
+experiments(S,N,M,J,K,[Ms_l,Ms_p]):-
+        findall(Res_l-Res_p
                ,(between(1,N,I)
                 ,debug(experiments,'Experiment ~w of ~w',[I,N])
-                ,experiment(S,M,J,K,[_Ps,_Pos,_Neg,Acc,TPR,TNR])
+                ,experiment(S,M,J,K,[_Ps,_Pos,_Neg,Res_l,Res_p])
                 )
                ,Rs)
-        ,result_means(Rs,Ms).
+        ,pairs_keys_values(Rs,Rs_l,Rs_p)
+        ,result_means(Rs_l,Ms_l)
+        ,result_means(Rs_p,Ms_p).
 
 
 %!      result_means(+Results,-Means) is det.
@@ -111,44 +118,52 @@ sum(A,B,C):-
         C is A + B.
 
 
-%!      experiment(+Target,+N,+J,+K,-Results) is det.
+%!      experiment(+Language,+N,+J,+K,-Results) is det.
 %
-%       Run an experiment learning a Target predicate.
+%       Run an experiment learning a program and labelling examples.
 %
-%       Target is the symbol, but not arity, of the target theory used
+%       Language is the symbol, but not arity, of the target theory used
 %       to verify examples learned by Poker.
 %
-%       M is the number of initial examples to generate, with a call to
-%       generate_initial/5.
+%       M is the number of initial examples to generate, with a call
+%       to generate_initial/5. N can be the atom all in which case all
+%       the input lists of length between J and K are generated.
 %
 %       J and K are the upper and lower bounds of the length of input
 %       lists in in generated initial examples of strings of the Target
 %       language. Each initial example will have an input list of length
 %       between J and K.
 %
-%       Results is a list [Ps,Pos,Neg,Acc,TPR,TNR], where:
+%       Results is a list [Ps,Pos,Neg,Ms_L,Ms_R], where:
 %       * Ps is the learned hypothesis
 %       * Pos is the list of positive examples identified
 %       * Neg is the list of negative examples identified
+%       * Ms_L is the list of labelling results
+%       * Ms_R is the list of program results.
+%
+%       Each of Ms_L and Ms_R is a list [Acc,TPR,TNR], where:
+%
+%       In Ms_L
 %       * Acc is the accuracy of the labelling of atoms in Pos and Neg.
 %       * TPR is the True Positive Rate of the labelling in Pos and Neg.
 %       * TNR is the True Negative Rate of the labelling in Pos and Neg.
 %
-experiment(S,N,J,K,[Ps,Pos,Neg,Acc,TPR,TNR]):-
-        (   number(N)
-        ->  generate_initial(S,N,J,K,Es)
-        ;   N == all
-        ->  generate_all_initial(S,J,K,Es)
-        )
+%       In Ms_P
+%       * Acc is the accuracy of the program learned from N examples
+%         measured against the ground truth of Language.
+%       * TPR is the True Positive Rate of the program.
+%       * TNR is the True Negative Rate of the program.
+%
+experiment(S,N,J,K,[Ps,Pos,Neg,Rs_l,Rs_p]):-
+        generate_initial(S,N,J,K,Es)
         ,debug_clauses_length(experiment_initial,'Generated ~w initial examples:',Es)
         ,time( learn(Es,Pos,Neg,Ps) )
         ,debug_clauses(experiment_learned,'Learned hypothesis:',Ps)
         ,debug_clauses_length(experiment_examples,'~w Positive examples:',Pos)
         ,debug_clauses_length(experiment_examples,'~w Negative examples:',Neg)
-        ,accuracy(test_harness,S,Pos,Neg,Acc)
-        ,tpr(test_harness,S,Pos,TPR)
-        ,tnr(test_harness,S,Neg,TNR)
-        ,debug(experiment_result,'Measured Acc: ~w TPR: ~w TNR: ~w',[Acc,TPR,TNR]).
+        ,test_labelling(S,Pos,Neg,Rs_l)
+        ,test_program(S,Ps,Rs_p).
+
 
 
 %!      accuracy(+Module,+Target,+Pos,+Neg,-Accuracy) is det.
@@ -236,14 +251,16 @@ atomize(N,An):-
         ,atom_number(A,An).
 
 
-%!      generate_initial(+Target,+N,+Min,+Max,-Atoms) is det.
+%!      generate_initial(+Language,+N,+Min,+Max,-Atoms) is det.
 %
 %       Generate a set of atoms to use as initial examples in Poker.
 %
-%       Target is the symbol, but not arity, of the target theory used
+%       Language is the symbol, but not arity, of the target theory used
 %       to generate atoms.
 %
-%       N is the number of atoms to generate.
+%       N is either a number or the atom all. If N is a number, it's the
+%       number of atoms to generate. If it is "all", then all atoms with
+%       strings of length between Min and Max will be generated.
 %
 %       Min and Max are the upper and lower bounds on the length of
 %       strings, represented as definite clause grammars input lists, in
@@ -251,13 +268,10 @@ atomize(N,An):-
 %
 %       Atoms is the list of generated atoms.
 %
-%       This predicate first generates _all_ atoms with input lists of
-%       length between Min and Max, and then samples N of those atoms,
-%       with a call to k_list_samples/3. The sampled atoms are returned
-%       in Atoms.
-%
-%       @tbd This and generate_all_initial can be merged with N
-%       accepting the value "all". Just saying.
+%       When N is a number this predicate first generates _all_ atoms
+%       with input lists of length between Min and Max, and then samples
+%       N of those atoms, with a call to k_list_samples/3. The sampled
+%       atoms are returned in Atoms.
 %
 generate_initial(S,N,J,K,Es):-
         findall(E
@@ -265,7 +279,11 @@ generate_initial(S,N,J,K,Es):-
                 ,generate_example(S,I,E)
                 )
                ,Es_)
-        ,k_list_samples(N,Es_,Es).
+        ,(   number(N)
+         ->  k_list_samples(N,Es_,Es)
+         ;   N == all
+         ->  Es = Es_
+         ).
 
 
 %!      generate_example(+Target,+Length,-Atom) is nondet.
@@ -304,41 +322,27 @@ internal_symbol(anbn,s).
 
 
 
-%!      generate_all_initial(+Target,+Min,+Max,-Atoms) is det.
+%!      test_labelling(+Language,+Pos,+Neg,-Results) is det.
 %
-%       Generate all strings of Target with length between Min, Max.
+%       Test a labelling of sets of Positive and Negative examples.
 %
-%       Target is the symbol, but not arity, of the target theory used
-%       to generate atoms.
+%       Language is the symbol, but not arity, of the target theory used
+%       to verify examples learned by Poker.
 %
-%       Min and Max are the upper and lower bounds on the length of
-%       strings, represented as definite clause grammars input lists, in
-%       the generated atoms.
+%       Pos and Neg are positive and negative examples of Language
+%       identified by a program learned by Poker from some initial
+%       observations.
 %
-%       Atoms is the list of generated atoms.
+%       Results is a list [Acc,TPR,TNR], the accuracy, True Positive
+%       Rate and True Negative Rate of the labelling of the positive and
+%       negative examples in Pos and Neg, compared to the true labelling
+%       by Language.
 %
-%       This predicate is similar to generate_initial/4 but generates
-%       _all_ atoms with input lists of length between Min and Max,
-%       without sampling.
-%
-generate_all_initial(S,J,K,Es):-
-        findall(E
-               ,(between(J,K,I)
-                ,generate_example_all(S,I,E)
-                )
-               ,Es).
-
-
-%!      generate_example_all(+Target,+Length,-Atom) is nondet.
-%
-%       Generate an Atom with a list of characters of the given Length.
-%
-generate_example_all(S,N,E_):-
-        internal_symbol(S,S_)
-        ,length(Xs,N)
-        ,E =.. [S,Xs,[]]
-        ,call(E)
-        ,E_ =.. [S_,Xs,[]].
+test_labelling(S,Pos,Neg,[Acc,TPR,TNR]):-
+        accuracy(test_harness,S,Pos,Neg,Acc)
+        ,tpr(test_harness,S,Pos,TPR)
+        ,tnr(test_harness,S,Neg,TNR)
+        ,debug(test_labelling,'Labelling: Measured Acc: ~w TPR: ~w TNR: ~w',[Acc,TPR,TNR]).
 
 
 
@@ -361,15 +365,17 @@ test_program(T/_,Cs,[Acc,TPR,TNR]):-
         ,!.
 test_program(T,Cs,[Acc,TPR,TNR]):-
         Program_module = experiment_file
+        ,internal_symbol(T,T_)
         ,S = assert_program(Program_module,Cs,Rs)
         ,G = (generate_examples(pos,Pos)
              ,generate_examples(neg,Neg)
-             ,accuracy(Program_module,T,Pos,Neg,Acc)
-             ,tpr(Program_module,T,Pos,TPR)
-             ,tnr(Program_module,T,Neg,TNR)
+             ,accuracy(Program_module,T_,Pos,Neg,Acc)
+             ,tpr(Program_module,T_,Pos,TPR)
+             ,tnr(Program_module,T_,Neg,TNR)
              )
         ,C = erase_program_clauses(Rs)
-        ,setup_call_cleanup(S,G,C).
+        ,setup_call_cleanup(S,G,C)
+        ,debug(test_program,'Program: Measured Acc: ~w TPR: ~w TNR: ~w',[Acc,TPR,TNR]).
 
 
 %!      generate_positives(+Sign,-Examples) is det.
@@ -386,11 +392,7 @@ test_program(T,Cs,[Acc,TPR,TNR]):-
 %
 generate_examples(Sign,Es):-
         experiment_file:generate_examples(Sign,S,N,J,K)
-        ,(   number(N)
-         ->  generate_initial(S,N,J,K,Es)
-         ;   N == all
-         ->   generate_all_initial(S,J,K,Es)
-         ).
+        ,generate_initial(S,N,J,K,Es).
 
 
 
