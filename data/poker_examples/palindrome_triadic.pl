@@ -8,6 +8,7 @@
                     ]).
 
 :-use_module(project_root(configuration)).
+:-use_module(lib(poker/poker_auxiliaries)).
 :-use_module(data(poker_examples/test_harness)).
 
 /** <module> Learn to recognise palindromes with Poker.
@@ -259,6 +260,16 @@ correct hypothesis, including one that covers the false negatives.
 
 */
 
+/*
+% Raises error despite importing poker_auxiliaries. Why?
+% Best way to use currently is to load file for the first time when this
+% is commented out, then uncomment and reload the file (with make/0).
+
+:-poker_auxiliaries:set_poker_configuration_option(clause_limit,[5]).
+:-poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true]).
+*/
+
+
 % McCarhtyite constraint
 configuration:metarule_constraints(M,fail):-
 	ground(M)
@@ -305,8 +316,7 @@ metarules(q0/2,[identity,tri_chain]).
 
 initial_example(q0/2,E):-
 	% Uncomment to generate random sets of initial eamples.
-        %,generate_initial(palindrome,K,0,5,Es)
-	generate_all_initial(palindrome,0,4,Es)
+	generate_initial(palindrome,all,0,4,Es)
         ,member(E,Es).
 
 zero --> [0].

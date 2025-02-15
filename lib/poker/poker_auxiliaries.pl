@@ -17,6 +17,7 @@
 			     ,edit_experiment_file/0
 			     % Configuration auxiliaries
 			     ,set_configuration_option/2
+			     ,set_poker_configuration_option/2
 			     % Program auxiliaries
 			     ,unifiable_compare/3
 			     ,skolem_sort/2
@@ -603,14 +604,6 @@ edit_experiment_file:-
 %	experiment, which then of course affects subsequent experiments.
 %	It happened to me, it could happen to you.
 %
-/*
-% Modify when multi-options are added to configuration.
-set_configuration_option(N,_Vs):-
-	memberchk(N, [recursion_depth_limit])
-	,!
-	,print_message(warning,multi_option(N))
-	,print_message(warning,option_not_set(N)).
-*/
 set_configuration_option(N, V):-
 	atomic(V)
 	,!
@@ -648,19 +641,23 @@ set_configuration_option(N, Vs):-
 	,assert(configuration:T_).
 
 
-% Message hook for multi-option warning in first clause of
-% set_configuration_option/2.
-prolog:message(multi_option(N)) -->
-	{ A = 'You\'re attempting to set the multi-clause option ~w to a single value.~n'
-	 ,B = 'Warning: Some predicates relying on this option may fail unexpectedly.~n'
-	 ,C = 'Warning: Use auxiliaries:set_multi_configuration_option/2 instead \c
-	  or set option by hand. ~n'
-	}
-	,[A-N],[B-[], C-[]].
-
-prolog:message(option_not_set(N)) -->
-	['Option ~w not set!~n'-[N]].
-
+%!	set_poker_configuration_option(+Name,+Value) is det.
+%
+%	Change the Value of a Poker configuration Option.
+%
+%	As set_configuration_option/2 but Name must be defined in
+%	poker_configuration module.
+%
+%	@tbd currently calling this and set_configuration_option/2 as a
+%	directive from an experiment file raises an existence error.
+%	Why?
+%
+set_poker_configuration_option(N, Vs):-
+	length(Vs, A)
+	,functor(T,N,A)
+	,T_ =.. [N|Vs]
+	,retractall(poker_configuration:T)
+	,assert(poker_configuration:T_).
 
 
 

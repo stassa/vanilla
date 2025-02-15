@@ -9,6 +9,7 @@
 
 :-use_module(project_root(configuration),[]).
 :-use_module(lib(poker/poker_configuration),[]).
+:-use_module(lib(poker/poker_auxiliaries)).
 
 :-use_module(data(poker_examples/test_harness)).
 
@@ -207,6 +208,25 @@ grammar_constraints:invented(inv_1).
 grammar_constraints:preterminal(zero).
 grammar_constraints:preterminal(one).
 grammar_constraints:preterminal(empty).
+
+/*
+% Raises error despite importing poker_auxiliaries. Why?
+% Best way to use currently is to load file for the first time when this
+% is commented out, then uncomment and reload the file (with make/0).
+
+:-poker_auxiliaries:set_configuration_option(fetch_clauses,[[builtins,bk,metarules]]).
+:-poker_auxiliaries:set_configuration_option(table_meta_interpreter, [false]).
+:-poker_auxiliaries:set_configuration_option(untable_meta_interpreter, [true]).
+:-poker_auxiliaries:set_poker_configuration_option(clause_limit,[5]).
+:-poker_auxiliaries:set_poker_configuration_option(gestalt,[true]).
+:-poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true]).
+:-poker_auxiliaries:set_poker_configuration_option(max_invented,[1]).
+:-poker_auxiliaries:set_poker_configuration_option(proof_samples,[1.0]).
+:-poker_auxiliaries:set_poker_configuration_option(respecialise,[true]).
+:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100]).
+:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+						  ,[deterministic]).
+*/
 
 
 %!	safe_example(-Example) is nondet.

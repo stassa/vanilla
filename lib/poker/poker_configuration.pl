@@ -26,6 +26,21 @@
 
 */
 
+% Dynamic options can be set with poker_set_configuration_option/2
+% directives. See Poker experiment files for examples.
+:- dynamic clause_limit/1
+          ,gestalt/1
+          ,greedy_generalisation/1
+          ,flatten_prove_all/1
+          ,max_invented/1
+          ,proof_samples/1
+          ,reduction/1
+          ,respecialise/1
+          ,strict_clause_limit/1
+          ,unlabelled_examples/1
+          ,unlabelled_examples_order/1.
+
+
 %!      clause_limit(?Limit) is semidet.
 %
 %       Limit the number of resolving clauses learned from each example.
