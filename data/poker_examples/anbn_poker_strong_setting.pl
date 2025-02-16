@@ -31,7 +31,16 @@ explicit knowledge. That's generally the done thing in machine learning
 research. Otherwise, how can we estimate the error of our systems on
 truly unseen data?
 
-Check your configs and training data:
+
+Check your configs and training data to reproduce results:
+
+
+% Remember to make/0 if you change this file to set configuration options
+% with poker_set_configuration_option/2.
+
+2 ?- make.
+% [...]/vanilla/data/poker_examples/anbn_poker_strong_setting compiled into anbn 0.00 sec, 0 clauses
+true.
 
 ==
 1 ?- [load_headless].
@@ -40,30 +49,33 @@ Global stack limit 2,147,483,648
 Table space 2,147,483,648
 true.
 
-2 ?- configuration:(fetch_clauses(Fetch), table_meta_interpreter(Table), untable_meta_interpreter(Untable)), poker_configuration:(clause_limit(Limit), max_invented(Invented), flatten_prove_all(Flatten), gestalt(Gestalt), greedy_generalisation(Greedy), respecialise(Respecialise), strict_clause_limit(Strict), proof_samples(Samples), unlabelled_examples(Unlabelled), unlabelled_examples_order(Order), reduction(Reduction)), listing(safe_example/1).
+
+3 ?- configuration:(fetch_clauses(Fetch), table_meta_interpreter(Table), untable_meta_interpreter(Untable)), poker_configuration:(clause_limit(Limit), max_invented(Invented), flatten_prove_all(Flatten), gestalt(Gestalt), greedy_generalisation(Greedy), respecialise(Respecialise), strict_clause_limit(Strict), proof_samples(Samples), unlabelled_examples(Unlabelled), unlabelled_examples_order(Order), reduction(Reduction)), listing(safe_example/1).
 :- dynamic poker_configuration:safe_example/1.
 :- multifile poker_configuration:safe_example/1.
 
 poker_configuration:safe_example(m(s, Ls, [])) :-
-    experiment_file:
-    (   between(1, 9, L),
+    anbn:
+    (   between(0, 9, L),
         length(Ls, L)
     ).
 
-Fetch = [builtins,bk,metarules],
-Table = Flatten, Flatten = Gestalt, Gestalt = Greedy, Greedy = Respecialise, Respecialise = Strict, Strict = false,
-Untable = true,
-Limit = 5,
+Fetch = all,
+Table = Untable, Untable = Flatten, Flatten = true,
+Limit = 3,
 Invented = 1,
+Gestalt = Greedy, Greedy = Respecialise, Respecialise = Strict, Strict = false,
 Samples = 1.0,
-Unlabelled = 100,
+Unlabelled = 40,
 Order = deterministic,
 Reduction = plotkins.
 
-3 ?- poker_auxiliaries:list_mil_problem(s/2).
+4 ?- poker_auxiliaries:list_mil_problem(s/2).
 Initial examples
 ----------------
+s([a,a,b,b],[]).
 s([a,a,a,b,b,b],[]).
+s([a,a,a,a,b,b,b,b],[]).
 
 Background knowledge (First Order)
 ----------------------------------
@@ -124,122 +136,72 @@ metarule_constraints(m(chain, P0, P1, _), fail) :-
 true.
 ==
 
-
-Expected results:
+Expected results.
 
 ==
-4 ?- _T = s/2, time( poker:learn(_T,_Pos,_Neg,_Ps) ), maplist(auxiliaries:print_clauses,['Hypothesis:','Positive examples:','Negative examples:'],[_Ps,_Pos,_Neg]), maplist(length,[_Ps,_Pos,_Neg],[Ps,Pos,Neg]).
-% 21,034,018 inferences, 10.406 CPU in 34.289 seconds (30% CPU, 2021287 Lips)
+5 ?- _T = s/2, time( poker:learn(_T,_Pos,_Neg,_Ps) ), maplist(auxiliaries:print_clauses,['Hypothesis:','Positive examples:','Negative examples:'],[_Ps,_Pos,_Neg]), maplist(length,[_Ps,_Pos,_Neg],[Ps,Pos,Neg]).
+% 9,887,787 inferences, 1.250 CPU in 2.806 seconds (45% CPU, 7910230 Lips)
 Hypothesis:
-s(A,B):-inv_1_53(A,C),b(C,B).
+s(A,B):-inv_1_11(A,C),b(C,B).
 s(A,B):-a(A,C),b(C,B).
-inv_1_53(A,B):-a(A,C),s(C,B).
+inv_1_11(A,B):-a(A,C),s(C,B).
 Positive examples:
 s([a,b],[]).
 s([a,a,b,b],[]).
 s([a,a,a,b,b,b],[]).
+s([a,a,a,a,b,b,b,b],[]).
 Negative examples:
-s([b,b,b,b,b,b],[]).
-s([b,b,b,b,b],[]).
-s([b,b,b,b,a,b],[]).
-s([b,b,b,b,a,a],[]).
 s([b,b,b,b],[]).
-s([b,b,b,a,b,b],[]).
-s([b,b,b,a,b],[]).
-s([b,b,b,a,a,b],[]).
-s([b,b,b,a,a,a],[]).
-s([b,b,b,a,a],[]).
+s([b,b,b,a],[]).
 s([b,b,b],[]).
-s([b,b,a,b,b,b],[]).
-s([b,b,a,b,b],[]).
-s([b,b,a,b,a,b],[]).
-s([b,b,a,b,a,a],[]).
 s([b,b,a,b],[]).
-s([b,b,a,a,b,b],[]).
-s([b,b,a,a,b],[]).
-s([b,b,a,a,a,b],[]).
-s([b,b,a,a,a,a],[]).
-s([b,b,a,a,a],[]).
 s([b,b,a,a],[]).
+s([b,b,a],[]).
 s([b,b],[]).
-s([b,a,b,b,b,b],[]).
-s([b,a,b,b,b],[]).
-s([b,a,b,b,a,b],[]).
-s([b,a,b,b,a,a],[]).
 s([b,a,b,b],[]).
-s([b,a,b,a,b,b],[]).
-s([b,a,b,a,b],[]).
-s([b,a,b,a,a,b],[]).
-s([b,a,b,a,a,a],[]).
-s([b,a,b,a,a],[]).
+s([b,a,b,a],[]).
 s([b,a,b],[]).
-s([b,a,a,b,b,b],[]).
-s([b,a,a,b,b],[]).
-s([b,a,a,b,a,b],[]).
-s([b,a,a,b,a,a],[]).
 s([b,a,a,b],[]).
-s([b,a,a,a,b,b],[]).
-s([b,a,a,a,b],[]).
-s([b,a,a,a,a,b],[]).
-s([b,a,a,a,a,a],[]).
-s([b,a,a,a,a],[]).
 s([b,a,a,a],[]).
 s([b,a,a],[]).
-s([a,b,b,b,b,b],[]).
-s([a,b,b,b,b],[]).
-s([a,b,b,b,a,b],[]).
-s([a,b,b,b,a,a],[]).
+s([b,a],[]).
+s([b],[]).
 s([a,b,b,b],[]).
-s([a,b,b,a,b,b],[]).
-s([a,b,b,a,b],[]).
-s([a,b,b,a,a,b],[]).
-s([a,b,b,a,a,a],[]).
-s([a,b,b,a,a],[]).
+s([a,b,b,a],[]).
 s([a,b,b],[]).
-s([a,b,a,b,b,b],[]).
-s([a,b,a,b,b],[]).
-s([a,b,a,b,a,b],[]).
-s([a,b,a,b,a,a],[]).
 s([a,b,a,b],[]).
-s([a,b,a,a,b,b],[]).
-s([a,b,a,a,b],[]).
-s([a,b,a,a,a,b],[]).
-s([a,b,a,a,a,a],[]).
 s([a,b,a,a,a],[]).
 s([a,b,a,a],[]).
-s([a,a,b,b,b,b],[]).
+s([a,b,a],[]).
 s([a,a,b,b,b],[]).
-s([a,a,b,b,a,b],[]).
-s([a,a,b,b,a,a],[]).
-s([a,a,b,a,b,b],[]).
+s([a,a,b,b,a],[]).
 s([a,a,b,a,b],[]).
-s([a,a,b,a,a,b],[]).
-s([a,a,b,a,a,a],[]).
 s([a,a,b,a,a],[]).
+s([a,a,b,a],[]).
 s([a,a,b],[]).
 s([a,a,a,b,b],[]).
-s([a,a,a,b,a,b],[]).
-s([a,a,a,b,a,a,a],[]).
-s([a,a,a,b,a,a],[]).
+s([a,a,a,b,a],[]).
 s([a,a,a,b],[]).
-s([a,a,a,a,b,b,b],[]).
-s([a,a,a,a,b,b],[]).
-s([a,a,a,a,b,a,b],[]).
-s([a,a,a,a,b,a,a],[]).
 s([a,a,a,a,b],[]).
-s([a,a,a,a,a,b,b],[]).
-s([a,a,a,a,a,b],[]).
-s([a,a,a,a,a,a,b],[]).
-s([a,a,a,a,a,a,a],[]).
-s([a,a,a,a,a,a],[]).
 s([a,a,a,a,a],[]).
 s([a,a,a,a],[]).
 s([a,a,a],[]).
 s([a,a],[]).
-Ps = Pos, Pos = 3,
-Neg = 97.
+s([a],[]).
+s([],[]).
+Ps = 3,
+Pos = 4,
+Neg = 38.
 ==
 
+That's not a lot of new positives, and many new negatives. That's
+because with three examples it's easy to learn the target almost
+immediately so there are few alternative hypotheses to get rid of.
+
+Try setting unlabelled_examples/1 to 100 and unlabelled_examples_order/1
+to "random", and learning again. This should produce more over-general
+hypotheses, but the target theory, as above, will still come up in
+there.
 */
 
 /*
@@ -247,13 +209,17 @@ Neg = 97.
 % Best way to use currently is to load file for the first time when this
 % is commented out, then uncomment and reload the file (with make/0).
 
-:-poker_auxiliaries:set_configuration_option(fetch_clauses,[[builtins,bk,metarules]]).
-:-poker_auxiliaries:set_configuration_option(table_meta_interpreter, [false]).
-:-poker_auxiliaries:set_configuration_option(untable_meta_interpreter, [true]).
-:-poker_auxiliaries:set_poker_configuration_option(clause_limit,[5]).
+% These should already be in the "default" ish config.
+%:-poker_auxiliaries:set_configuration_option(fetch_clauses,[[builtins,bk,metarules]]).
+%:-poker_auxiliaries:set_configuration_option(fetch_clauses,[all]).
+%:-poker_auxiliaries:set_configuration_option(table_meta_interpreter, [true]).
+%:-poker_auxiliaries:set_configuration_option(untable_meta_interpreter, [true]).
+:-poker_auxiliaries:set_poker_configuration_option(clause_limit,[3]).
 :-poker_auxiliaries:set_poker_configuration_option(max_invented,[1]).
+:-poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true]).
+:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[40]).
+:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order,[deterministic]).
 */
-
 
 % Language alphabet for the constraints defeined
 % in grammar_constraints.pl
@@ -277,14 +243,16 @@ grammar_constraints:preterminal(empty).
 %	examples. This is left to the user to avoid.
 %
 poker_configuration:safe_example(m(s,Ls,[])):-
-	between(1,9,L)
+	between(0,9,L)
 	,length(Ls,L).
 
 background_knowledge(s/2,[a/2,b/2,empty/2]).
 
 metarules(s/2,[identity,chain]).
 
+initial_example(s/2,s([a,a,b,b],[])).
 initial_example(s/2,s([a,a,a,b,b,b],[])).
+initial_example(s/2,s([a,a,a,a,b,b,b,b],[])).
 
 % The background knowledge is the set of pre-terminals in the language.
 % a^nb^n does not include the empty string.
