@@ -882,7 +882,6 @@ generate(atomic,N,[Ep|Pos],K,MS,Subs,Neg_):-
         ,En =.. [Enc,S|_Args1]
 	,flatten(Subs,Subs_f)
 	,skolem_sort(Subs_f, Subs_s)
-	,Pos = [Ep|_]
 	,signature(Ep,Ss)
         ,setof(Sub
                ,M^Subs_s^member(Sub-M,Subs_s)
@@ -893,7 +892,7 @@ generate(atomic,N,[Ep|Pos],K,MS,Subs,Neg_):-
 		 ,debug_clauses(generate_full,'Generated new atom:',En)
 		 )
 		,Neg)
-	,maplist(sort,[[Ep|Pos],Neg],[Pos_s,Neg_s])
+	,maplist(sort,[Pos,Neg],[Pos_s,Neg_s])
 	,ord_subtract(Neg_s,Pos_s,Neg_d)
 	,negated(Neg_d,Neg_).
 
@@ -1059,6 +1058,7 @@ prove_all(false,Pos,K,MS,Ss,Subs):-
 %	Unlike the original, one-clause TPC version this one specialises
 %	sub-hypotheses derived by generalise/3.
 %
+/*
 specialise(Ss_Pos,_MS,[],Ss_Pos):-
 	!
        ,debug(examples,'No negative examples. Can\'t specialise',[]).
@@ -1088,6 +1088,7 @@ specialise(Ss_Pos,MS,Neg,Ss_Neg):-
 	,setup_call_cleanup(S,G,C)
 	,debug_length(specialise,'Kept ~w sub-hypotheses',Ss_Neg).
 specialise(Ss_Pos,_MS,[],Ss_Pos):-
+% TODO: duplicate.
 	!
        ,debug(examples,'No negative examples. Ca\t specialise',[]).
 specialise(Ss_Pos,MS,Neg,Ss_Neg):-
@@ -1117,6 +1118,20 @@ specialise(Ss_Pos,MS,Neg,Ss_Neg):-
 	,C = cleanup_negatives(Fs,T,U)
 	,setup_call_cleanup(S,G,C)
 	,debug_length(specialise,'Kept ~w sub-hypotheses',Ss_Neg).
+*/
+%/*
+specialise(Ss_Pos,_MS,[],Ss_Pos):-
+	!
+       ,debug(examples,'No negative examples. Can\'t specialise',[]).
+specialise(Ss_Pos,MS,Neg,Ss_Neg):-
+	%\+ poker_configuration:multithreading(specialise)
+	%,poker_configuration:clause_limit(K)
+	debug_length(specialise,'Specialising with ~w negative examples.',Neg)
+	,verify_metasubs(fail,specialise,Ss_Pos,Neg,MS,Ss_Neg)
+	,debug_length(specialise,'Kept ~w sub-hypotheses',Ss_Neg).
+%*/
+
+
 
 
 %!	reduced_top_program(+Pos,+BK,+Metarules,+Program,-Reduced)
@@ -1216,3 +1231,149 @@ reduced_top_program_(N,Ps,BK,MS,Bind):-
 reduced_top_program_(_,Rs,_BK,_MS,Rs):-
 	length(Rs, N)
 	,debug(reduction,'Final reduction: ~w',[N]).
+
+
+
+		/*******************************
+		*         VERIFICATION         *
+		*******************************/
+
+
+%!	verify_metasubs(+How,+What,+Metasubs,+Examples,+Metarules,-Verfied)
+%!	is det.
+%
+%	Verify metasubstitutions with respect to Examples.
+%
+%	How is one of: [succeed, fail], and determines whether
+%	metasubstitutions are "verified" when they succeed, or fail,
+%	respectively, for all examples in Examples.
+%
+%	What is the Poker procedure calling this predicate, one of:
+%	[specialise, respecialise, generate, prove_all].
+%
+%	Metasubs is a list-of-lists where each sublist is a list of
+%	key-value pairs S-M, where M is a metasubstitution and M its
+%	corresponding metarule, in expanded form.
+%
+%	Metarules is a list of metarules in expanded form.
+%
+%	Verified is the list of metaubstutitoin lists in
+%	Metasubs that either succeeded or failed, for all Examples,
+%	depending to How.
+%
+verify_metasubs(succeed,W,Subs,Es,MS,Subs_v):-
+	!
+	,un_negate(Es,Es_)
+	,examples_targets(Es_, Ss)
+	,excapsulated_clauses(Ss,Es_,Es_e)
+	,findall(Subs_i
+	       ,(member(Subs_i, Subs)
+		,applied_metarules(Subs_i,MS,Cs)
+		,excapsulated_clauses(Ss,Cs,Cs_e)
+		,verify_program(Cs_e,W,Es_e)
+		,debug_clauses(verify_metasubs,'Proved metasubs:',Subs_i)
+		)
+	       ,Subs_v).
+verify_metasubs(fail,W,Subs,Es,MS,Subs_v):-
+	un_negate(Es,Es_)
+	,examples_targets(Es_, Ss)
+	,excapsulated_clauses(Ss,Es_,Es_e)
+	,findall(Subs_i
+	       ,(member(Subs_i, Subs)
+		,applied_metarules(Subs_i,MS,Cs)
+		,excapsulated_clauses(Ss,Cs,Cs_e)
+		,\+ verify_program(Cs_e,W,Es_e)
+		,debug_clauses(verify_metasubs,'Refuted metasubs:',Subs_i)
+		)
+	       ,Subs_v).
+
+
+%!	un_negate(+Negated,-NoMore) is det.
+%
+%	Remove the negation from a set of literals.
+%
+un_negate([E|Es],[E|Es]):-
+	E \= (:-_)
+	,!.
+un_negate([:-E|Es],[E|Es_]):-
+	findall(Ei
+	       ,member(:-Ei,Es)
+	       ,Es_).
+
+
+%!	verify_program(+Clauses,+What,+Examples) is det.
+%
+%	Verify a program against a set of examples.
+%
+%	Clauses it the program to verify, as a list of definite clauses
+%	(the result of applying and excapsulating a set of
+%	metasubstitutions).
+%
+%	What is one of: [specialise, respectialise, generate,
+%	prove_all]. This is checked against the value of
+%	poker_configuration:multithreading/1 to determine whether the
+%	proof should be done inside a concurrent_forall/2 loop for all
+%	Examples, or inside a normal forall/2.
+%
+verify_program(Cs,W,Es):-
+	PM = experiment_file
+	,debug_clauses(verify_program_full,'Verifying program:',Cs)
+	,S = (assert_program(PM,Cs,Rs)
+	     ,table_untable_predicates(table,PM,Cs)
+	     )
+	,(   poker_configuration:multithreading(W)
+	->   G = (concurrent_forall(member(E,Es)
+				  ,(debug(examples,'Verifying Example: ~w', [E])
+				   ,call(PM:E)
+				   )
+				  )
+		 )
+	 ;   G = forall(member(E,Es)
+		       ,(debug(examples,'Verifying Example: ~w', [E])
+			,call(PM:E)
+			)
+		       )
+	 )
+	,C = (erase_program_clauses(Rs)
+	     ,table_untable_predicates(untable,PM,Cs)
+	     )
+	,setup_call_cleanup(S,G,C)
+	,debug(verify_program,'Verified program accepts all examples',[]).
+
+
+%!	table_untable_predicates(+What,+Module,+Clauses) is det.
+%
+%	Table or untable the predicates defined in a set of Clauses.
+%
+%	What is one of: [table, untable].
+%
+%	Module is the module where the programs that are to be tabled or
+%	untabled are defined.
+%
+%	Clauses is a list of clauses that potentially use the predicates
+%	to table or untable in their body literals.
+%
+table_untable_predicates(W,M,Cs):-
+	program_symbols(Cs,Ss)
+	,forall(member(S,Ss)
+	       ,table_untable(W,M,S)
+	       ).
+
+
+%!	table_untable(+What,+Module,+Symbol) is det.
+%
+%	Table or untable a predicate Symbol.
+%
+table_untable(_,_M,F/A):-
+% Attempt to identify BK predicates. Those are already defined with
+% their own properties, and trying to table them raises a permission
+% error.
+	functor(T,F,A)
+	,poker_configuration:experiment_file(_P,M)
+	,predicate_property(M:T,static)
+	,!.
+table_untable(table,M,S):-
+	M:table(S)
+	,!.
+table_untable(untable,M,S):-
+	M:untable(S).
