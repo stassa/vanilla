@@ -932,9 +932,14 @@ label(Pos,[En|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
 	,debug_clauses(label_full,'Specialising hypothesis:',Subs)
 	,debug(label,'With negative example: ~w',[En])
 	,specialise(Subs,MS,[En],Subs_S)
-        ,debug_clauses(label_full,'Specialised hypothesis:',Subs_S)
-        ,prove_all(Pos,K,MS,[],Subs_S)
-        ,!
+	,maplist(length,[Subs,Subs_S],[M,N])
+	,(   M > N
+	 ->  prove_all(Pos,K,MS,[],Subs_S)
+	 ;   true
+	 )
+	,debug_length(label,'Remaining sub-hypotheses: ~w',Subs_S)
+	,debug_clauses(label_full,'Remaining sub-hypotheses:',Subs_S)
+	,!
         ,debug(label,'Keeping negative example: ~w',[En])
         ,label(Pos,Neg,MS,K,Subs_S,Pos_Bind,[En|Neg_Acc],Neg_Bind,Ps).
 label(Pos,[:-Ep|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
