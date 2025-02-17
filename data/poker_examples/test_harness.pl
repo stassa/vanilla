@@ -338,6 +338,8 @@ internal_symbol_(palindrome,q0).
 internal_symbol_(not_palindrome,q0).
 internal_symbol_(anbn,s).
 internal_symbol_(not_anbn,s).
+internal_symbol_(anbm,s).
+internal_symbol_(not_anbm,s).
 
 
 %!      accuracy(+Module,+Target,+Pos,+Neg,-Accuracy) is det.
@@ -494,8 +496,11 @@ bit(0) --> [0].
 anbn --> a,b.
 anbn --> a,anbn,b.
 
+a --> [a].
+b --> [b].
 
-%!      not_s0 is nondet.
+
+%!      not_anbn is nondet.
 %
 %       A grammar for the language of non-a^nb^n a-b strings.
 %
@@ -508,13 +513,17 @@ ab(a) --> a.
 ab(b) --> b.
 
 
-% Grammar for the langauge {a^nb^n|n >= m >= 0}
-s1 --> a,s1,b.
-s1 --> a,s1.
-s1 --> empty.
+% Grammar for the language {a^nb^m|n >= m >= 0}
+anbm --> empty.
+anbm --> a,anbm.
+anbm --> a,anbm,b.
 
-a --> [a].
-b --> [b].
+%!      not_anbn is nondet.
+%
+%       A grammar for the language of non-a^nb^n a-b strings.
+%
+not_anbm --> ab_string(Ss), { \+ phrase(anbm,Ss) }.
+
 
 % Grammar for the language of equal numbers of as and bs in any order.
 % L = {w in {a,b}* | n_a(w) = n_b(w)} (n_a is n with underscore a, so
