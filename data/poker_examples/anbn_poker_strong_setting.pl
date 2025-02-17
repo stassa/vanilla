@@ -34,19 +34,22 @@ truly unseen data?
 
 Check your configs and training data to reproduce results:
 
-
-% Remember to make/0 if you change this file to set configuration options
-% with poker_set_configuration_option/2.
-
-2 ?- make.
-% [...]/vanilla/data/poker_examples/anbn_poker_strong_setting compiled into anbn 0.00 sec, 0 clauses
-true.
+Note that unlabelled_examples/1 may need to be set to 60, rather
+than 40 as listed below, despite the deterministic nature of everything
+really. I don't understand why.
 
 ==
 1 ?- [load_headless].
 Loading poker
 Global stack limit 2,147,483,648
 Table space 2,147,483,648
+true.
+
+% Remember to make/0 if you change this file to set configuration options
+% with poker_set_configuration_option/2.
+
+2 ?- make.
+% [...]/vanilla/data/poker_examples/anbn_poker_strong_setting compiled into anbn 0.00 sec, 0 clauses
 true.
 
 
@@ -210,15 +213,15 @@ there.
 % is commented out, then uncomment and reload the file (with make/0).
 
 % These should already be in the "default" ish config.
-%:-poker_auxiliaries:set_configuration_option(fetch_clauses,[[builtins,bk,metarules]]).
 %:-poker_auxiliaries:set_configuration_option(fetch_clauses,[all]).
 %:-poker_auxiliaries:set_configuration_option(table_meta_interpreter, [true]).
 %:-poker_auxiliaries:set_configuration_option(untable_meta_interpreter, [true]).
 :-poker_auxiliaries:set_poker_configuration_option(clause_limit,[3]).
 :-poker_auxiliaries:set_poker_configuration_option(max_invented,[1]).
 :-poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true]).
-:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[40]).
-:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order,[deterministic]).
+:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[60]).
+:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+						  ,[deterministic]).
 */
 
 % Language alphabet for the constraints defeined
