@@ -204,6 +204,7 @@ max_invented(0).
 %       * generalise: generalise/3
 %       * respecialise: respecialise/4
 %       * specialise: specialise/4
+%       * reprove: prove_all/6
 %
 %       To turn all multithreading off set it to false:
 %       ==
@@ -216,6 +217,7 @@ multithreading(false).
 %multithreading(generalise).
 %multithreading(respecialise).
 %multithreading(specialise).
+%multithreading(reprove).
 
 
 %!      proof_samples(?Sample) is semidet.

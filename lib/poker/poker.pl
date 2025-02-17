@@ -1004,37 +1004,19 @@ prove_all(_F,_Pos,_K,_MS,_Ss,[]):-
         debug(prove_all,'Empty hypothesis. Proof fails',[])
 	,!
 	,fail.
-prove_all(true,Pos,K,MS,Ss,Subs):-
+prove_all(true,Pos,_K,MS,_Ss,Subs):-
 	debug(flattening,'Flattening the Top Program',[])
 	,debug_clauses(prove_all,'Re-proving positive examples:',Pos)
 	,flatten(Subs,Subs_f)
-	,setof(Sub
-	      ,M^Subs_f^member(Sub-M,Subs_f)
-	      ,Subs_)
-	,debug_clauses(prove_all_full,'With current metasubs: ',Subs_)
-	,S = setup_negatives(Fs,T,U)
-	,G = forall(member(Ep,Pos)
-		   ,prove(Ep,K,MS,Ss,Subs_,Subs_)
-		   )
-	,C = cleanup_negatives(Fs,T,U)
-	,setup_call_cleanup(S,G,C)
+	,sort(Subs_f,Subs_s)
+	,debug_clauses(prove_all_full,'With current metasubs: ',Subs_s)
+	,verify_metasubs(true,reprove,Subs_s,Pos,MS)
 	,debug(prove_all,'Proof succeeded',[]).
-prove_all(false,Pos,K,MS,Ss,Subs):-
+prove_all(false,Pos,_K,MS,_Ss,Subs):-
 	debug(flattening,'Not flattening the Top Program',[])
 	,debug_clauses(prove_all,'Re-proving positive examples:',Pos)
-	,S = setup_negatives(Fs,T,U)
-	,G = forall(member(Sub,Subs)
-		   ,(setof(Sub_
-			  ,M^Sub^member(Sub_-M,Sub)
-			  ,Subs_)
-		    ,debug_clauses(prove_all_full,'With current metasubs: ',Subs_)
-		    ,forall(member(Ep,Pos)
-			   ,prove(Ep,K,MS,Ss,Subs_,Subs_)
-			   )
-		    )
-		   )
-	,C = cleanup_negatives(Fs,T,U)
-	,setup_call_cleanup(S,G,C)
+	,debug_clauses(prove_all_full,'With current metasubs: ',Subs)
+	,verify_metasubs(false,reprove,Subs,Pos,MS)
 	,debug(prove_all,'Proof succeeded',[]).
 
 
@@ -1231,17 +1213,67 @@ reduced_top_program_(_,Rs,_BK,_MS,Rs):-
 		*******************************/
 
 
+%!	verify_metasubs(+Flat,+What,+Metasubs,+Examples,+Metarules) is
+%!	det.
+%
+%	Verify metasubsitutions with respect to a set of Examples.
+%
+%	Use this variant to prove (but not disprove) a set of
+%	Metasubstitutions without collecting those that succeed (or
+%	fail) the proof.
+%
+%	Flat is one of: [true,false] and denotes whether the set of
+%	metasubstitutions in Metasubs is a flat list, or a
+%	list-of-lists, respectively. This is mainly to accommodate
+%	prove_all/6 and the different values of poker configuration
+%	option flatten_prove_all/1.
+%
+%	What is the Poker procedure calling this predicate, currently
+%	only reprove.
+%
+%	Examples is the set of examples against which to verify
+%	Metasubs.
+%
+%	Metarules is a list of metarules in expanded form.
+%
+verify_metasubs(true,W,Subs,Es,MS):-
+	!
+	,un_negate(Es,Es_)
+	,examples_targets(Es_, Ss)
+	,excapsulated_clauses(Ss,Es_,Es_e)
+	,applied_metarules(Subs,MS,Cs)
+	,excapsulated_clauses(Ss,Cs,Cs_e)
+	,verify_program(Cs_e,W,Es_e)
+	,debug_clauses(verify_metasubs,'Proved metasubs:',Subs).
+verify_metasubs(false,W,Subs,Es,MS):-
+	!
+	,un_negate(Es,Es_)
+	,examples_targets(Es_, Ss)
+	,excapsulated_clauses(Ss,Es_,Es_e)
+	,forall(member(Subs_i, Subs)
+	       ,(applied_metarules(Subs_i,MS,Cs)
+		,excapsulated_clauses(Ss,Cs,Cs_e)
+		,verify_program(Cs_e,W,Es_e)
+		,debug_clauses(verify_metasubs,'Proved metasubs:',Subs_i)
+		)
+	       ).
+
+
+
 %!	verify_metasubs(+How,+What,+Metasubs,+Examples,+Metarules,-Verfied)
 %!	is det.
 %
 %	Verify metasubstitutions with respect to Examples.
+%
+%	Use this variant to prove or disprove a set of Metasubstitutions
+%	and collect those that succeed or fail the proof.
 %
 %	How is one of: [succeed, fail], and determines whether
 %	metasubstitutions are "verified" when they succeed, or fail,
 %	respectively, for all examples in Examples.
 %
 %	What is the Poker procedure calling this predicate, one of:
-%	[specialise, respecialise, generate, prove_all].
+%	[specialise, respecialise, generate].
 %
 %	Metasubs is a list-of-lists where each sublist is a list of
 %	key-value pairs S-M, where M is a metasubstitution and M its
