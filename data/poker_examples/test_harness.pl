@@ -159,8 +159,10 @@ experiment(S,N,J,K,[Ps,Pos,Neg,Rs_l,Rs_p]):-
         ,debug_clauses_length(experiment_initial,'Generated ~w initial examples:',Es)
         ,time( learn(Es,Pos,Neg,Ps) )
         ,debug_clauses(experiment_learned,'Learned hypothesis:',Ps)
-        ,debug_clauses_length(experiment_examples,'~w Positive examples:',Pos)
-        ,debug_clauses_length(experiment_examples,'~w Negative examples:',Neg)
+        ,debug_length(experiment_examples,'~w Positive examples.',Pos)
+        ,debug_length(experiment_examples,'~w Negative examples.',Neg)
+        ,debug_clauses_length(experiment_examples_full,'~w Positive examples:',Pos)
+        ,debug_clauses_length(experiment_examples_full,'~w Negative examples:',Neg)
         ,test_labelling(S,Pos,Neg,Rs_l)
         ,test_program(S,Ps,Rs_p).
 
@@ -214,19 +216,23 @@ test_program(T/_,Cs,[Acc,TPR,TNR]):-
         ,!.
 test_program(T,Cs,[Acc,TPR,TNR]):-
         debug(test_program,'Testing learned program for target: ~w',[T])
-        ,debug_clauses(test_program_full,'Testing learned program:',Cs)
+        ,debug_clauses_length(test_program_full,'Testing ~w-clause learned program:',Cs)
         ,Program_module = experiment_file
         ,once( internal_symbol(T,T_) )
-        ,S = assert_program(Program_module,Cs,Rs)
-        ,G = (debug(test_program,'Generating positive testing examples.',[])
+        ,S = (assert_program(Program_module,Cs,Rs)
+             ,poker:table_untable_predicates(table,Program_module,Cs)
+             )
+        ,G = (debug(test_program_full,'Generating positive testing examples.',[])
              ,generate_examples(pos,Pos)
-             ,debug(test_program,'Generating negative testing examples.',[])
+             ,debug(test_program_full,'Generating negative testing examples.',[])
              ,generate_examples(neg,Neg)
              ,accuracy(Program_module,T_,Pos,Neg,Acc)
              ,tpr(Program_module,T_,Pos,TPR)
              ,tnr(Program_module,T_,Neg,TNR)
              )
-        ,C = erase_program_clauses(Rs)
+        ,C = (erase_program_clauses(Rs)
+             ,poker:table_untable_predicates(table,Program_module,Cs)
+             )
         ,setup_call_cleanup(S,G,C)
         ,debug(test_program,'Program: Measured Acc: ~w TPR: ~w TNR: ~w',[Acc,TPR,TNR]).
 
@@ -245,8 +251,17 @@ test_program(T,Cs,[Acc,TPR,TNR]):-
 %
 generate_examples(Sign,Es):-
         experiment_file:generate_examples(Sign,S,N,J,K)
+        ,debug(generate_examples,'Generating ~w ~w examples of length in [~w,~w].'
+              ,[N,S,J,K])
         ,generate_initial(S,N,J,K,Es)
-        ,debug_clauses_length(generate_examples,'Generated ~w testing examples',Es).
+        ,(   Sign == pos
+         ->  Sign_ = positive
+         ;   Sign == neg
+         ->  Sign_ = negative
+         )
+        ,format(atom(M),'Generated ~~w ~w testing examples',[Sign_])
+        ,debug_length(generate_examples,M,Es)
+        ,debug_clauses_length(generate_examples_full,M,Es).
 
 
 
@@ -340,6 +355,10 @@ internal_symbol_(anbn,s).
 internal_symbol_(not_anbn,s).
 internal_symbol_(anbm,s).
 internal_symbol_(not_anbm,s).
+internal_symbol_(anbn_uo,s).
+internal_symbol_(not_anbn_uo,s).
+internal_symbol_(parens,p).
+internal_symbol_(unbalanced_parens,p).
 
 
 %!      accuracy(+Module,+Target,+Pos,+Neg,-Accuracy) is det.
@@ -413,7 +432,7 @@ true_negatives(M,S,Neg,TN):-
                      ,(member(En,Neg)
                       ,En =.. [_S|As]
                       ,En_ =.. [S|As]
-                      ,\+ M:call(En_)
+                      ,\+ once( M:call(En_) )
                       )
                      ,TN).
 
@@ -525,18 +544,36 @@ anbm --> a,anbm,b.
 not_anbm --> ab_string(Ss), { \+ phrase(anbm,Ss) }.
 
 
+% "anbn_uo" stands for "anbn unordered"
 % Grammar for the language of equal numbers of as and bs in any order.
 % L = {w in {a,b}* | n_a(w) = n_b(w)} (n_a is n with underscore a, so
-% "the n for a".
-s2 --> a,s2,b.
-s2 --> b,s2,a.
-s2 --> s2, s2.
-s2 --> empty.
+% "the n for a").
+:- table anbn_uo/2. % Because left-recursive.
+
+anbn_uo --> empty.
+anbn_uo --> a,anbn_uo,b.
+anbn_uo --> b,anbn_uo,a.
+anbn_uo --> anbn_uo, anbn_uo.
+
+not_anbn_uo --> ab_string(Ss), { \+ phrase(anbn_uo,Ss) }.
+
 
 % Language of balanced parentheses.
+
+:- table parens/2.
+
+parens --> empty.
 parens --> lp, parens, rp.
 parens --> parens, parens.
-parens --> empty.
 
 lp --> ['('].
 rp --> [')'].
+
+
+unbalanced_parens --> paren_string(Ss), { \+ phrase(parens,Ss) }.
+
+paren_string([S]) --> paren(S).
+paren_string([S|Ss]) --> paren(S), paren_string(Ss).
+
+paren('(') --> ['('].
+paren(')') --> [')'].
