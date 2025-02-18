@@ -19,7 +19,7 @@
 
 /** <module> Learn a grammar of the context-free language {a^nb^m|n >= m >= 0}.
 
-Work in progress. Currently works with fixed examples:
+Known good configs to reproduce experiments listed here:
 
 ==
 1 ?- [load_headless].
@@ -27,11 +27,6 @@ Loading poker
 Loading experiment file module data(poker_examples/anbm_poker.pl) from anbm.
 Global stack limit 2,147,483,648
 Table space 2,147,483,648
-true.
-
-2 ?- make.
-Loading experiment file module data(poker_examples/anbm_poker.pl) from anbm.
-% c:/users/yegoblynqueenne/documents/prolog/ilp_systems/vanilla/data/poker_examples/anbm_poker compiled into anbm 0.00 sec, 0 clauses
 true.
 
 3 ?- configuration:(fetch_clauses(Fetch), table_meta_interpreter(Table), untable_meta_interpreter(Untable)), poker_configuration:(clause_limit(Limit), max_invented(Invented), flatten_prove_all(Flatten), gestalt(Gestalt), greedy_generalisation(Greedy), respecialise(Respecialise), strict_clause_limit(Strict), proof_samples(Samples), unlabelled_examples(Unlabelled), unlabelled_examples_order(Order), reduction(Reduction)), listing(safe_example/1).
