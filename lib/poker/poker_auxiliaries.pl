@@ -16,6 +16,10 @@
 			     ,load_experiment_file/0
 			     ,edit_experiment_file/0
 			     % Configuration auxiliaries
+			     ,list_poker_options/1
+			     ,debug_poker_config/1
+			     ,list_poker_config/0
+			     ,print_poker_config/3
 			     ,set_configuration_option/2
 			     ,set_poker_configuration_option/2
 			     % Program auxiliaries
@@ -567,6 +571,142 @@ edit_experiment_file:-
 % Configuration auxiliaries
 % ================================================================================
 % Predicates for inspecting and manipulating configuration options.
+
+
+
+%!	list_poker_options(+Options) is det.
+%
+%	List a set of configuration Options for POker.
+%
+%	Options is a list of predicate indicators, Symbol/Arity, of
+%	configuration options defined in poker_configuration.pl.
+%
+%	This predicate prints to the top-level the configuration options
+%	given in Options.
+%
+%	This predicate can be used in place of list_config/0 to list the
+%	values of only a desired subset of configuration options.
+%
+%	@tbd Shameless copy/pasta from auxiliaries.pl modified for use
+%	by Poker because we don't want Vanilla to know anything about
+%	the learning systems using it.
+%
+list_poker_options(Os):-
+	\+ is_list(Os)
+	,!
+	,list_poker_options([Os]).
+list_poker_options(Os):-
+        forall(member(S/A,Os)
+              ,(functor(O,S,A)
+               ,poker_configuration:O
+               ,format('~w~n',[O])
+               )
+              ).
+
+
+
+%!	debug_poker_config(+Subject) is det.
+%
+%	Log Poker configuration options to the debug stream for Subject.
+%
+%	Alias for print_config(print,user_output,configuration).
+%
+%	Only configuration options actually defined in the
+%	poker_configuration module (i.e. not re-exported from other
+%	configuration files) are printed.
+%
+%	@tbd Shameless copy/pasta from auxiliaries.pl modified for use
+%	by Poker because we don't want Vanilla to know anything about
+%	the learning systems using it.
+%
+debug_poker_config(S):-
+	print_poker_config(debug,S,main).
+
+
+%!	list_poker_config is det.
+%
+%	Print Poker configuration options to the console.
+%
+%	Alias for print_config(print,user_output,configuration).
+%
+%	Only configuration options actually defined in the
+%	poker_configuration module (i.e. not re-exported from other
+%	configuration files) are printed.
+%
+%	@tbd Shameless copy/pasta from auxiliaries.pl modified for use
+%	by Poker because we don't want Vanilla to know anything about
+%	the learning systems using it.
+%
+list_poker_config:-
+	print_poker_config(print,user_output,main).
+
+
+%!	print_poker_config(+Print_or_Debug,+Stream_or_Subject,+Scope) is det.
+%
+%	Print or debug current configuration options for Poker.
+%
+%	Print_or_Debug is one of [print,debug] which should be
+%	self-explanatory.
+%
+%	Stream_or_Subject is either a stream alias or a debug subject,
+%	depending on the value of Print_or_Debug.
+%
+%	Scope is one of [main,all]. If Scope is "main", only
+%	configuration options whose implementation module is
+%	"poker_configuration" are printed. If Scope is "all", all
+%	configuration options re-exported by poker_configuration.pl are
+%	printed, which includes options defined elsewhere, e.g.
+%	configuration files of libraries that are re-exported by
+%	poker_configuration.pl to avoid cluttering it etc.
+%
+%	If Scope is "all" configuration options are prepended by the
+%	name of their implementation module, to help identification.
+%
+%	If Scope is something other than "main" or "all", print_poker_config/3
+%	raised an existence error.
+%
+%	Configuration options are printed in alphabetical order, which
+%	includes the alphabetical order of their implementation modules'
+%	names.
+%
+%	@tbd Shameless copy/pasta from auxiliaries.pl modified for use
+%	by Poker because we don't want Vanilla to know anything about
+%	the learning systems using it.
+%
+print_poker_config(T,S,Sc):-
+	must_be(oneof([main,all]), Sc)
+	,module_property(poker_configuration, exports(Es))
+	,findall(M:Opt_
+		,(member(F/A,Es)
+		 % No need to print those out and they're too verbose.
+		 ,\+ memberchk(F/A, [tautology/1
+				    ,safe_example/1
+				    ])
+		 ,functor(Opt,F,A)
+		 ,predicate_property(Opt, implementation_module(M))
+		 ,call(poker_configuration:Opt)
+		 % Convert to list to sort by functor only.
+		 % Standard order of terms also sorts by arity.
+		 ,Opt =.. Opt_
+		 )
+		,Opts)
+	% Sort alphabetically
+	,sort(Opts, Opts_)
+	,(   Sc = all
+	 ->  true
+	 ;   Sc = main
+	 ->  Mod = poker_configuration
+	 )
+	,forall(member(Mod:Opt, Opts_)
+	       ,(Opt_ =.. Opt
+		,(   Sc = all
+		 ->  print_or_debug(T,S,Mod:Opt_)
+		 ;   Sc = main
+		 ->  print_or_debug(T,S,Opt_)
+		 )
+		)
+	       ).
+
 
 
 %!	set_configuration_option(+Option,+Value) is det.
