@@ -339,6 +339,23 @@ generalise(Pos,MS,Ss_Pos):-
 	,rename_all_invented(Ss_Pos_s,Ss_Pos).
 
 
+%!	prove_positives(+Limit,+MS,+Example,+Subs) is det.
+%
+%	Prove a positive Example with a set of metasubstitutions.
+%
+%	Helper for concurrent_maplist/3 in generalise/3. Calls findall/3
+%	so might not make best use of multithreading (supposedly the
+%	dynamic database is not a great combo with multithreading).
+%
+%	Limit is the value of clause_limit/1, inherited from
+%	generalise/3.
+%
+%	MS is a set of expanded metarules.
+%
+%	Example is a positive example.
+%
+%	Subs is a list of metasubs with which to prove Example.
+%
 prove_positives(K,MS,Ep,SUBS):-
 	ground(Ep)
 	,debug_clauses(examples,'Positive example:',Ep)
@@ -1032,68 +1049,6 @@ prove_all(false,Pos,_K,MS,_Ss,Subs):-
 %	Unlike the original, one-clause TPC version this one specialises
 %	sub-hypotheses derived by generalise/3.
 %
-/*
-specialise(Ss_Pos,_MS,[],Ss_Pos):-
-	!
-       ,debug(examples,'No negative examples. Can\'t specialise',[]).
-specialise(Ss_Pos,MS,Neg,Ss_Neg):-
-	\+ poker_configuration:multithreading(specialise)
-	,poker_configuration:clause_limit(K)
-	,debug_length(specialise,'Specialising with ~w negative examples.',Neg)
-	,S = setup_negatives(Fs,T,U)
-	,G = findall(Subs
-		    ,(member(Subs,Ss_Pos)
-		     ,findall(Sub
-			     ,member(Sub-_M,Subs)
-			     ,Subs_)
-		     ,debug_metasubs(specialise_full
-				    ,'Specialising metasubstitutions:',Subs,Neg,MS)
-		     ,\+((member(En,Neg)
-			 ,debug(examples,'Negative example: ~w',[En])
-			 ,once(metasubstitutions(En,K,MS,Subs_))
-			 ,debug(examples,'Proved negative example: ~w',[En])
-			 )
-			)
-		     ,debug_metasubs(specialise_full
-				    ,'Keeping metasubstitutions:',Subs,Neg,MS)
-		     )
-		    ,Ss_Neg)
-	,C = cleanup_negatives(Fs,T,U)
-	,setup_call_cleanup(S,G,C)
-	,debug_length(specialise,'Kept ~w sub-hypotheses',Ss_Neg).
-specialise(Ss_Pos,_MS,[],Ss_Pos):-
-% TODO: duplicate.
-	!
-       ,debug(examples,'No negative examples. Ca\t specialise',[]).
-specialise(Ss_Pos,MS,Neg,Ss_Neg):-
-	poker_configuration:multithreading(specialise)
-	,poker_configuration:clause_limit(K)
-	,debug_length(specialise,'Specialising with ~w negative examples.',Neg)
-	,S = setup_negatives(Fs,T,U)
-	,G = findall(Subs
-		    ,(member(Subs,Ss_Pos)
-		     ,findall(Sub
-			     ,member(Sub-_M,Subs)
-			     ,Subs_)
-		     ,debug_metasubs(specialise_full
-				    ,'Specialising metasubstitutions:',Subs_,Neg,MS)
-		     ,\+((concurrent_and((member(En,Neg)
-					 ,debug_clauses(examples,'Negative example:',En))
-					,(once(metasubstitutions(En,K,MS,Subs_))
-					 ,debug_clauses(examples
-						       ,'Proved negative example:',En))
-					)
-			 )
-			)
-		     ,debug_metasubs(specialise_full
-				    ,'Keeping metasubstitutions:',Subs,Neg,MS)
-		     )
-		    ,Ss_Neg)
-	,C = cleanup_negatives(Fs,T,U)
-	,setup_call_cleanup(S,G,C)
-	,debug_length(specialise,'Kept ~w sub-hypotheses',Ss_Neg).
-*/
-%/*
 specialise(Ss_Pos,_MS,[],Ss_Pos):-
 	!
        ,debug(examples,'No negative examples. Can\'t specialise',[]).
@@ -1103,9 +1058,12 @@ specialise(Ss_Pos,MS,Neg,Ss_Neg):-
 	debug_length(specialise,'Specialising with ~w negative examples.',Neg)
 	,verify_metasubs(fail,specialise,Ss_Pos,Neg,MS,Ss_Neg)
 	,debug_length(specialise,'Kept ~w sub-hypotheses',Ss_Neg).
-%*/
 
 
+
+		/*******************************
+		*    TOP PROGRAM REDUCTION     *
+		*******************************/
 
 
 %!	reduced_top_program(+Pos,+BK,+Metarules,+Program,-Reduced)
