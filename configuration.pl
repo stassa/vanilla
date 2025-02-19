@@ -187,8 +187,8 @@ postcon_abduce metarule 'P(x,Y):- Q(x,Y), R(Y)'.
 %       Path is a path to the Prolog source file where the named Module
 %       is defined.
 %
-learner(metagol,lib(metagol/metagol)).
-%learner(poker,lib(poker/poker)).
+%learner(metagol,lib(metagol/metagol)).
+learner(poker,lib(poker/poker)).
 %learner(louise,lib(louise/louise)).
 %learner(simpleton,lib(simpleton/simpleton)).
 
