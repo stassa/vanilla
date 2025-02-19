@@ -52,6 +52,7 @@ unlabelled_examples(50)
 unlabelled_examples_order(random)
 true.
 
+
 4 ?- poker_auxiliaries:list_mil_problem(p/2).
 Initial examples
 ----------------
@@ -167,6 +168,7 @@ metarule_constraints(m(tri_chain, _P0, _P1, P2, P3), fail) :-
 true.
 ==
 
+
 There are too many bloody constraints. Note that those are loaded from
 grammar_constraints_weak_setting.pl and they apply to all grammars
 learnable with some combination of the Identity, Chain and Tri-Chain
@@ -200,7 +202,7 @@ true.
 % p([(,(,),),(,)],[])
 % p([(,),(,(,),)],[])
 % p([(,),(,),(,)],[])
-% 23,329,001 inferences, 0.797 CPU in 4.767 seconds (17% CPU, 29275609 Lips)
+% 23,329,035 inferences, 1.469 CPU in 4.893 seconds (30% CPU, 15883598 Lips)
 % Learned hypothesis:
 % p(A,B):-empty(A,B)
 % p(A,B):-lp(A,C),p(C,D),inv_1_9(D,B)
@@ -212,15 +214,22 @@ true.
 % Testing labelling for target: parens
 % Labelling: Measured Acc: 1.0 TPR: 1.0 TNR: 1.0
 % Testing learned program for target: parens
-% Generating all parens examples of length in [0,4].
-% Generated 4 positive testing examples
-% Generating all unbalanced_parens examples of length in [0,4].
-% Generated 27 negative testing examples
+% Generating all parens examples of length in [0,20].
+% Generated 23714 positive testing examples
+% Generating all unbalanced_parens examples of length in [0,15].
+% Generated 64909 negative testing examples
 % Program: Measured Acc: 1.0 TPR: 1.0 TNR: 1.0
 Labelling = Program, Program = [1.0,1.0,1.0].
 ==
 
+Note the numbers of positive and negative examples identified by Poker,
+and the ones generated for testing. Definitions for "parens" and
+"unbalanced_parens", used to generate testing examples, are found in
+test_harness.pl.
+
+
 This may look like a mess:
+
 ==
 % p(A,B):-empty(A,B)
 % p(A,B):-lp(A,C),p(C,D),inv_1_9(D,B)
@@ -290,16 +299,16 @@ Here's a more complete experiment to assuage your concerns about that
 weird hypothesis:
 ==
 8 ?- test_harness:experiments(parens,10,all,0,6,[Labelling,Program]).
-% 23,327,525 inferences, 1.156 CPU in 4.594 seconds (25% CPU, 20175157 Lips)
-% 23,327,522 inferences, 0.969 CPU in 4.343 seconds (22% CPU, 24080023 Lips)
-% 23,327,417 inferences, 1.078 CPU in 4.357 seconds (25% CPU, 21637024 Lips)
-% 23,327,559 inferences, 0.531 CPU in 4.573 seconds (12% CPU, 43910699 Lips)
-% 23,327,454 inferences, 1.047 CPU in 4.439 seconds (24% CPU, 22282941 Lips)
-% 23,327,523 inferences, 1.094 CPU in 4.481 seconds (24% CPU, 21328021 Lips)
-% 23,327,524 inferences, 0.281 CPU in 4.452 seconds (6% CPU, 82942308 Lips)
-% 23,327,559 inferences, 1.125 CPU in 4.427 seconds (25% CPU, 20735608 Lips)
-% 23,327,523 inferences, 0.922 CPU in 4.667 seconds (20% CPU, 25304432 Lips)
-% 23,327,559 inferences, 1.062 CPU in 4.294 seconds (25% CPU, 21955350 Lips)
+% 23,327,559 inferences, 1.062 CPU in 7.061 seconds (15% CPU, 21955350 Lips)
+% 23,327,559 inferences, 4.094 CPU in 11.364 seconds (36% CPU, 5698335 Lips)
+% 23,327,559 inferences, 3.437 CPU in 10.366 seconds (33% CPU, 6786199 Lips)
+% 23,327,559 inferences, 1.953 CPU in 8.219 seconds (24% CPU, 11943710 Lips)
+% 23,327,560 inferences, 1.734 CPU in 8.437 seconds (21% CPU, 13450125 Lips)
+% 23,327,523 inferences, 1.656 CPU in 8.810 seconds (19% CPU, 14084542 Lips)
+% 23,331,355 inferences, 2.250 CPU in 8.660 seconds (26% CPU, 10369491 Lips)
+% 23,327,490 inferences, 4.188 CPU in 10.749 seconds (39% CPU, 5570744 Lips)
+% 23,327,489 inferences, 2.703 CPU in 9.007 seconds (30% CPU, 8629823 Lips)
+% 23,331,358 inferences, 2.609 CPU in 10.004 seconds (26% CPU, 8941359 Lips)
 Labelling = Program, Program = [1.0,1.0,1.0].
 ==
 
@@ -364,5 +373,5 @@ lp --> ['('].
 rp --> [')'].
 empty --> [].
 
-generate_examples(pos,parens,all,0,4).
-generate_examples(neg,unbalanced_parens,all,0,4).
+generate_examples(pos,parens,all,0,20).
+generate_examples(neg,unbalanced_parens,all,0,15).
