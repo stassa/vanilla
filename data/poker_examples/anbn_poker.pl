@@ -12,7 +12,31 @@
 :-use_module(lib(poker/poker_configuration)).
 :-use_module(data(poker_examples/test_harness)).
 
+% Identify thine self.
+:-poker_configuration:experiment_file(P,M)
+  ,format('Loading experiment file module ~w from ~w.~n',[P,M]).
+
 /** <module> Learn an a^nb^n CFG with Poker.
+
+There are three versions of anbn in data/poker_examples:
+
+1. anbn_poker.pl (this file): no specific assumptions about language or
+grammar.
+
+2. anbn_poker_weak_setting.pl: assumes only that the target language is
+Context Free and can be represented by a grammar in Chomsky Normal Form.
+
+3. anbn_poker_strong_setting.pl: Assumes that the target language is
+Context Free and can be represented by a grammar in a "natural",
+informal form.
+
+The three files differen in the set of metarules they define and in the
+constraints they impose on those metarules. This may sound a bit
+confusing but the differences between the three files, and the
+assumptions made therein should help better understand how Poker can be
+used, when different kinds or degrees or domain knowledge are available.
+-------------------------------------------------------------------------
+
 
 Check your configs and training data:
 

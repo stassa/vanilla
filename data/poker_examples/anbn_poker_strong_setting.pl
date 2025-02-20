@@ -13,11 +13,34 @@
 :-use_module(lib(poker/poker_configuration)).
 :-use_module(data(poker_examples/test_harness)).
 
+% Identify thine self.
+:-poker_configuration:experiment_file(P,M)
+  ,format('Loading experiment file module ~w from ~w.~n',[P,M]).
+
 /** <module> Learn an a^nb^n CFG with Poker.
 
-Variant of anbn_poker.pl with stronger constraints, imposing a
-combination of Chomsky Normal Form and Greibach Normal Form to the
-instantiation of metarules.
+There are three versions of anbn in data/poker_examples:
+
+1. anbn_poker.pl: no specific assumptions about language or grammar.
+
+2. anbn_poker_weak_setting.pl: assumes only that the target language is
+Context Free and can be represented by a grammar in Chomsky Normal Form.
+
+3. anbn_poker_strong_setting.pl (this file): Assumes that the target
+language is Context Free and can be represented by a grammar in a
+"natural", informal form.
+
+The three files differen in the set of metarules they define and in the
+constraints they impose on those metarules. This may sound a bit
+confusing but the differences between the three files, and the
+assumptions made therein should help better understand how Poker can be
+used, when different kinds or degrees or domain knowledge are available.
+-------------------------------------------------------------------------
+
+
+This is the version with stronger constraints, imposing a combination of
+Chomsky Normal Form and Greibach Normal Form to the instantiation of
+metarules.
 
 The "strength" of this set of constraints is in the fact that it is not
 specific to the problem being solved (learning a grammar of a^nb^n) but
