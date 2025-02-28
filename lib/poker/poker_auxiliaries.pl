@@ -8,6 +8,7 @@
 			     ,debug_length/3
 			     ,debug_clauses_length/3
 			     ,debug_metasubs/5
+			     ,debug_all_metasubs/5
 	                     % Experiment file auxiliaries
 			     ,cleanup_experiment/0
 			     ,experiment_data/4
@@ -348,6 +349,24 @@ debug_metasubs(T,M,Subs,Es,MS):-
 	,examples_targets(Es,Ss)
 	,excapsulated_clauses(Ss,Cs,Cs_e)
 	,debug_clauses(T,M,Cs_e).
+
+
+
+%!	debug_all_metasubs(+Topic,+Message,+Subs,+Examples,+Metarules)
+%!      is det.
+%
+%	Debug a list of lists of metasubs applied to their Metarules.
+%
+%	As debug_metasubs/5 but applies to lists of lists of
+%	metasubstitutions, rather than to one list of metasubstitutions.
+%
+debug_all_metasubs(T,M,Subs,Es,MS):-
+	debug(T,'~w',[M])
+	,forall(nth1(I,Subs,Subs_i)
+	       ,(format(atom(A),'-- Sub-hypothesis ~w --',[I])
+		,debug_metasubs(T,A,Subs_i,Es,MS)
+		)
+	       ).
 
 
 

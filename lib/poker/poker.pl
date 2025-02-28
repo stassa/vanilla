@@ -204,11 +204,11 @@ label(Ep,MS,K,Pos,Neg,Ps):-
 	,generalise(Ep,MS,Subs_)
 	,respecialise(Subs_,Ep,MS,Subs)
 	,debug_length(label,'Constructed ~w initial sub-hypotheses.',Subs)
-	,debug_clauses(label_full,'Initial hypothesis:',Subs)
+	,debug_all_metasubs(label_full,'Initial hypothesis:',Subs,Ep,MS)
 	,generate(N,Ep,K,MS,Subs,As)
 	,label(Ep,As,MS,K,Subs,Pos,[],Neg,Ps)
 	,debug_length(label,'Kept ~w final sub-hypotheses.',Ps)
-	,debug_clauses(label_full,'Final hypothesis:',Ps).
+	,debug_all_metasubs(label_full,'Final hypothesis:',Ps,Ep,MS).
 label(Ep,MS,K,Pos,Neg,Ps):-
         poker_configuration:greedy_generalisation(true)
 	,poker_configuration:unlabelled_examples(N)
@@ -946,7 +946,7 @@ label(Pos,[],_MS,_K,Ps,Pos,Neg,Neg,Ps):-
 	,!.
 label(Pos,[En|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
         debug_length(label,'Specialising ~w sub-hypotheses.',Subs)
-	,debug_clauses(label_full,'Specialising hypothesis:',Subs)
+	,debug_all_metasubs(label_full,'Specialising hypothesis:',Subs,Pos,MS)
 	,debug(label,'With negative example: ~w',[En])
 	,specialise(Subs,MS,[En],Subs_S)
 	,maplist(length,[Subs,Subs_S],[M,N])
@@ -955,12 +955,12 @@ label(Pos,[En|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
 	 ;   true
 	 )
 	,debug_length(label,'Remaining sub-hypotheses: ~w',Subs_S)
-	,debug_clauses(label_full,'Remaining sub-hypotheses:',Subs_S)
+	,debug_all_metasubs(label_full,'Remaining sub-hypotheses:',Subs_S,Pos,MS)
 	,!
         ,debug(label,'Keeping negative example: ~w',[En])
         ,label(Pos,Neg,MS,K,Subs_S,Pos_Bind,[En|Neg_Acc],Neg_Bind,Ps).
 label(Pos,[:-Ep|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
-        debug_clauses(label_full,'Keeping hypothesis:',Subs)
+        debug_all_metasubs(label_full,'Keeping hypothesis:',Subs,Pos,MS)
         ,debug_length(label,'Keeping ~w sub-hypotheses:',Subs)
         ,debug(label,'Keeping as positive example: ~w',[Ep])
 	,label([Ep|Pos],Neg,MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps).
@@ -1032,7 +1032,7 @@ prove_all(true,Pos,_K,MS,_Ss,Subs):-
 prove_all(false,Pos,_K,MS,_Ss,Subs):-
 	debug(flattening,'Not flattening the Top Program',[])
 	,debug_clauses(prove_all,'Re-proving positive examples:',Pos)
-	,debug_clauses(prove_all_full,'With current metasubs: ',Subs)
+	,debug_all_metasubs(prove_all_full,'With current metasubs: ',Subs,Pos,MS)
 	,verify_metasubs(false,reprove,Subs,Pos,MS)
 	,debug(prove_all,'Proof succeeded',[]).
 
@@ -1057,7 +1057,8 @@ specialise(Ss_Pos,MS,Neg,Ss_Neg):-
 	%,poker_configuration:clause_limit(K)
 	debug_length(specialise,'Specialising with ~w negative examples.',Neg)
 	,verify_metasubs(fail,specialise,Ss_Pos,Neg,MS,Ss_Neg)
-	,debug_length(specialise,'Kept ~w sub-hypotheses',Ss_Neg).
+	,debug_length(specialise,'Kept ~w sub-hypotheses',Ss_Neg)
+	,debug_all_metasubs(specialise_full,'Kept sub-hypotheses',Ss_Neg,Neg,MS).
 
 
 
