@@ -1026,7 +1026,7 @@ prove_all(true,Pos,_K,MS,_Ss,Subs):-
 	,debug_clauses(prove_all,'Re-proving positive examples:',Pos)
 	,flatten(Subs,Subs_f)
 	,sort(Subs_f,Subs_s)
-	,debug_clauses(prove_all_full,'With current metasubs: ',Subs_s)
+	,debug_metasubs(prove_all_full,'With current metasubs:',Subs_s,Pos,MS)
 	,verify_metasubs(true,reprove,Subs_s,Pos,MS)
 	,debug(prove_all,'Proof succeeded',[]).
 prove_all(false,Pos,_K,MS,_Ss,Subs):-
@@ -1053,8 +1053,6 @@ specialise(Ss_Pos,_MS,[],Ss_Pos):-
 	!
        ,debug(examples,'No negative examples. Can\'t specialise',[]).
 specialise(Ss_Pos,MS,Neg,Ss_Neg):-
-	%\+ poker_configuration:multithreading(specialise)
-	%,poker_configuration:clause_limit(K)
 	debug_length(specialise,'Specialising with ~w negative examples.',Neg)
 	,verify_metasubs(fail,specialise,Ss_Pos,Neg,MS,Ss_Neg)
 	,debug_length(specialise,'Kept ~w sub-hypotheses',Ss_Neg)
@@ -1203,7 +1201,7 @@ verify_metasubs(true,W,Subs,Es,MS):-
 	,applied_metarules(Subs,MS,Cs)
 	,excapsulated_clauses(Ss,Cs,Cs_e)
 	,verify_program(Cs_e,W,Es_e)
-	,debug_clauses(verify_metasubs,'Proved metasubs:',Subs).
+	,debug_metasubs(verify_metasubs,'Proved metasubs:',Subs,Es,MS).
 verify_metasubs(false,W,Subs,Es,MS):-
 	!
 	,un_negate(Es,Es_)
@@ -1213,7 +1211,7 @@ verify_metasubs(false,W,Subs,Es,MS):-
 	       ,(applied_metarules(Subs_i,MS,Cs)
 		,excapsulated_clauses(Ss,Cs,Cs_e)
 		,verify_program(Cs_e,W,Es_e)
-		,debug_clauses(verify_metasubs,'Proved metasubs:',Subs_i)
+		,debug_metasubs(verify_metasubs,'Proved metasubs:',Subs_i,Es,MS)
 		)
 	       ).
 
@@ -1254,7 +1252,7 @@ verify_metasubs(succeed,W,Subs,Es,MS,Subs_v):-
 		,applied_metarules(Subs_i,MS,Cs)
 		,excapsulated_clauses(Ss,Cs,Cs_e)
 		,verify_program(Cs_e,W,Es_e)
-		,debug_clauses(verify_metasubs,'Proved metasubs:',Subs_i)
+		,debug_metasubs(verify_metasubs,'Proved metasubs:',Subs_i,Es,MS)
 		)
 	       ,Subs_v).
 verify_metasubs(fail,W,Subs,Es,MS,Subs_v):-
@@ -1266,7 +1264,7 @@ verify_metasubs(fail,W,Subs,Es,MS,Subs_v):-
 		,applied_metarules(Subs_i,MS,Cs)
 		,excapsulated_clauses(Ss,Cs,Cs_e)
 		,\+ verify_program(Cs_e,W,Es_e)
-		,debug_clauses(verify_metasubs,'Refuted metasubs:',Subs_i)
+		,debug_metasubs(verify_metasubs,'Refuted metasubs:',Subs_i,Es,MS)
 		)
 	       ,Subs_v).
 
