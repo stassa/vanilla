@@ -17,6 +17,9 @@ labelled by Poker, or the programs it learns to label them.
 
 */
 
+% To draw L-Systems with Python's turtle library, via Janus.
+:- py_add_lib_dir(data(poker_examples)).
+
 
 %!      experiments(+Target,+N,+M,+J,+K,-Means) is det.
 %
@@ -317,8 +320,17 @@ generate_example(S,N,E_):-
         once( internal_symbol(S,S_) )
         ,length(Xs,N)
         ,E =.. [S,Xs,[]]
+        ,current_predicate(_,E)
+        ,!
         ,call(E)
         ,E_ =.. [S_,Xs,[]].
+generate_example(S,N,E_):-
+        once( internal_symbol(S,S_) )
+        ,length(Is,N)
+        ,E =.. [S,Is,Os,[]]
+        ,current_predicate(_,E)
+        ,call(E)
+        ,E_ =.. [S_,Is,Os,[]].
 
 
 %!      internal_symbol(?Internal,?External) is semidet.
@@ -359,6 +371,10 @@ internal_symbol_(anbn_uo,s).
 internal_symbol_(not_anbn_uo,s).
 internal_symbol_(parens,p).
 internal_symbol_(unbalanced_parens,p).
+internal_symbol_(not,q0).
+internal_symbol_(not_not,q0).
+internal_symbol_(algae,s).
+internal_symbol_(not_algae,s).
 
 
 %!      accuracy(+Module,+Target,+Pos,+Neg,-Accuracy) is det.
@@ -577,3 +593,440 @@ paren_string([S|Ss]) --> paren(S), paren_string(Ss).
 
 paren('(') --> ['('].
 paren(')') --> [')'].
+
+
+%!      not is nondet.
+%
+%       Bit string inverter grammar
+%
+not([1]) --> zero.
+not([0]) --> one.
+not([1|Bs]) --> zero, not(Bs).
+not([0|Bs]) --> one, not(Bs).
+
+
+%!      not_not is nondet.
+%
+%       Bit string inverter inverter grammar
+%
+not_not([0]) --> zero.
+not_not([1]) --> one.
+not_not([0|Bs]) --> zero, not_not(Bs).
+not_not([1|Bs]) --> one, not_not(Bs).
+
+
+
+                /*******************************
+                *          L-SYSTEMS           *
+                *******************************/
+
+
+%!      algae// is nondet.
+%
+%       Algae L-System as a context-free grammar.
+%
+%       Lindemayer's book ("The algorithmic beauty of plans") claims
+%       that L-Systems are not context-free grammars, because at each
+%       iteration all new tokens placed on the grammar stack are
+%       processed "simultaneously".
+%
+%       That seems to be right, after all. Treating the algae grammar as
+%       a Context-Free Grammar, here implemented in Definite Clause
+%       Grammars form, results in a grammar that can only perform one
+%       iteration of generation. On the other hand, this grammar can
+%       start at any point in the generation, taking as input the algae
+%       string at iteration k, and outputing the string at iteration
+%       k+1.
+%
+%       Example query:
+%       ==
+%       ?- phrase(test_harness:algae(Ss),[a,b,a]).
+%       Ss = [a,b,a,a,b] ;
+%       false.
+%
+%       % You can also run the grammar backwards to go one iteration back:
+%       ?- phrase(test_harness:algae([a,b,a]),Ss).
+%       Ss = [a,b] ;
+%       false.
+%       ==
+%
+%       __Implementation Notes__
+%
+%       The DCG below is indeed a direct translation of the rules:
+%       ==
+%       A -> AB
+%       B -> A
+%       ==
+%
+%       And so it's missing the iteration counter that controls the
+%       number of iterations. Parsing ends when the entire input string
+%       (in the second variable of phrase/2) is consumed. It is possible
+%       to add a counter if desired, but that's left as an exercise to
+%       the reader.
+%
+%       Source:
+%       https://en.wikipedia.org/wiki/L-system#Example_1:_algae
+%
+algae([a,b|Ss]) --> a, algae(Ss).
+algae([a|Ss]) --> b, algae(Ss).
+algae([]) --> [].
+
+
+%!      not_algae(Ss) is nondet.
+%
+%       Not an algage grammar.
+%
+%       Not great though.
+%
+not_algae(Ss) -->
+        ab_string(Ss)
+        ,{  \+ phrase(algae(Ss),_,[])
+            ,maplist(length,[Ss,Xs],[N,N])
+            ,phrase(ab_string(Xs),_)
+         }
+        ,Xs.
+
+
+%!      fractal_tree(?String) is semidet.
+%
+%       Calculate a fractal tree String.
+%
+%       Mnyeah, dunno. This one's not very clear.
+%
+%       Axiom: [0]
+%
+%       Source:
+%       https://en.wikipedia.org/wiki/L-system#Example_2:_fractal_(binary)_tree
+%
+fractal_tree(['['|Ss]) --> lsb,  fractal_tree(Ss).
+fractal_tree([']'|Ss]) --> rsb,  fractal_tree(Ss).
+fractal_tree([1,1|Ss]) --> one,  fractal_tree(Ss).
+fractal_tree([1,'[',0,']',0|Ss]) --> zero,  fractal_tree(Ss).
+fractal_tree([]) --> [].
+
+
+                /*******************************
+                *      L-SYSTEM FRACTALS       *
+                *******************************/
+
+% Vocabulary, used to command a turtle.
+% Note: b//0 is not declared here because it is already declared earlier
+% but when used in an L-System grammar it is interpreted as "move
+% backwards"
+
+
+%!      lsb//0 is semidet.
+%
+%       Push current position and angle on the stack.
+%
+lsb --> ['['].
+
+%!      rsb//0 is semidet.
+%
+%       Pop position and angle from the stack.
+%
+rsb --> [']'].
+
+%!      f//0 is semidet.
+%
+%       Move the turtle forward in the current heading.
+%
+%       Synonymous to g//0.
+%
+f --> [f].
+
+%!      g//0 is semidet.
+%
+%       Move the turtle forward in the current heading.
+%
+%       Synonymous to f//0.
+%
+g --> [g].
+
+
+%!      plus//0 is semidet.
+%
+%       Turn left by the current angle setting.
+%
+plus --> [+].
+
+
+%!      minus//0 is semidet.
+%
+%       Turn right by the current angle setting.
+%
+minus --> [-].
+
+%!      x//0 is semidet.
+%
+%       Ignored, used to control evolution of shape.
+%
+x --> [x].
+
+
+%!      y//0 is semidet.
+%
+%       Ignored, used to control evolution of shape.
+%
+y --> [y].
+
+
+%!      dragon_curve(?String) is semidet.
+%
+%       Calculate a Dragon Curve string.
+%
+%       Axiom: [f]
+%       Angle: 90
+%
+%       Draw with:
+%       _S = dragon_curve, _K = 15, _A = [f], test_harness:( peano(_K,_I), l_system(_S,_A,_I,_Ss) ),atomic_list_concat(_Ss,'',_Is), writeln(_Is), test_harness:draw(_Is,90,90,2,'center').
+%
+%       Source:
+%       https://en.wikipedia.org/wiki/L-system#Example_6:_dragon_curve
+%
+dragon_curve([+|Ss])--> plus, dragon_curve(Ss).
+dragon_curve([-|Ss])--> minus, dragon_curve(Ss).
+dragon_curve([f,+,g|Ss])--> f, dragon_curve(Ss).
+dragon_curve([f,-,g|Ss])--> g, dragon_curve(Ss).
+dragon_curve([])--> [].
+
+
+
+%!      koch_curve(?String) is semidet.
+%
+%       Calculate a Koch Curve String.
+%
+%       Axiom: [f,-,-,f,-,-,f]
+%       Alt:   [f,+,+,f,+,+,f]
+%       Angle: 90
+%
+%       Draw with:
+%       _S = koch_curve, _K = 6, _A = [f,-,-,f,-,-,f], test_harness:( peano(_K,_I), l_system(_S,_A,_I,_Ss) ), atomic_list_concat(_Ss,'',_Is), writeln(_Is), test_harness:draw(_Is,60,60,1,'bottom_center').
+%
+%       Sources:
+%       https://en.wikipedia.org/wiki/L-system#Example_4:_Koch_curve
+%       https://en.wikipedia.org/wiki/Koch_snowflake#Representation_as_Lindenmayer_system
+%
+koch_curve([+|Ss])--> plus, koch_curve(Ss).
+koch_curve([-|Ss])--> minus, koch_curve(Ss).
+koch_curve([f,+,f,-,-,f,+,f|Ss]) --> f, koch_curve(Ss).
+% Variants - which ones?
+% Square:
+%koch_curve([f,+,f,-,f,-,f,+,f|Ss]) --> f, koch_curve(Ss).
+%koch_curve([f,-,f,+,+,f,-,f|Ss]) --> f, koch_curve(Ss).
+koch_curve([]) --> [].
+
+
+
+%!      hilbert_curve(?String) is semidet.
+%
+%       Calculate a Hilbert Curve String.
+%
+%       Axiom: [x]
+%       Angle: 90
+%
+%       Draw with:
+%       _S = hilbert_curve, _K = 7, _A = [x], test_harness:( peano(_K,_I), l_system(_S,_A,_I,_Ss) ), atomic_list_concat(_Ss,'',_Is), writeln(_Is), test_harness:draw(_Is,90,90,8,'bottom_left').
+%
+%       Source:
+%       https://en.wikipedia.org/wiki/Hilbert_curve#Representation_as_Lindenmayer_system
+%
+hilbert_curve([+|Ss])--> plus, hilbert_curve(Ss).
+hilbert_curve([-|Ss])--> minus, hilbert_curve(Ss).
+hilbert_curve([f|Ss])--> f, hilbert_curve(Ss).
+hilbert_curve([+,y,f,-,x,f,x,-,f,y,+|Ss]) --> x, hilbert_curve(Ss).
+hilbert_curve([-,x,f,+,y,f,y,+,f,x,-|Ss]) --> y, hilbert_curve(Ss).
+hilbert_curve([]) --> [].
+
+
+
+%!      sierpinski_triangle(?String) is semidet.
+%
+%       Calculate a Sierpinski Triangle string.
+%
+%       Axiom: [f,-,g,-,g]
+%       Angle: 120
+%
+%       Draw with:
+%       _S = sierpinski_triangle, _K = 6, _A = [f,-,g,-,g], test_harness:( peano(_K,_I), l_system(_S,_A,_I,_Ss) ), atomic_list_concat(_Ss,'',_Is), writeln(_Is), test_harness:draw(_Is,120,120,6,'center').
+%
+%       Source:
+%       https://en.wikipedia.org/wiki/L-system#Example_5:_Sierpinski_triangle
+%
+%       Also see:
+%       https://en.wikipedia.org/wiki/Sierpi%C5%84ski_curve#Representation_as_Lindenmayer_system
+%
+sierpinski_triangle([+|Ss])--> plus, sierpinski_triangle(Ss).
+sierpinski_triangle([-|Ss])--> minus, sierpinski_triangle(Ss).
+sierpinski_triangle([f,-,g,+,f,+,g,-,f|Ss]) --> f, sierpinski_triangle(Ss).
+sierpinski_triangle([g,g|Ss]) --> g, sierpinski_triangle(Ss).
+sierpinski_triangle([]) --> [].
+
+
+
+%!      sierpinski_arrowhead(?String) is semidet.
+%
+%       Calculate a Sierpinski Arrowhead String.
+%
+%       Axiom: [x,f]
+%       Angle: 60
+%
+%       Draw with:
+%       _S = sierpinski_arrowhead, _K = 8, _A = [x,f], test_harness:( peano(_K,_I), l_system(_S,_A,_I,_Ss) ), atomic_list_concat(_Ss,'',_Is), writeln(_Is), test_harness:draw(_Is,60,60,4,'bottom_center').
+%
+%       Source:
+%       https://en.wikipedia.org/wiki/Sierpi%C5%84ski_curve#Representation_as_Lindenmayer_system_2
+%
+sierpinski_arrowhead([+|Ss])--> plus, sierpinski_arrowhead(Ss).
+sierpinski_arrowhead([-|Ss])--> minus, sierpinski_arrowhead(Ss).
+sierpinski_arrowhead([f|Ss])--> f, sierpinski_arrowhead(Ss).
+sierpinski_arrowhead([y,f,+,x,f,+,y|Ss])--> x, sierpinski_arrowhead(Ss).
+sierpinski_arrowhead([x,f,-,y,f,-,x|Ss])--> y, sierpinski_arrowhead(Ss).
+sierpinski_arrowhead([]) --> [].
+
+
+
+%!      fractal_plant(?String) is semidet.
+%
+%       Calculate a fractal plant String.
+%
+%       This is the classic L-System that draws a grass-like shape.
+%
+%       Axiom: [-,x]
+%       Angle: 25
+%
+%       Draw with:
+%       _S = fractal_plant, _K = 8, _A = [-,x], test_harness:( peano(_K,_I), l_system(_S,_A,_I,_Ss) ), atomic_list_concat(_Ss,'',_Is), writeln(_Is), test_harness:draw(_Is,25,25,1.5,'bottom_left').
+%
+%       Source:
+%       https://en.wikipedia.org/wiki/L-system#Example_7:_fractal_plant
+%
+fractal_plant([+|Ss]) --> plus, fractal_plant(Ss).
+fractal_plant([-|Ss]) --> minus, fractal_plant(Ss).
+fractal_plant(['['|Ss]) --> lsb,  fractal_plant(Ss).
+fractal_plant([']'|Ss]) --> rsb,  fractal_plant(Ss).
+fractal_plant([f,f|Ss]) --> f,  fractal_plant(Ss).
+fractal_plant([f,+,'[','[',x,']',-,x,']',-,f,'[',-,f,x,']',+,x|Ss]) -->
+        x,
+        fractal_plant(Ss).
+fractal_plant([]) --> [].
+
+
+
+%!	l_system(+Symbol,+Input,+Iteration,-Output) is semidet.
+%
+%	L-System interpreter.
+%
+%	Symbol is the starting symbol of an L-System grammar.
+%
+%	Input is a list of terminals accepted by an L-system grammar,
+%       given as an initial state.
+%
+%       Iteration is the final iteration of generation following from
+%       the initial state given as Input.
+%
+%	Output is the output string of the L-System at the given
+%	Iteration.
+%
+%       An L-System grammar must be loaded in memory as a set of DCG
+%       rules with the start symbol Symbol//1.
+%
+%       Example queries:
+%       ==
+%       ?- test_harness:( peano(1,_I), l_system(algae,[a],_I,Ss) ).
+%       Ss = [a,b] ;
+%       false.
+%
+%       ?- test_harness:( peano(3,_I), l_system(algae,[a,b],_I,Ss) ).
+%       Ss = [a,b,a,a,b,a,b,a] ;
+%       false.
+%
+%       ?- test_harness:( peano(2,_I), l_system(algae,[a,b,a],_I,Ss) ).
+%       Ss = [a,b,a,a,b,a,b,a] ;
+%       false.
+%       ==
+%
+l_system(_S,Os,0,Os):-
+        !.
+l_system(S,Is,s(N),Os):-
+        S_ =.. [S,Ss]
+	,phrase(S_, Is)
+        ,l_system(S,Ss,N,Os).
+
+
+
+%!      peano(?Digit,?Peano) is nondet.
+%
+%       Convert between a Digit and a Peano number.
+%
+%       Use this program to quickly convert between Peano notation and
+%       arabic notation for easy testing of L-System grammars at
+%       specific iterations.
+%
+%       Accepted modes are (+,-) and (-,+). In mode (?,?) this predicate
+%       returns only 0 deterministically.
+%
+%       Examples:
+%       ==
+%       ?- test_harness:peano(1,P).
+%       P = s(0).
+%
+%       ?- test_harness:peano(I,s(0)).
+%       I = 1.
+%
+%       ?- test_harness:peano(N,P).
+%       N = P, P = 0.
+%       ==
+%
+peano(N,P):-
+        peano(P,0,N).
+
+%!      peano(+I,+N,+Acc) is nondet.
+%
+%       Business end of peano/2.
+%
+peano(0,N,N):-
+        !.
+peano(s(P),N,Acc):-
+        succ(N,N_)
+        ,peano(P,N_,Acc).
+
+
+
+%!      draw(+String,+LeftAngle,+RightAngle,+Distance,+Start) is det.
+%
+%       Draw an L-System String to screen with Turtle graphics.
+%
+%       String is an atom, an L-system string in atomic form.
+%
+%       LeftAngle is the angle for left turns when changing the
+%       turtle's heading.
+%
+%       RightAngle is the angle for right turns.
+%
+%       Distance is the amount (of pixels, I guess) the turtle moves
+%       across the screen in its current heading.
+%
+%       Start is an atom denoting the initial position of the turtle:
+%       * 'center': start at dead center on screen
+%       * 'bottom_right': duh
+%       * 'bottom_left': also
+%
+%       Tweaking LeftAngle and RightAngle can rotate a shape in space,
+%       e.g. the fractal plant controls how slanted the main stem of the
+%       plant is.
+%
+draw(Is,S,A,D,P):-
+        py_call(turtle_mapping:draw(Is,S,A,D,P)).
+
+
+
+%!      manual_tester(+Symbol,+Min,+Max,+Module,-Example) is det.
+%
+%       Helper for top-level testing of learned, hand-crafted grammars.
+%
+manual_tester(S,I,J,M,E):-
+        between(I,J,K)
+        ,length(Xs,K)
+        ,E =.. [S,Xs,[]]
+        ,call(M:E).
