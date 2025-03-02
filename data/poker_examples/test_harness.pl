@@ -715,19 +715,19 @@ fractal_tree([]) --> [].
 % backwards"
 
 
-%!      lsb//0 is semidet.
+%!      lsb// is semidet.
 %
 %       Push current position and angle on the stack.
 %
 lsb --> ['['].
 
-%!      rsb//0 is semidet.
+%!      rsb// is semidet.
 %
 %       Pop position and angle from the stack.
 %
 rsb --> [']'].
 
-%!      f//0 is semidet.
+%!      f// is semidet.
 %
 %       Move the turtle forward in the current heading.
 %
@@ -735,7 +735,7 @@ rsb --> [']'].
 %
 f --> [f].
 
-%!      g//0 is semidet.
+%!      g// is semidet.
 %
 %       Move the turtle forward in the current heading.
 %
@@ -744,27 +744,27 @@ f --> [f].
 g --> [g].
 
 
-%!      plus//0 is semidet.
+%!      plus// is semidet.
 %
 %       Turn left by the current angle setting.
 %
 plus --> [+].
 
 
-%!      minus//0 is semidet.
+%!      minus// is semidet.
 %
 %       Turn right by the current angle setting.
 %
 minus --> [-].
 
-%!      x//0 is semidet.
+%!      x// is semidet.
 %
 %       Ignored, used to control evolution of shape.
 %
 x --> [x].
 
 
-%!      y//0 is semidet.
+%!      y// is semidet.
 %
 %       Ignored, used to control evolution of shape.
 %
