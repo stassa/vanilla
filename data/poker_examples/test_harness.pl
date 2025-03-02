@@ -162,8 +162,8 @@ experiment(S,N,J,K,[Ps,Pos,Neg,Rs_l,Rs_p]):-
         ,debug_clauses_length(experiment_initial,'Generated ~w initial examples:',Es)
         ,time( learn(Es,Pos,Neg,Ps) )
         ,debug_clauses(experiment_learned,'Learned hypothesis:',Ps)
-        ,debug_length(experiment_examples,'~w Positive examples.',Pos)
-        ,debug_length(experiment_examples,'~w Negative examples.',Neg)
+        ,debug_length(experiment_examples,'Labelled ~w Positive examples.',Pos)
+        ,debug_length(experiment_examples,'Labelled ~w Negative examples.',Neg)
         ,debug_clauses_length(experiment_examples_full,'~w Positive examples:',Pos)
         ,debug_clauses_length(experiment_examples_full,'~w Negative examples:',Neg)
         ,test_labelling(S,Pos,Neg,Rs_l)
@@ -375,6 +375,9 @@ internal_symbol_(not,q0).
 internal_symbol_(not_not,q0).
 internal_symbol_(algae,s).
 internal_symbol_(not_algae,s).
+
+internal_symbol_(dragon_curve,s).
+internal_symbol_(not_dragon_curve,s).
 
 
 %!      accuracy(+Module,+Target,+Pos,+Neg,-Accuracy) is det.
@@ -791,6 +794,27 @@ dragon_curve([f,-,g|Ss])--> g, dragon_curve(Ss).
 dragon_curve([])--> [].
 
 
+%!      not_dragon_curve(?String) is semidet.
+%
+%       Not a dragon curve. Honest.
+%
+not_dragon_curve(Ss) -->
+        dragon_string(Ss)
+        ,{  \+ phrase(dragon_curve(Ss),_,[])
+            ,maplist(length,[Ss,Xs],[N,N])
+            ,phrase(dragon_string(Xs),_)
+         }
+        ,Xs.
+
+dragon_string([C]) --> dragon_char(C).
+dragon_string([C|Ss]) --> dragon_char(C), dragon_string(Ss).
+
+dragon_char(+) --> plus.
+dragon_char(-) --> minus.
+dragon_char(f) --> f.
+dragon_char(g) --> g.
+
+
 
 %!      koch_curve(?String) is semidet.
 %
@@ -1025,8 +1049,14 @@ draw(Is,S,A,D,P):-
 %
 %       Helper for top-level testing of learned, hand-crafted grammars.
 %
-manual_tester(S,I,J,M,E):-
+manual_tester(S/2,I,J,M,E):-
         between(I,J,K)
         ,length(Xs,K)
         ,E =.. [S,Xs,[]]
         ,call(M:E).
+manual_tester(S/3,I,J,M,E):-
+        between(I,J,K)
+        ,length(Xs,K)
+        ,E =.. [S,Xs,_Is,[]]
+        ,call(M:E).
+
