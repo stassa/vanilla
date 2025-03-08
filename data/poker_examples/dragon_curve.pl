@@ -25,6 +25,12 @@ set_poker_configuration_option/2 later in this file to set the correct
 options:
 
 ==
+?- make.
+Global stack limit 2,147,483,648
+Table space 2,147,483,648
+% c:/your_path_to/vanilla/load_headless compiled 0.00 sec, 0 clauses
+true.
+
 ?- poker_auxiliaries:list_config.
 encapsulation_predicate(m)
 example_clauses(call)
@@ -64,14 +70,21 @@ true.
 :- dynamic poker_configuration:safe_example/1.
 :- multifile poker_configuration:safe_example/1.
 
-poker_configuration:safe_example(m(s, A, B, [])) :-
+poker_configuration:safe_example(m(s, Is, Os, [])) :-
     dragon_curve:
-    (   C=8,
-        between(0, C, D),
-        length(A, D),
-        between(0, C, E),
-        length(B, E)
+    (   K=8,
+        between(0, K, I),
+        length(Is, I),
+        between(0, K, J),
+        length(Os, J)
     ).
+
+true.
+
+?- listing(initial_example/2).
+dragon_curve:initial_example(s/3, A) :-
+    generate_initial(dragon_curve, all, 0, 3, B),
+    member(A, B).
 
 true.
 
@@ -117,8 +130,9 @@ Background knowledge (Second Order)
 (Ls-constant) ∃.P,Q ∀.x,y,z,u,v: P(x,y,z)← Q(y,u),Q(x,v),P(v,u,z)
 (Ls-variable) ∃.P,Q,R ∀.x,y,z,u,v: P(x,y,z)← Q(y,u),R(x,v),P(v,u,z)
 (Ls-base) ∃.P,Q ∀.x,y: P(x,y,y)← Q(x,y)
+(Chain) ∃.P,Q,R ∀.x,y,z: P(x,y)← Q(x,z),R(z,y)
 (Tri-chain) ∃.P,Q,R,S ∀.x,y,z,u: P(x,y)← Q(x,z),R(z,u),S(u,y)
-
+Metasubstitution constraints
 ----------------------------
 :- dynamic metarule_constraints/2.
 :- multifile metarule_constraints/2.
@@ -190,18 +204,28 @@ metarule_constraints(m(tri_chain, _P, _Q, _R, S), fail) :-
     (   ground(S),
         target(S)
     ).
-
-true.
+metarule_constraints(m(chain, P, _Q, _R), fail) :-
+    l_systems_constraints:
+    (   ground(P),
+        \+ invented(P)
+    ).
+metarule_constraints(m(chain, _P, Q, _R), fail) :-
+    l_systems_constraints:
+    (   ground(Q),
+        \+ preterminal(Q)
+    ).
+metarule_constraints(m(chain, _P, _Q, R), fail) :-
+    l_systems_constraints:
+    (   ground(R),
+        \+ target(R)
+    ).
 ==
 
 3. Learning query:
 
 ==
 ?- _T = s/3, time( poker:learn(_T,_Pos,_Neg,_Ps) ), auxiliaries:print_clauses('Hypothesis:',_Ps), maplist(length,[_Ps,_Pos,_Neg],[Ps,Pos,Neg]).
-% Generalising positive examples
-% Derived 129 sub-hypotheses (unsorted)
-% Derived 19 sub-hypotheses (sorted)
-% 5,613,423 inferences, 0.469 CPU in 0.815 seconds (57% CPU, 11975302 Lips)
+% 7,843,656 inferences, 1.359 CPU in 3.083 seconds (44% CPU, 5770046 Lips)
 Hypothesis:
 s(A,B,C):-plus(B,D),plus(A,E),s(E,D,C).
 s(A,B,C):-minus(B,D),minus(A,E),s(E,D,C).
@@ -231,7 +255,8 @@ is a bug in the way Vanilla constructs invented predicates.
 ?- debug(generalise), debug(experiments), debug(experiment_initial), debug(experiment_examples), debug(generate_examples), debug(test_program), debug(test_labelling).
 true.
 
-?- test_harness:experiments(dragon_curve,1,all,0,4,[Labelling,Program]).% Experiment 1 of 1
+?- test_harness:experiments(dragon_curve,1,all,0,4,[Labelling,Program]).
+% Experiment 1 of 1
 % Generated 41 initial examples:
 % s([],[],[])
 % s([+],[+],[])
@@ -277,7 +302,7 @@ true.
 % Generalising positive examples
 % Derived 701 sub-hypotheses (unsorted)
 % Derived 60 sub-hypotheses (sorted)
-% 32,899,177 inferences, 1.047 CPU in 5.186 seconds (20% CPU, 31426080 Lips)
+% 46,482,151 inferences, 4.656 CPU in 11.217 seconds (42% CPU, 9982744 Lips)
 % Labelled 41 Positive examples.
 % Labelled 87 Negative examples.
 % Testing labelling for target: dragon_curve
@@ -347,7 +372,7 @@ background_knowledge(s/3,[f/2
                          ,empty/2
                          ]).
 
-metarules(s/3,[ls_constant,ls_variable,ls_base,tri_chain]).
+metarules(s/3,[ls_constant,ls_variable,ls_base,chain,tri_chain]).
 
 initial_example(s/3,E):-
 	generate_initial(dragon_curve,all,0,3,Es)
