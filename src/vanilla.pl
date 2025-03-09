@@ -652,3 +652,26 @@ constraints(Sub):-
 	,forall(configuration:metarule_constraints(Sub_, C)
 	       ,user:call(C)
 	       ).
+/*
+% TODO: Test and make permanent.
+% Adds extra constraint checking logging with more logging on top.
+%
+constraints(_Sub):-
+	predicate_property(metarule_constraints(_,_), number_of_clauses(0))
+	,!.
+constraints(Sub):-
+	predicate_property(metarule_constraints(_,_), number_of_clauses(N))
+	,N > 0
+	,copy_term(Sub,Sub_)
+	,forall(clause(configuration:metarule_constraints(Sub_, C), B)
+	       ,(debug(constraints,'Checking Constraint: ~w'
+		      ,[metarule_constraints(Sub_, C)])
+		,debug(constraints,'With body: ~w',[B])
+		,(   call(B)
+		 ->  debug(constraints,'Constraint call succeeded. Calling ~w.',[C])
+		    ,user:call(C)
+		 ;   debug(constraints,'Constraint call failed. Not calling ~w',[C])
+		 )
+		)
+	       ).
+*/
