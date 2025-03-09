@@ -8,6 +8,8 @@
 
 /** <module> Grammar constraints for L-Systems.
 
+Defines Lindenmayer Normal Form, a normal form for L-System grammars.
+
 This set of metasubstitution constraints are based on the ones in
 grammar_constraints.pl, with similar assumptions about the expansion of
 rules to terminals and non-terminals, but tailored to the purpose of
@@ -246,6 +248,7 @@ configuration:metarule_constraints(m(ls_constant,_P,Q),fail):-
 % ls_variable defines L-System variables.
 % It can't define an invented predicate.
 % Its second body literal only can be an invented predicates.
+
 configuration:metarule_constraints(m(ls_variable,P,_Q,_R),fail):-
 	ground(P)
         ,\+ target(P).
@@ -299,4 +302,4 @@ configuration:metarule_constraints(m(chain,_P,Q,_R),fail):-
         ,\+ preterminal(Q).
 configuration:metarule_constraints(m(chain,_P,_Q,R),fail):-
 	ground(R)
-        ,\+ target(R).
+        ,target(R).
