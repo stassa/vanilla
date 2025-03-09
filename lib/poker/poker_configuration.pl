@@ -1,5 +1,6 @@
 :-module(poker_configuration, [clause_limit/1
                               ,experiment_file/2
+                              ,generalise_conjunction/1
                               ,gestalt/1
                               ,greedy_generalisation/1
                               ,flatten_prove_all/1
@@ -83,6 +84,35 @@ experiment_file(data('poker_examples/hello_world_poker.pl'),hello_world_poker).
 %
 flatten_prove_all(false).
 %flatten_prove_all(true).
+
+
+%!      generalise_conjunction(?Bool) is semidet.
+%
+%       Whether to generalise the conjunction of all examples, or not.
+%
+%       When Bool is set to "false" (default ish) Poker will learn
+%       an initial hypothesis by proving each initial example at a time,
+%       by SLD-Resolution with the first-order background knowledge and
+%       metarules.
+%
+%       When Bool is set to "true", Poker will instead prove the
+%       conjunction of all initial examples to learn an initial
+%       hypothesis.
+%
+%       This is useful when a correct hypothesis cannot be learned from
+%       a single example all at once.
+%
+%       The trade-off is that it is more expensive to try and prove the
+%       conjunction of all examples because the proof may have to
+%       backtrack multiple times to correct itself so that it can
+%       accept a new example. It is also not always possible to prove a
+%       conjunction of examples (e.g. when there are contradictory
+%       examples in the set of initial examples).
+%
+%       Experimental.
+%
+generalise_conjunction(false).
+%generalise_conjunction(true).
 
 
 %!      gestalt(?Bool) is semidet.

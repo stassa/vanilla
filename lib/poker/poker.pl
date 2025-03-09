@@ -302,6 +302,27 @@ generalise_greedy([Ep|Es],Pos,K,MS,Subs):-
 %	metasubstitutions and metarules returned by generalise/3.
 %
 generalise(Pos,MS,Ss_Pos):-
+	poker_configuration:generalise_conjunction(true)
+	,!
+	,poker_configuration:clause_limit(K)
+	% Used to name invented predicates apart in rename_invented/3.
+	,debug(generalise,'Generalising positive examples',[])
+	,reset_gensym('_')
+	,once( list_tree(Pos,Pos_) )
+	,findall(Subs
+		,(metasubstitutions(Pos_,K,MS,Subs)
+		 ,forall(member(Sub-_M,Subs)
+			,constraints(Sub)
+			)
+		 ,debug_metasubs(generalise_full,'Passed metasub constraints:',Subs,Pos,MS)
+		 )
+		,Ss_Pos_)
+	,abolish_all_tables
+	,debug_length(generalise,'Derived ~w sub-hypotheses (unsorted)',Ss_Pos_)
+	,once( skolem_sort(Ss_Pos_,Ss_Pos_s) )
+	,debug_length(generalise,'Derived ~w sub-hypotheses (sorted)',Ss_Pos_s)
+	,rename_all_invented(Ss_Pos_s,Ss_Pos).
+generalise(Pos,MS,Ss_Pos):-
 	\+ poker_configuration:multithreading(generalise)
 	,poker_configuration:clause_limit(K)
 	% Used to name invented predicates apart in rename_invented/3.
@@ -561,6 +582,9 @@ cleanup_negatives(Fs,T,U):-
 %
 %	Return the predicate Signature for one example's predicate.
 %
+signature((L,_),Ss):-
+        !
+        ,signature(L,Ss).
 signature(L,[T|Ss]):-
         configuration:encapsulation_predicate(E)
         ,poker_configuration:max_invented(N)
