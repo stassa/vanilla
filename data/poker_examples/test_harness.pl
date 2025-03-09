@@ -159,9 +159,11 @@ sum(A,B,C):-
 %
 experiment(S,N,J,K,[Ps,Pos,Neg,Rs_l,Rs_p]):-
         generate_initial(S,N,J,K,Es)
-        ,debug_clauses_length(experiment_initial,'Generated ~w initial examples:',Es)
+        ,debug_length(experiment_initial,'Generated ~w initial examples.',Es)
+        ,debug_clauses_length(experiment_initial_full,'Generated ~w initial examples:',Es)
         ,time( learn(Es,Pos,Neg,Ps) )
-        ,debug_clauses(experiment_learned,'Learned hypothesis:',Ps)
+        ,debug_length(experiment_learned,'Learned ~w clause hypothesis.',Ps)
+        ,debug_clauses(experiment_learned_full,'Learned hypothesis:',Ps)
         ,debug_length(experiment_examples,'Labelled ~w Positive examples.',Pos)
         ,debug_length(experiment_examples,'Labelled ~w Negative examples.',Neg)
         ,debug_clauses_length(experiment_examples_full,'~w Positive examples:',Pos)
@@ -378,6 +380,12 @@ internal_symbol_(not_algae,s).
 
 internal_symbol_(dragon_curve,s).
 internal_symbol_(not_dragon_curve,s).
+
+internal_symbol_(koch_curve,s).
+internal_symbol_(hilbert_curve,s).
+internal_symbol_(sierpinski_triangle,s).
+internal_symbol_(sierpinski_arrowhead,s).
+internal_symbol_(fractal_plant,s).
 
 
 %!      accuracy(+Module,+Target,+Pos,+Neg,-Accuracy) is det.
