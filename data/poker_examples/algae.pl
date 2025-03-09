@@ -7,24 +7,62 @@
 		 ,generate_examples/5
                  ]).
 
+:-use_module(l_systems_constraints).
 :-use_module(project_root(configuration),[]).
 :-use_module(lib(poker/poker_configuration),[]).
 :-use_module(lib(poker/poker_auxiliaries)).
-
 :-use_module(data(poker_examples/test_harness)).
 
-:-use_module(l_systems_constraints).
+/** <module> Learn a simple L-System grammar.
 
-/** <module> Learn an L-System grammar modelling the growth of blue algae.
-
-This is kind of a dumb example only useful as a proof of concept. That's
-because negative examples aren't really needed to learn the target
-theory.
-
-Configs:
+This experiment file shows how to use Poker to learn the first and
+simplest L-system example from Aristide Lindenmayer's textbook
+introducing L-Systems, "The Algorithmic Beauty of Plants" (TABoP). The
+rules of that L-System's grammar are as follows:
 
 ==
-?- poker_auxiliaries:list_config.
+a --> ab
+b --> a
+==
+
+Read "a must be replaced by ab and b by a simultaneously in the current
+string". Unlike phrase structure grammars, L-Systems rules are all
+applied simultaneously in each step of parsing, called a "generation",
+then the resulting string fed back to the next generation, until some
+maximum generation set by the user.
+
+Also unlike phrase-structure grammars, L-Systems have two kinds of
+symbols: constants and variables, where constants are never replaced (or
+more precisely replace only themselves by themselves in a string) and
+variables are replaced by other strings. The grammar listed above has
+only variables (a and b).
+
+This grammar is illustrated in Figure 1.3 of TABoP and is also given as
+the first example of an L-System on the wikipedia page on L-Systems:
+
+https://en.wikipedia.org/wiki/L-system#Example_1:_algae
+
+The Wikipedia page suggests this L-System models "the growth of algae"
+but I can't find this information in TABoP. I think the wikipedia
+editors confused it with an L-System for the blue-green bacteria
+Anabena Catenula, illustrated in Figure 1.4 of TABoP, which uses
+similar, but not identical, rules and symbols.
+
+In any case the example here is the simplest example of an L-System so
+it should serve as reference for learning L-Systems with Poker, and with
+the Lindenmayer Normal Form defined in l_systems_constraints.pl.
+
+
+1. Configuration:
+
+==
+?- make.
+Global stack limit 2,147,483,648
+Table space 2,147,483,648
+% c:/<your_path_to_>/vanilla/load_headless compiled 0.00 sec, 0 clauses
+true.
+
+?- auxiliaries:list_config.
 encapsulation_predicate(m)
 example_clauses(call)
 fetch_clauses(all)
@@ -37,35 +75,46 @@ untable_meta_interpreter(true)
 true.
 
 ?- poker_auxiliaries:list_poker_config.
-clause_limit(3)
+clause_limit(4)
 experiment_file(data(poker_examples/algae.pl),algae)
-flatten_prove_all(false)
-gestalt(false)
+flatten_prove_all(true)
+generalise_conjunction(false)
+gestalt(true)
 greedy_generalisation(false)
 listing_limit(15)
-max_invented(0)
+max_invented(1)
 multithreading(false)
 proof_samples(1.0)
 recursive_reduction(false)
 reduction(plotkins)
 resolutions(5000)
-respecialise(true)
+respecialise(false)
 strict_clause_limit(false)
 unlabelled_examples(100)
 unlabelled_examples_order(random)
 true.
 ==
 
-Learning problem (training on 4 randomly drawn examples):
+
+2. Learning Problem, with all the constraints enforcing Lindenmayer
+Normal Form.
 
 ==
 ?- poker_auxiliaries:list_mil_problem(s/3).
 Initial examples
 ----------------
 s([],[],[]).
+s([a],[b],[]).
+s([a,b],[a],[]).
 s([a,a],[b,b],[]).
+s([a,b,a],[a,b],[]).
+s([a,a,b],[b,a],[]).
 s([a,a,a],[b,b,b],[]).
+s([a,b,a,b],[a,a],[]).
+s([a,b,a,a],[a,b,b],[]).
+s([a,a,b,a],[b,a,b],[]).
 s([a,a,a,b],[b,b,a],[]).
+s([a,a,a,a],[b,b,b,b],[]).
 
 Background knowledge (First Order)
 ----------------------------------
@@ -80,9 +129,11 @@ empty(A,B):-A=B.
 
 Background knowledge (Second Order)
 -----------------------------------
+(Ls-constant) ∃.P,Q ∀.x,y,z,u,v: P(x,y,z)← Q(y,u),Q(x,v),P(v,u,z)
+(Ls-variable) ∃.P,Q,R ∀.x,y,z,u,v: P(x,y,z)← Q(y,u),R(x,v),P(v,u,z)
 (Ls-base) ∃.P,Q ∀.x,y: P(x,y,y)← Q(x,y)
-(Ls-rec) ∃.P,Q,R,S ∀.x,y,z,u,v: P(x,y,z)← Q(y,u),R(x,v),S(v,u,z)
-(Ls-rec-2) ∃.P,Q,R,S,T ∀.x,y,z,u,v,w: P(x,y,z)← Q(y,u),R(x,v),S(v,w),T(w,u,z)
+(Chain) ∃.P,Q,R ∀.x,y,z: P(x,y)← Q(x,z),R(z,y)
+(Tri-chain) ∃.P,Q,R,S ∀.x,y,z,u: P(x,y)← Q(x,z),R(z,u),S(u,y)
 
 Metasubstitution constraints
 ----------------------------
@@ -94,20 +145,40 @@ metarule_constraints(M, fail) :-
     (   ground(M),
         M=..[m, _Id, P, P|_Ps]
     ).
-metarule_constraints(m(ls_base, P, _Q, _R), fail) :-
+metarule_constraints(m(ls_constant, P, _Q), fail) :-
     l_systems_constraints:
     (   ground(P),
         \+ target(P)
     ).
-metarule_constraints(m(ls_base, _P, Q, _R), fail) :-
+metarule_constraints(m(ls_constant, _P, Q), fail) :-
     l_systems_constraints:
     (   ground(Q),
         \+ preterminal(Q)
     ).
-metarule_constraints(m(ls_base, _P, _Q, R), fail) :-
+metarule_constraints(m(ls_variable, P, _Q, _R), fail) :-
+    l_systems_constraints:
+    (   ground(P),
+        \+ target(P)
+    ).
+metarule_constraints(m(ls_variable, _P, Q, _R), fail) :-
+    l_systems_constraints:
+    (   ground(Q),
+        \+ preterminal(Q)
+    ).
+metarule_constraints(m(ls_variable, _P, _Q, R), fail) :-
     l_systems_constraints:
     (   ground(R),
-        \+ preterminal(R)
+        target(R)
+    ).
+metarule_constraints(m(ls_base, P, _Q), fail) :-
+    l_systems_constraints:
+    (   ground(P),
+        \+ target(P)
+    ).
+metarule_constraints(m(ls_base, _P, Q), fail) :-
+    l_systems_constraints:
+    (   ground(Q),
+        Q\==empty
     ).
 metarule_constraints(M, fail) :-
     l_systems_constraints:
@@ -116,138 +187,99 @@ metarule_constraints(M, fail) :-
         Id\==ls_base,
         memberchk(empty, Ps)
     ).
-metarule_constraints(m(Id, _P, Q, _R, _S), fail) :-
+metarule_constraints(m(tri_chain, P, _Q, _R, _S), fail) :-
     l_systems_constraints:
-    (   memberchk(Id, [ls_rec, ls_rec_2]),
-        ground(Q),
-        target(Q)
+    (   ground(P),
+        \+ invented(P)
     ).
-metarule_constraints(m(Id, P, Q, _R, _S), fail) :-
+metarule_constraints(m(tri_chain, _P, Q, _R, _S), fail) :-
     l_systems_constraints:
-    (   memberchk(Id, [ls_rec, ls_rec_2]),
-        ground(P),
-        ground(Q),
-        invented(P),
-        invented(Q)
+    (   ground(Q),
+        \+ preterminal(Q)
+    ).
+metarule_constraints(m(tri_chain, _P, _Q, R, _S), fail) :-
+    l_systems_constraints:
+    (   ground(R),
+        \+ preterminal(R)
+    ).
+metarule_constraints(m(tri_chain, _P, _Q, _R, S), fail) :-
+    l_systems_constraints:
+    (   ground(S),
+        target(S)
+    ).
+metarule_constraints(m(chain, P, _Q, _R), fail) :-
+    l_systems_constraints:
+    (   ground(P),
+        \+ invented(P)
+    ).
+metarule_constraints(m(chain, _P, Q, _R), fail) :-
+    l_systems_constraints:
+    (   ground(Q),
+        \+ preterminal(Q)
+    ).
+metarule_constraints(m(chain, _P, _Q, R), fail) :-
+    l_systems_constraints:
+    (   ground(R),
+        target(R)
     ).
 
 true.
 ==
 
-Learning:
+
+3. Simple experiment:
 
 ==
-?- _T = s/3, time( poker:learn(_T,_Pos,_Neg,_Ps) ), maplist(auxiliaries:print_clauses,['Hypothesis:','Positive examples:','Negative examples:'],[_Ps,_Pos,_Neg]), maplist(length,[_Ps,_Pos,_Neg],[Ps,Pos,Neg]).
-% 379,913 inferences, 0.062 CPU in 0.066 seconds (95% CPU, 6078608 Lips)
-Hypothesis:
-s(A,B,C):-b(B,D),a(A,E),s(E,D,C).
-s(A,B,C):-a(B,D),a(A,E),b(E,F),s(F,D,C).
-s(A,B,B):-empty(A,B).
-Positive examples:
-s([],[],[]).
-s([a,a,b],[b,a],[]).
-s([a,a,a,a],[b,b,b,b],[]).
-s([a,b,a],[a,b],[]).
-s([a,a,b,a],[b,a,b],[]).
-s([a,a,a],[b,b,b],[]).
-s([a],[b],[]).
-s([a,b,a,a],[a,b,b],[]).
-s([a,a],[b,b],[]).
-s([a,a,a,b],[b,b,a],[]).
-s([a,b],[a],[]).
-s([a,b,a,b],[a,a],[]).
-Negative examples:
-[]
-Ps = 3,
-Pos = 12,
-Neg = 0.
-==
-
-
-More complete experiment:
-
-==
-?- debug(test_program), debug(test_labelling).
+?- debug(experiments), debug(experiment_learned), debug(experiment_examples), debug(generate_examples), debug(test_labelling), debug(test_program).
 true.
 
-?- test_harness:experiments(algae,10,4,0,4,[Labels,Program]).
-% 262,403 inferences, 0.047 CPU in 0.110 seconds (43% CPU, 5597931 Lips)
+?- test_harness:experiments(algae,1,all,0,6,[Labelling,Program]).% Experiment 1 of 1
+% 15,996,168 inferences, 0.937 CPU in 3.172 seconds (30% CPU, 17062579 Lips)
+% Learned hypothesis:
+% s(A,B,C):-b(B,D),a(A,E),s(E,D,C)
+% s(A,B,C):-a(B,D),inv_1(A,E),s(E,D,C)
+% s(A,B,B):-empty(A,B)
+% inv_1(A,B):-a(A,C),b(C,B)
+% Labelled 33 Positive examples.
+% Labelled 92 Negative examples.
 % Testing labelling for target: algae
-% Labelling: Measured Acc: 1.0 TPR: 1.0 TNR: 0
+% Labelling: Measured Acc: 1.0 TPR: 1.0 TNR: 1.0
 % Testing learned program for target: algae
+% Generating all algae examples of length in [0,20].
+% Generated 28656 positive testing examples
+% Generating all not_algae examples of length in [0,6].
+% Generated 4258 negative testing examples
 % Program: Measured Acc: 1.0 TPR: 1.0 TNR: 1.0
-% 451,743 inferences, 0.062 CPU in 0.142 seconds (44% CPU, 7227888 Lips)
-% Testing labelling for target: algae
-% Labelling: Measured Acc: 1.0 TPR: 1.0 TNR: 0
-% Testing learned program for target: algae
-% Program: Measured Acc: 1.0 TPR: 1.0 TNR: 1.0
-% 398,456 inferences, 0.062 CPU in 0.136 seconds (46% CPU, 6375296 Lips)
-% Testing labelling for target: algae
-% Labelling: Measured Acc: 1.0 TPR: 1.0 TNR: 0
-% Testing learned program for target: algae
-% Program: Measured Acc: 1.0 TPR: 1.0 TNR: 1.0
-% 533,759 inferences, 0.109 CPU in 0.164 seconds (67% CPU, 4880082 Lips)
-% Testing labelling for target: algae
-% Labelling: Measured Acc: 1.0 TPR: 1.0 TNR: 0
-% Testing learned program for target: algae
-% Program: Measured Acc: 1.0 TPR: 1.0 TNR: 1.0
-% 192,412 inferences, 0.062 CPU in 0.094 seconds (66% CPU, 3078592 Lips)
-% Testing labelling for target: algae
-% Labelling: Measured Acc: 1.0 TPR: 1.0 TNR: 0
-% Testing learned program for target: algae
-% Program: Measured Acc: 1.0 TPR: 1.0 TNR: 1.0
-% 392,194 inferences, 0.078 CPU in 0.132 seconds (59% CPU, 5020083 Lips)
-% Testing labelling for target: algae
-% Labelling: Measured Acc: 1.0 TPR: 1.0 TNR: 0
-% Testing learned program for target: algae
-% Program: Measured Acc: 1.0 TPR: 1.0 TNR: 1.0
-% 198,025 inferences, 0.016 CPU in 0.099 seconds (16% CPU, 12673600 Lips)
-% Testing labelling for target: algae
-% Labelling: Measured Acc: 0 TPR: 0 TNR: 0
-% 362,279 inferences, 0.000 CPU in 0.062 seconds (0% CPU, Infinite Lips)
-% Testing labelling for target: algae
-% Labelling: Measured Acc: 1.0 TPR: 1.0 TNR: 0
-% Testing learned program for target: algae
-% Program: Measured Acc: 1.0 TPR: 1.0 TNR: 1.0
-% 358,044 inferences, 0.062 CPU in 0.129 seconds (48% CPU, 5728704 Lips)
-% Testing labelling for target: algae
-% Labelling: Measured Acc: 1.0 TPR: 1.0 TNR: 0
-% Testing learned program for target: algae
-% Program: Measured Acc: 1.0 TPR: 1.0 TNR: 1.0
-% 451,125 inferences, 0.094 CPU in 0.143 seconds (66% CPU, 4812000 Lips)
-% Testing labelling for target: algae
-% Labelling: Measured Acc: 1.0 TPR: 1.0 TNR: 0
-% Testing learned program for target: algae
-% Program: Measured Acc: 1.0 TPR: 1.0 TNR: 1.0
-Labels = [0.9,0.9,0.0],
-Program = [0.95,0.9,1.0].
+Labelling = Program, Program = [1.0,1.0,1.0].
 ==
-
 
 */
 
 % Language alphabet for the constraints defeined
 % in grammar_constraints.pl
 %
-grammar_constraints:target(s).
-grammar_constraints:invented(inv_1).
-grammar_constraints:invented(inv_2).
-grammar_constraints:preterminal(a).
-grammar_constraints:preterminal(b).
-grammar_constraints:preterminal(empty).
+l_systems_constraints:target(s).
+l_systems_constraints:invented(inv_1).
+l_systems_constraints:invented(inv_2).
+l_systems_constraints:preterminal(a).
+l_systems_constraints:preterminal(b).
+l_systems_constraints:preterminal(empty).
 
 /*
 % Raises error despite importing poker_auxiliaries. Why?
 % Best way to use currently is to load file for the first time when this
 % is commented out, then uncomment and reload the file (with make/0).
 
-:-poker_auxiliaries:set_poker_configuration_option(clause_limit,[3]).
-:-poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[false]).
-:-poker_auxiliaries:set_poker_configuration_option(max_invented,[0]).
-:-poker_auxiliaries:set_poker_configuration_option(respecialise,[true]).
+:-poker_auxiliaries:set_poker_configuration_option(clause_limit,[4]).
+:-poker_auxiliaries:set_poker_configuration_option(gestalt,[true]).
+:-poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true]).
+:-poker_auxiliaries:set_poker_configuration_option(max_invented,[1]).
+:-poker_auxiliaries:set_poker_configuration_option(respecialise,[false]).
+:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100]).
 :-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
 						  ,[random]).
 */
+
 
 %!	safe_example(-Example) is nondet.
 %
@@ -261,27 +293,26 @@ grammar_constraints:preterminal(empty).
 %	examples. This is left to the user to avoid.
 %
 poker_configuration:safe_example(m(s,Is,Os,[])):-
-	between(0,4,I)
+	K = 8
+	,between(0,K,I)
 	,length(Is,I)
-	,between(0,4,J)
+	,between(0,K,J)
 	,length(Os,J).
-
 
 background_knowledge(s/3,[a/2
                          ,b/2
                          ,empty/2
                          ]).
 
-metarules(s/3,[ls_base,ls_rec,ls_rec_2]).
+metarules(s/3,[ls_constant,ls_variable,ls_base,chain,tri_chain]).
 
 initial_example(s/3,E):-
-	generate_initial(algae,4,0,4,Es)
+	generate_initial(algae,all,0,4,Es)
         ,member(E,Es).
 
 a --> [a].
 b --> [b].
 empty --> [].
-
 
 % Generate examples for evaluation.
 % Examples are generated by test harndes predicates.
