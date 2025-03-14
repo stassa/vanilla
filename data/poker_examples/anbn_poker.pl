@@ -159,7 +159,7 @@ Neg = 32.
 ==
 */
 
-/*
+%/*
 % Raises error despite importing poker_auxiliaries. Why?
 % Best way to use currently is to load file for the first time when this
 % is commented out, then uncomment and reload the file (with make/0).
@@ -169,7 +169,7 @@ Neg = 32.
 :-poker_auxiliaries:set_configuration_option(untable_meta_interpreter, [true]).
 :-poker_auxiliaries:set_poker_configuration_option(clause_limit,[5]).
 :-poker_auxiliaries:set_poker_configuration_option(max_invented,[1]).
-*/
+%*/
 
 
 % Constraints to eliminate left recursions and ensure Chain instances

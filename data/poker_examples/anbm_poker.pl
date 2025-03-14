@@ -119,8 +119,7 @@ Expected results in test harness with randomly generated initial
 examples:
 
 ==
-17 ?- debug(test_program), debug(test_labelling), debug(experiment_learned), debug(experiment_initial), debug(exper
-iment_examples).
+17 ?- debug(test_program), debug(test_labelling), debug(experiment_learned), debug(experiment_initial), debug(experiment_examples).
 true.
 
 18 ?- test_harness:experiments(anbm,1,all,0,4,[Labelling,Program]).

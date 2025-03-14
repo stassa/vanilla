@@ -233,7 +233,8 @@ true.
 ?- debug(experiments), debug(experiment_learned), debug(experiment_examples), debug(generate_examples), debug(test_labelling), debug(test_program).
 true.
 
-?- test_harness:experiments(algae,1,all,0,6,[Labelling,Program]).% Experiment 1 of 1
+?- test_harness:experiments(algae,1,all,0,6,[Labelling,Program]).
+% Experiment 1 of 1
 % 15,996,168 inferences, 0.937 CPU in 3.172 seconds (30% CPU, 17062579 Lips)
 % Learned hypothesis:
 % s(A,B,C):-b(B,D),a(A,E),s(E,D,C)
