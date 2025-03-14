@@ -142,6 +142,12 @@ refresh_tables(untable):-
 %	metarules and so only clauses of those predicates will be found
 %	in the returned list of metasubstitutions.
 %
+%	Note well: Sig must be in the order:
+%	[T_1,...T_n,inv_1,...,inv_m], where each T_i is the predicate
+%	symbol of a target predicate and inv_1,...,inv_m are the symbols
+%	of predicates to be invented, in ascending order of their
+%	indices.
+%
 %	Acc is the accumulator of metasubstitutions.
 %
 %	Metasubs is a list of metasubstitution terms derived during the
@@ -445,27 +451,123 @@ free_member(X,[_|Ys],Z):-
 %
 new_metasub(L,MS,Ss,Subs,[Sub|Subs],Ls):-
         member(M,MS)
-        ,applied_metasub(Sub,M,Ss,L,Ls)
+	,defined_invented(Subs,N)
+        ,applied_metasub(Sub,M,Ss,N,L,Ls)
 	,debug(fetch,'Added new metasub: ~w',[Sub]).
 
 
-%!	applied(?Metasubstitution,+Metarule,+Sig,?Head,-Body) is
+%!	defined_invented(+Metasubs,-Defined) is	det.
+%
+%	Count the invented predicates Defined in a list of Metasubs.
+%
+%	Metasubs is a list of metasubstitution atoms in any state of
+%	grounding, representing the clauses of a hypothesis induced
+%	so-far.
+%
+%	Defined is a number, the count of metasubstitution atoms in
+%	Metasubs that have an invented predicate symbol in the place of
+%	their first second order variable. Those are metasubstitution
+%	atoms that, once applied to their respective metarules, will
+%	form a definition of that invented predicate, so Defined counts
+%	the number of invented predicates defined in the hypothesis
+%	so-far.
+%
+%	This predicate is used in applied_metasub/6 to ensure that an
+%	invented predicate inv_k is not defined before an invented
+%	predicate inv_j is defined, where k < j. The purpose of that is
+%	to avoid a form of hypothesis over-generation where the same
+%	definition of a predicate is constructed multiple times, but
+%	with different invented predicate symbols each time.
+%
+defined_invented([],0):-
+	debug(defined_invented,'Invented predicates defined so far: ~w',[0])
+	,!.
+defined_invented(Subs,N):-
+	defined_invented(Subs,0,N)
+	,debug(defined_invented,'Invented predicates defined so far: ~w',[N]).
+
+%!	defined_invented(+Metasubs,+Acc,-Count) is det.
+%
+%	Business end of defined_invented/2.
+%
+defined_invented([],C,C):-
+	!.
+defined_invented([Sub|Subs],C,Bind):-
+	configuration:encapsulation_predicate(E)
+        ,Sub =.. [E,_Id,S|_]
+	,ground(S)
+	,invented_symbol(N,S)
+	,N > C
+	,!
+	,defined_invented(Subs,N,Bind).
+defined_invented([_Sub|Subs],C,Bind):-
+	defined_invented(Subs,C,Bind).
+
+
+
+%!	applied(?Metasub,+Metarule,+Sig,+Inv,?Head,-Body) is
 %!	nondet.
 %
 %	Construct a new Metasubstitution whose head unifies with Head.
 %
-applied_metasub(Sub, M, Ss, H, Ls):-
-	copy_term(M,M_)
+%	Metasub is a metasubstitution atom, more or less
+%	ground.
+%
+%	Metarule is an expanded metarule.
+%
+%	Sig is the signature, an ordered list of symbols that are the
+%	symbols allowed to bind to the first second-order variable in
+%	Metasub.
+%
+%	Inv is the number of invented predicates defined so-far in all
+%	metasubstitutions in the current hypothesis, as returned by
+%	defined_invented/2.
+%
+%	Head and Body are the head and body literals, respectively, of
+%	Metarule with some existentially quantified variables bound by
+%	the application of Metasub. Metasub is applied
+%	to Metarule by unifying Metasub with the head literal
+%	of Metarule.
+%
+%	Ordering of signature
+%	---------------------
+%
+%	Sig is expected to be in the order [T,inv_1,...,inv_n] where T
+%	is the symbol of a target predicate and inv_1, ..., inv_n are
+%	the symbols of invented predicates in ascending ordered of their
+%	subscripts.
+%
+%	Invented predicates are taken from Sig according to the value of
+%	Inv. In particular, an invented predicate inv_k can only be
+%	selected from Sig if Inv is no more than k + 1.
+%
+%	This restriction reduces over-generation of definitions of a
+%	predicate where the same definition is constructed multiple
+%	times but with different invented symbols each time. This is
+%	more of a problem when there is a large ish number of predicate
+%	symbols (really anything above 5).
+%
+%	@bug This predicate's invented predicate definition ordering
+%	logic will fail when there is more than one target predicate in
+%	Sig.
+%
+applied_metasub(Sub, M, Ss, N, H, Ls):-
+	succ(N,N_)
+	,copy_term(M,M_)
 	,M_ = (Sub:-(H,Ls))
 	,bind_head_literal(H,M_,(Sub:-(H,Ls)))
-	,member(S,Ss)
+	,nth0(I,Ss,S)
+	,I =< N_
         ,symbol(H,S).
-applied_metasub(Sub, M, Ss, H, H):-
-	copy_term(M,M_)
+applied_metasub(Sub, M, Ss, N, H, H):-
+	succ(N,N_)
+	,copy_term(M,M_)
 	,M_ = (Sub:-(H))
 	,bind_head_literal(H,M_,(Sub:-(H)))
-	,member(S,Ss)
+	,nth0(I,Ss,S)
+	,I =< N_
         ,symbol(H,S).
+
 
 
 %!	bind_head_literal(+Example,+Metarule,-Head) is det.

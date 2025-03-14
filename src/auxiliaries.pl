@@ -206,7 +206,7 @@ protocol_experiment(T,N,G):-
 % Predicates for inspecting and manipulating a MIL problem.
 
 
-%!	invented_symbol(+Index,?Arity,?Symbol) is nondet.
+%!	invented_symbol(+Index,+Arity,?Symbol) is nondet.
 %
 %	An invented Symbol witn an index in [1,Index].
 %
@@ -217,10 +217,32 @@ protocol_experiment(T,N,G):-
 %	Arity or verify that a Prolog term is an invented symbol of that
 %	Arity.
 %
+%	Example:
+%	==
+%	?- auxiliaries:( invented_symbol(4,2,S), invented_symbol(N,2,S) ).
+%	S = inv_1/2,
+%	N = 1 ;
+%	S = inv_2/2,
+%	N = 2 ;
+%	S = inv_3/2,
+%	N = 3 ;
+%	S = inv_4/2,
+%	N = 4 ;
+%	false.
+%	==
+%
 invented_symbol(I,A,S/A):-
-	configuration:invented_symbol_prefix(F)
+	ground(I)
+	,var(S)
+	,configuration:invented_symbol_prefix(F)
 	,between(1,I,K)
 	,atomic_list_concat([F,K],'',S).
+invented_symbol(I,A,S/A):-
+	var(I),
+	ground(S)
+	,configuration:invented_symbol_prefix(F)
+	,atom_concat(F,K,S)
+	,atom_number(K,I).
 
 
 
@@ -234,14 +256,36 @@ invented_symbol(I,A,S/A):-
 %	Use this predicate to generate invented symbols or verify that
 %	a Prolog term is an invented symbol.
 %
+%	Example:
+%	==
+%	?- auxiliaries:( invented_symbol(4,S), invented_symbol(N,S) ).
+%	S = inv_1,
+%	N = 1 ;
+%	S = inv_2,
+%	N = 2 ;
+%	S = inv_3,
+%	N = 3 ;
+%	S = inv_4,
+%	N = 4 ;
+%	false.
+%	==
+%
 invented_symbol(I,S):-
-	configuration:invented_symbol_prefix(F)
+	ground(I)
+	,var(S)
+	,configuration:invented_symbol_prefix(F)
 	,between(1,I,K)
 	,atomic_list_concat([F,K],'',S).
+invented_symbol(I,S):-
+	var(I),
+	ground(S)
+	,configuration:invented_symbol_prefix(F)
+	,atom_concat(F,K,S)
+	,atom_number(K,I).
 
 
 
-%!	invented_symbols(+Index,?Arity,?Symbols) is det.
+%!	invented_symbols(+Index,+Arity,?Symbols) is det.
 %
 %	A list of invented Symbols up to some maximum Index.
 %
@@ -252,10 +296,30 @@ invented_symbol(I,S):-
 %	or verify that a list of Prolog terms is a list of invented
 %	symbols of that Arity.
 %
+%	Example:
+%	==
+%	?- auxiliaries:( invented_symbols(3,2,Ss), invented_symbols(I,2,Ss) ).
+%	Ss = [inv_1/2,inv_2/2,inv_3/2],
+%	I = 3.
+%	==
+%
 invented_symbols(I,A,Ss):-
-	findall(S
+	ground(I)
+	,var(Ss)
+	,!
+	,findall(S
 	       ,invented_symbol(I,A,S)
 	       ,Ss).
+invented_symbols(I,A,Ss):-
+	var(I)
+	,ground(Ss)
+	,!
+	,findall(I
+	       ,(member(S,Ss)
+		,invented_symbol(I,A,S)
+		)
+	       ,Is)
+	,length(Is,I).
 
 
 
@@ -269,10 +333,29 @@ invented_symbols(I,A,Ss):-
 %	Use this predicate to generate invented symbols or verify that a
 %	list of Prolog terms is a list of invented symbols.
 %
+%	Example:
+%	==
+%	?- auxiliaries:( invented_symbols(3,Ss), invented_symbols(I,Ss) ).
+%	Ss = [inv_1,inv_2,inv_3],
+%	I = 3.
+%	==
+%
 invented_symbols(I,Ss):-
-	findall(S
+	ground(I)
+	,var(Ss)
+	,!
+	,findall(S
 	       ,invented_symbol(I,S)
 	       ,Ss).
+invented_symbols(I,Ss):-
+	var(I)
+	,ground(Ss)
+	,findall(I
+	       ,(member(S,Ss)
+		,invented_symbol(I,S)
+		)
+	       ,Is)
+	,length(Is,I).
 
 
 
