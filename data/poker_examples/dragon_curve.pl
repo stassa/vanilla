@@ -335,7 +335,7 @@ l_systems_constraints:preterminal(empty).
 % Best way to use currently is to load file for the first time when this
 % is commented out, then uncomment and reload the file (with make/0).
 
-:-poker_auxiliaries:set_poker_configuration_option(clause_limit,[7]).
+:-poker_auxiliaries:set_poker_configuration_option(clause_limit,[4]).
 :-poker_auxiliaries:set_poker_configuration_option(gestalt,[false]).
 :-poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true]).
 :-poker_auxiliaries:set_poker_configuration_option(max_invented,[2]).
