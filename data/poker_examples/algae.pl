@@ -276,6 +276,7 @@ l_systems_constraints:preterminal(empty).
 :-poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true]).
 :-poker_auxiliaries:set_poker_configuration_option(max_invented,[1]).
 :-poker_auxiliaries:set_poker_configuration_option(respecialise,[false]).
+:-poker_auxiliaries:set_poker_configuration_option(unfold_invented,[learned]).
 :-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100]).
 :-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
 						  ,[random]).
