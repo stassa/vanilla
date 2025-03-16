@@ -289,6 +289,11 @@ configuration:metarule_constraints(m(tri_chain,_P,_Q,R,_S),fail):-
 configuration:metarule_constraints(m(tri_chain,_P,_Q,_R,S),fail):-
 	ground(S)
         ,target(S).
+% Experiment: don't let an invented predicate recurse with itself.
+configuration:metarule_constraints(m(tri_chain,P,_Q,_R,S),fail):-
+	ground(P)
+	,ground(S)
+        ,P == S.
 
 % Like tri_chain, chain can only define an invented predciate.
 % Its body literals can only be L-System constants or variables i.e.
@@ -303,3 +308,8 @@ configuration:metarule_constraints(m(chain,_P,Q,_R),fail):-
 configuration:metarule_constraints(m(chain,_P,_Q,R),fail):-
 	ground(R)
         ,target(R).
+% Experiment: don't let an invented predicate recurse with itself.
+configuration:metarule_constraints(m(chain,P,_Q,R),fail):-
+	ground(P)
+	,ground(R)
+        ,P == R.
