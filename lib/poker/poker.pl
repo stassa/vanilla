@@ -10,6 +10,7 @@
 :-use_module(lib(poker/program_reduction/program_reduction)).
 :-use_module(lib(poker/poker_configuration)).
 :-use_module(lib(poker/sampling/sampling)).
+:-use_module(lib(poker/unfolding)).
 
 /** <module> Self-supervised Meta-Interpretive Learning.
 
@@ -98,7 +99,7 @@ learn(As,BK,MS,_Pos,_Neg,_Ts):-
 	->  throw('learn/5: unbound metarule IDs list!')
 	;   fail
 	).
-learn(As,BK,MS,Pos,Neg,Ps):-
+learn(As,BK,MS,Pos,Neg,Us):-
 	debug(learn,'Encapsulating problem...',[])
 	,encapsulated_problem(As,[],BK,MS,[As_,_,BK_,MS_])
 	,debug(learn,'Constructing Top program...',[])
@@ -108,6 +109,7 @@ learn(As,BK,MS,Pos,Neg,Ps):-
 	,examples_targets(As,Ss)
 	,debug(learn,'Excapsulating hypothesis...',[])
 	,excapsulated_clauses(Ss,Rs,Ps)
+	,unfold_top_program(Ps,Ss,Us)
 	,debug(learn,'Excapsulating labelled examples...',[])
 	,excapsulated_clauses(Ss,Pos_,Pos)
 	,findall(En
@@ -1186,6 +1188,32 @@ reduced_top_program_(N,Ps,BK,MS,Bind):-
 reduced_top_program_(_,Rs,_BK,_MS,Rs):-
 	length(Rs, N)
 	,debug(reduction,'Final reduction: ~w',[N]).
+
+
+
+		/*******************************
+		*          UNFOLDING           *
+		*******************************/
+
+
+%!	unfold_top_program(+Top,+Targets,-Unfolded) is det.
+%
+%	Unfold a learned Top Program to remove invented predicates.
+%
+%	Top is the set of clauses in the learned hypothesis, i.e. the
+%	Top Program.
+%
+%	Targets is the list of target symbols of examples.
+%
+%	Unfolded is Top, unfolded to remove clauses of invented
+%	predicates.
+%
+unfold_top_program(Ps,Ts,Us_s):-
+	poker_configuration:unfold_invented(learned)
+	,!
+	,unfold_invented(Ps,Ts,Us)
+	,index_and_sort(Us,Us_s).
+unfold_top_program(Ps,_Ts,Ps).
 
 
 

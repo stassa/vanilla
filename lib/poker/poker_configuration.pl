@@ -15,6 +15,7 @@
                               ,safe_example/1
                               ,strict_clause_limit/1
                               ,tautology/1
+                              ,unfold_invented/1
                               ,unlabelled_examples/1
                               ,unlabelled_examples_order/1
                               ]).
@@ -30,6 +31,7 @@
 % Dynamic options can be set with poker_set_configuration_option/2
 % directives. See Poker experiment files for examples.
 :- dynamic clause_limit/1
+          ,generalise_conjunction/1
           ,gestalt/1
           ,greedy_generalisation/1
           ,flatten_prove_all/1
@@ -38,6 +40,7 @@
           ,reduction/1
           ,respecialise/1
           ,strict_clause_limit/1
+          ,unfold_invented/1
           ,unlabelled_examples/1
           ,unlabelled_examples_order/1.
 
@@ -449,6 +452,30 @@ tautology(H:-B):-
         ,clause_literals(C_,Ls)
         ,numbervars(Ls)
         ,sort(Ls,[_]).
+
+
+%!      unfold_invented(?What) is semidet.
+%
+%       Whether to unfold hypotheses to remove invented predicates.
+%
+%       What is one of:
+%       * none: no unfolding will be performed.
+%       * learned: the learned hypothesis will be unfolded at the end of
+%         learning.
+%       * generalised: initial hypothesers will be unfoled at the end of
+%         the genrealisation step (in generalise/3).
+%
+%       Setting this option to "hypothesis" can drasticaly reduce the
+%       redundancy in hypotheses returned at the end of a learning run.
+%
+%       Setting this option to "generalised" can drasticaly reduce the
+%       number of initial hypotheses derived at the start of learning.
+%       This will _also_ reduce the number of hypotheses returned at the
+%       end.
+%
+unfold_invented(none).
+%unfold_invented(learned).
+%unfold_invented(generalised).
 
 
 %!      unlabelled_examples(?Number) is semidet.
