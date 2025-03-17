@@ -294,6 +294,17 @@ configuration:metarule_constraints(m(tri_chain,P,_Q,_R,S),fail):-
 	ground(P)
 	,ground(S)
         ,P == S.
+% Experimental: order invented predicates by index
+% Forces invented predicates to be constructed in order of their
+% indices and avoids the unnecessary combinatorial cost of constructing
+% all possible combinations of invented predicates.
+configuration:metarule_constraints(m(tri_chain,P,_Q,_R,S),fail):-
+	ground(P)
+	,ground(S)
+	,(   invented(S)
+	 ->  S @< P
+	 ;   false
+	 ).
 
 % Like tri_chain, chain can only define an invented predciate.
 % Its body literals can only be L-System constants or variables i.e.
@@ -313,3 +324,14 @@ configuration:metarule_constraints(m(chain,P,_Q,R),fail):-
 	ground(P)
 	,ground(R)
         ,P == R.
+% Experimental: order invented predicates by index.
+% Forces invented predicates to be constructed in order of their
+% indices and avoids the unnecessary combinatorial cost of constructing
+% all possible combinations of invented predicates.
+configuration:metarule_constraints(m(chain,P,_Q,R),fail):-
+	ground(P)
+	,ground(R)
+	,(   invented(R)
+	 ->  R @< P
+	 ;   false
+	 ).
