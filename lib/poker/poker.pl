@@ -342,9 +342,11 @@ generalise(Pos,MS,Ss_Pos):-
 		,Ss_Pos_)
 	,abolish_all_tables
 	,debug_length(generalise,'Derived ~w sub-hypotheses (unsorted)',Ss_Pos_)
-	,unfold_generalised(Ss_Pos_,Pos,MS,Ss_Pos_s)
+	,once( skolem_sort(Ss_Pos_,Ss_Pos_s) )
 	,debug_length(generalise,'Derived ~w sub-hypotheses (sorted)',Ss_Pos_s)
-	,rename_all_invented(Ss_Pos_s,Ss_Pos).
+	,unfold_generalised(Ss_Pos_s,Pos,MS,Ss_Pos_u)
+	,debug_length(generalise,'Derived ~w sub-hypotheses (unfolded)',Ss_Pos_u)
+	,rename_all_invented(Ss_Pos_u,Ss_Pos).
 generalise(Pos,MS,Ss_Pos):-
 	poker_configuration:multithreading(generalise)
 	,poker_configuration:clause_limit(K)
@@ -356,10 +358,13 @@ generalise(Pos,MS,Ss_Pos):-
 		 ,member(Subs,Ss2)
 		 )
 		,Ss_Pos_)
-	,debug_length(generalise_c,'Derived ~w sub-hypotheses (unsorted)',Ss_Pos_)
-	,unfold_generalised(Ss_Pos_,Pos,MS,Ss_Pos_s)
-	,debug_length(generalise_c,'Derived ~w sub-hypotheses (sorted)',Ss_Pos_s)
-	,rename_all_invented(Ss_Pos_s,Ss_Pos).
+	,debug_length(generalise,'Derived ~w sub-hypotheses (unsorted)',Ss_Pos_)
+	,once( skolem_sort(Ss_Pos_,Ss_Pos_s) )
+	,debug_length(generalise,'Derived ~w sub-hypotheses (sorted)',Ss_Pos_s)
+	,unfold_generalised(Ss_Pos_s,Pos,MS,Ss_Pos_u)
+	,debug_length(generalise,'Derived ~w sub-hypotheses (unfolded)',Ss_Pos_u)
+	,rename_all_invented(Ss_Pos_u,Ss_Pos).
+
 
 
 %!	prove_positives(+Limit,+MS,+Example,+Subs) is det.
@@ -1254,8 +1259,7 @@ unfold_generalised(Subs,Pos,MS,Us):-
 	,debug_length(unfold_generalised,'Keeping ~w metasubs:',Us)
 	,debug_clauses_length(unfold_generalised_msubs,'Keeping ~w metasubs:',Us)
 	,debug_all_metasubs(unfold_generalised_full,'Keeping hypotheses:',Us,Pos,MS).
-unfold_generalised(Subs,_Pos,_MS,Subs_s):-
-	once( skolem_sort(Subs,Subs_s) ).
+unfold_generalised(Subs,_Pos,_MS,Subs).
 
 
 

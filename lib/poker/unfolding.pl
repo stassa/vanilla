@@ -1,5 +1,4 @@
 :-module(unfolding, [unfold_invented/3
-		    %,unfold_invented/4
 		    ,index_and_sort/2
 		    ,indexed_mergesort/2
                     ]).
@@ -11,12 +10,6 @@
 /** <module> Unfold learned hypotheses to remove invented predicates.
 
 */
-
-%!	recursion_depth_limit(?Limit) is semidet.
-%
-%	Limits recursion in unfold_literals/5.
-%
-recursion_depth_limit(500).
 
 
 %!	unfold_invented(+Program,+Targets,-Unfolded) is det.
@@ -240,9 +233,9 @@ unfold_clauses([C|Cs],Ss,Is,Acc,Bind):-
 %	Auxiliary to unfold_clauses/5.
 %
 unfold_clause(H:-B,Ss,Is,C):-
-	must_be(nonvar,H)
+	poker_configuration:unfolding_depth_limit(L)
+	,must_be(nonvar,H)
 	,must_be(nonvar,B)
-	,recursion_depth_limit(L)
 	,debug_clauses(unfold_clause,'Unfolding Clause:',[H:-B])
 	,G = unfold_literals(B,Ss,Is,(H),U_)
 	,call_with_depth_limit(G,L,R)

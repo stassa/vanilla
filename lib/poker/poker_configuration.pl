@@ -15,6 +15,7 @@
                               ,safe_example/1
                               ,strict_clause_limit/1
                               ,tautology/1
+                              ,unfolding_depth_limit/1
                               ,unfold_invented/1
                               ,unlabelled_examples/1
                               ,unlabelled_examples_order/1
@@ -40,6 +41,7 @@
           ,reduction/1
           ,respecialise/1
           ,strict_clause_limit/1
+          ,unfolding_depth_limit/1
           ,unfold_invented/1
           ,unlabelled_examples/1
           ,unlabelled_examples_order/1.
@@ -452,6 +454,13 @@ tautology(H:-B):-
         ,clause_literals(C_,Ls)
         ,numbervars(Ls)
         ,sort(Ls,[_]).
+
+
+%!      unfold_invented(?Limit) is semidet.
+%
+%       Recursion depth limit for unfolding.
+%
+unfolding_depth_limit(500).
 
 
 %!      unfold_invented(?What) is semidet.
