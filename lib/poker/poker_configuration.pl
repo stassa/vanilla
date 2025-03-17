@@ -71,6 +71,7 @@ experiment_file(data('poker_examples/hello_world_poker.pl'),hello_world_poker).
 %experiment_file(data('poker_examples/parity.pl'),parity).
 %experiment_file(data('poker_examples/algae.pl'),algae).
 %experiment_file(data('poker_examples/dragon_curve.pl'),dragon_curve).
+%experiment_file(data('poker_examples/hilbert_curve.pl'),hilbert_curve).
 
 
 %!      flatten_prove_all(?Bool) is semidet.
