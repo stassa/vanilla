@@ -109,7 +109,7 @@ learn(As,BK,MS,Pos,Neg,Us):-
 	,examples_targets(As,Ss)
 	,debug(learn,'Excapsulating hypothesis...',[])
 	,excapsulated_clauses(Ss,Rs,Ps)
-	,unfold_top_program(Ps,Ss,Us)
+	,unfold_top_program(Ps,As,Us)
 	,debug(learn,'Excapsulating labelled examples...',[])
 	,excapsulated_clauses(Ss,Pos_,Pos)
 	,findall(En
@@ -342,7 +342,7 @@ generalise(Pos,MS,Ss_Pos):-
 		,Ss_Pos_)
 	,abolish_all_tables
 	,debug_length(generalise,'Derived ~w sub-hypotheses (unsorted)',Ss_Pos_)
-	,once( skolem_sort(Ss_Pos_,Ss_Pos_s) )
+	,unfold_generalised(Ss_Pos_,Pos,MS,Ss_Pos_s)
 	,debug_length(generalise,'Derived ~w sub-hypotheses (sorted)',Ss_Pos_s)
 	,rename_all_invented(Ss_Pos_s,Ss_Pos).
 generalise(Pos,MS,Ss_Pos):-
@@ -357,7 +357,7 @@ generalise(Pos,MS,Ss_Pos):-
 		 )
 		,Ss_Pos_)
 	,debug_length(generalise_c,'Derived ~w sub-hypotheses (unsorted)',Ss_Pos_)
-	,once( skolem_sort(Ss_Pos_,Ss_Pos_s) )
+	,unfold_generalised(Ss_Pos_,Pos,MS,Ss_Pos_s)
 	,debug_length(generalise_c,'Derived ~w sub-hypotheses (sorted)',Ss_Pos_s)
 	,rename_all_invented(Ss_Pos_s,Ss_Pos).
 
@@ -1191,6 +1191,7 @@ reduced_top_program_(_,Rs,_BK,_MS,Rs):-
 
 
 
+
 		/*******************************
 		*          UNFOLDING           *
 		*******************************/
@@ -1208,12 +1209,54 @@ reduced_top_program_(_,Rs,_BK,_MS,Rs):-
 %	Unfolded is Top, unfolded to remove clauses of invented
 %	predicates.
 %
-unfold_top_program(Ps,Ts,Us_s):-
-	poker_configuration:unfold_invented(learned)
+unfold_top_program(Ps,[E|Pos],Us_s):-
+	poker_configuration:unfold_invented(W)
+	,memberchk(W,[learned,all])
 	,!
+	,examples_targets([E|Pos],Ts)
 	,unfold_invented(Ps,Ts,Us)
 	,index_and_sort(Us,Us_s).
 unfold_top_program(Ps,_Ts,Ps).
+
+
+%!	unfold_generalised(+Metasubs,+Pos,+Metarules,-Unfolded) is det.
+%
+%	Unfold a set of Metasubstitutions to remove invented predicates.
+%
+%	Metasubs is a set of metasubstitutions, as returned by
+%	generalise/3.
+%
+%	Pos is the set of initial examples.
+%
+%	Metarules is duh.
+%
+%	Unfolded is the set of metasubstitutions remaining in Metasubs
+%	after they have been unfolded and sorted, to remove equivalent
+%	sub-hypotheses from the initial hypothesis.
+%
+unfold_generalised(Subs,Pos,MS,Us):-
+	poker_configuration:unfold_invented(W)
+	,memberchk(W,[generalised,all])
+	,!
+	,debug_length(unfold_generalised,'Unfolding ~w metasubs.',Subs)
+	,debug_clauses_length(unfold_generalised_msubs,'Unfolding ~w metasubs:',Subs)
+	,debug_all_metasubs(unfold_generalised_full,'Unfolding hypotheses:',Subs,Pos,MS)
+	,examples_targets(Pos,Ts)
+	,findall(I-Us_i
+		,(nth1(I,Subs,Subs_i)
+		 ,applied_metarules(Subs_i,MS,Cs_i)
+		 ,excapsulated_clauses(Ts,Cs_i,Cs_e)
+		 ,unfold_invented(Cs_e,Ts,Us_i)
+		 )
+		,Us_I)
+	,indexed_mergesort(Us_I,Us_s)
+	,unfolding:de_indexed_list(Us_s,Subs,Us)
+	,debug_length(unfold_generalised,'Keeping ~w metasubs:',Us)
+	,debug_clauses_length(unfold_generalised_msubs,'Keeping ~w metasubs:',Us)
+	,debug_all_metasubs(unfold_generalised_full,'Keeping hypotheses:',Us,Pos,MS).
+unfold_generalised(Subs,_Pos,_MS,Subs_s):-
+	once( skolem_sort(Subs,Subs_s) ).
+
 
 
 

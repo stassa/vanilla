@@ -1,4 +1,5 @@
 :-module(unfolding, [unfold_invented/3
+		    %,unfold_invented/4
 		    ,index_and_sort/2
 		    ,indexed_mergesort/2
                     ]).
@@ -10,6 +11,12 @@
 /** <module> Unfold learned hypotheses to remove invented predicates.
 
 */
+
+%!	recursion_depth_limit(?Limit) is semidet.
+%
+%	Limits recursion in unfold_literals/5.
+%
+recursion_depth_limit(500).
 
 
 %!	unfold_invented(+Program,+Targets,-Unfolded) is det.
@@ -60,21 +67,19 @@ unfold_invented(Ps,Ts,Us):-
 	debug_clauses(unfold_invented,'Unfolding program:',Ps)
 	,debug(unfold_invented,'With target symbols: ~w',[Ts])
 	,copy_term(Ps,Ps_c)
-	% Skolemise to avoid inifinite recursions.
-	%,maplist(numbervars,Ps_c)
-	%,write_canonical(Ps_c)
 	,program_invented(Ps_c,Ts,Cs,Is)
 	,invented_symbols_(Is,Ss)
 	,!
-	,S = table(unfold_literals/5)
-	,G = unfold_clauses(Cs,Ss,Is,[],Us_)
-	,C = abolish_all_tables
-	,setup_call_cleanup(S,G,C)
-	,flatten(Us_,Us)
-	%,maplist(varnumbers,Us_f,Us)
+	,unfold_clauses(Cs,Ss,Is,[],Us_)
+	,(   is_list(Us_)
+	    ,\+ memberchk([depth_limit_exceeded],Us_)
+	 ->  flatten(Us_,Us)
+	 ;   Us = Ps
+	 )
 	,debug_clauses(unfold_invented,'Unfolded program:',Us).
 unfold_invented(Ps,Ts,Ps):-
 	program_invented(Ps,Ts,_Cs,[]).
+
 
 
 %!	program_invented(+Program,+Targets,-Clauses,-Invented) is det.
@@ -234,13 +239,21 @@ unfold_clauses([C|Cs],Ss,Is,Acc,Bind):-
 %
 %	Auxiliary to unfold_clauses/5.
 %
-unfold_clause(H:-B,Ss,Is,H:-B_):-
+unfold_clause(H:-B,Ss,Is,C):-
 	must_be(nonvar,H)
 	,must_be(nonvar,B)
-	,debug_clauses(unfold_clauses,'Unfoliding Clause:',[H:-B])
-	,unfold_literals(B,Ss,Is,(H),U_)
-	,treeverse(U_,(H,B_))
-	,debug_clauses(unfold_clauses,'Unfolded:',[H:-B_]).
+	,recursion_depth_limit(L)
+	,debug_clauses(unfold_clause,'Unfolding Clause:',[H:-B])
+	,G = unfold_literals(B,Ss,Is,(H),U_)
+	,call_with_depth_limit(G,L,R)
+	,(   R == depth_limit_exceeded
+	 ->  debug(unfold_clause,'Proof exceeded depth limit ~w',[L])
+	    ,C = R
+	 ;   debug(unfold_clause,'unfold_clause/4 succeeded at depth ~w',[R])
+	   ,treeverse(U_,(H,B_))
+	   ,C = (H:-B_)
+	   ,debug_clauses(unfold_clause,'Unfolded:',[H:-B_])
+	 ).
 
 
 %!	unfold_literals(+Literals,+Symbols,+Invented,+Acc,-Unfolded) is

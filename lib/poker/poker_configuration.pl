@@ -464,6 +464,7 @@ tautology(H:-B):-
 %         learning.
 %       * generalised: initial hypothesers will be unfoled at the end of
 %         the genrealisation step (in generalise/3).
+%       * all: combines the effects of "generalised" and "learned".
 %
 %       Setting this option to "hypothesis" can drasticaly reduce the
 %       redundancy in hypotheses returned at the end of a learning run.
@@ -474,6 +475,7 @@ tautology(H:-B):-
 %       end.
 %
 unfold_invented(none).
+%unfold_invented(all).
 %unfold_invented(learned).
 %unfold_invented(generalised).
 
