@@ -8,11 +8,11 @@
 	       ,generate_examples/5
 	       ]).
 
-:-use_module(grammar_constraints).
 :-use_module(project_root(configuration)).
 :-use_module(lib(poker/poker_auxiliaries)).
 :-use_module(lib(poker/poker_configuration)).
 :-use_module(data(poker_examples/test_harness)).
+:-use_module(lib(poker/normal_forms/chomsky_greibach_normal_form)).
 
 % Identify thine self.
 :-poker_configuration:experiment_file(P,M)
@@ -248,11 +248,11 @@ the case.
 % Language alphabet for the constraints defeined
 % in grammar_constraints.pl
 %
-grammar_constraints:target(s).
-grammar_constraints:invented(inv_1).
-grammar_constraints:preterminal(a).
-grammar_constraints:preterminal(b).
-grammar_constraints:preterminal(empty).
+cgnf:target(s).
+cgnf:invented(inv_1).
+cgnf:preterminal(a).
+cgnf:preterminal(b).
+cgnf:preterminal(empty).
 
 
 %!	safe_example(-Example) is nondet.

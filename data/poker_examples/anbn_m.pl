@@ -8,11 +8,11 @@
 		 ,generate_examples/5
 		 ]).
 
-:-use_module(grammar_constraints).
 :-use_module(project_root(configuration)).
 :-use_module(lib(poker/poker_auxiliaries)).
 :-use_module(lib(poker/poker_configuration)).
 :-use_module(data(poker_examples/test_harness)).
+:-use_module(lib(poker/normal_forms/chomsky_greibach_normal_form)).
 
 % Identify thine self.
 :-poker_configuration:experiment_file(P,M)
@@ -21,10 +21,12 @@
 /** <module> Separate anbn from anbm strings.
 
 ==
+?- _T = s/2, time( poker:learn(_T,_Pos,_Neg,_Ps) ), maplist(auxiliaries:print_clauses,['Hypothesis:','Positive examples:','Negative examples:'],[_Ps,_Pos,_Neg]), maplist(length,[_Ps,_Pos,_Neg],[Ps,Pos,Neg]).
+% 724,490 inferences, 0.078 CPU in 0.093 seconds (84% CPU, 9273472 Lips)
 Hypothesis:
 s(A,B):-a(A,C),s(C,D),b(D,B).
 s(A,B):-a(A,C),b(C,B).
-Positive:
+Positive examples:
 s([a,b],[]).
 s([a,a,b,b],[]).
 s([a,a,a,b,b,b],[]).
@@ -37,7 +39,7 @@ s([a,a,a,a,a,a,a,a,a,b,b,b,b,b,b,b,b,b],[]).
 s([a,b],[]).
 s([a,a,b,b],[]).
 s([a,a,a,b,b,b],[]).
-Negative
+Negative examples:
 s([a,a,b],[]).
 s([a,a,a,b,b],[]).
 s([a,a,a,b],[]).
@@ -83,13 +85,13 @@ Neg = 21.
 
 
 % Language alphabet for the constraints defeined
-% in grammar_constraints.pl
+% in lib/poker/normal_forms/chomsky_greibach_normal_form.pl
 %
-grammar_constraints:target(s).
-grammar_constraints:invented(inv_1).
-grammar_constraints:preterminal(a).
-grammar_constraints:preterminal(b).
-grammar_constraints:preterminal(empty).
+cgnf:target(s).
+cgnf:invented(inv_1).
+cgnf:preterminal(a).
+cgnf:preterminal(b).
+cgnf:preterminal(empty).
 
 %!	safe_example(-Example) is nondet.
 %

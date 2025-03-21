@@ -1,8 +1,8 @@
-:-module(l_systems_constraints, [target/1
-                                ,invented/1
-                                ,nonterminal/1
-                                ,preterminal/1
-                                ]).
+:-module(lnf, [target/1
+	      ,invented/1
+	      ,nonterminal/1
+	      ,preterminal/1
+	      ]).
 
 :-use_module(project_root(configuration)).
 

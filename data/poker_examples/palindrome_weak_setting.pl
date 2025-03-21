@@ -11,7 +11,7 @@
 :-use_module(project_root(configuration)).
 :-use_module(lib(poker/poker_auxiliaries)).
 :-use_module(data(poker_examples/test_harness)).
-:-use_module(data(poker_examples/grammar_constraints_weak_setting)).
+:-use_module(lib(poker/normal_forms/weak_chomsky_greibach_nf)).
 
 % Identify thine self.
 :-poker_configuration:experiment_file(P,M)
@@ -391,14 +391,12 @@ Program = [1.0,1.0,1.0].
 
 
 % Language alphabet for the constraints defeined
-% in grammar_constraints.pl
+% in poker/normal_form/chomsky_greibach_nf.pl
 %
-grammar_constraints:target(q0).
-grammar_constraints:preterminal(one).
-grammar_constraints:preterminal(zero).
-grammar_constraints:preterminal(empty).
-
-configuration:tri_chain metarule 'P(x,y):- Q(x,z), R(z,u), S(u,y)'.
+weak_cgnf:target(q0).
+weak_cgnf:preterminal(one).
+weak_cgnf:preterminal(zero).
+weak_cgnf:preterminal(empty).
 
 poker_configuration:safe_example(m(q0,Ls,[])):-
 	between(0,8,L)

@@ -12,7 +12,7 @@
 :-use_module(lib(poker/poker_auxiliaries)).
 :-use_module(lib(poker/poker_configuration)).
 :-use_module(data(poker_examples/test_harness)).
-:-use_module(grammar_constraints_weak_setting).
+:-use_module(lib(poker/normal_forms/weak_chomsky_greibach_nf)).
 
 % Identify thine self.
 :-poker_configuration:experiment_file(P,M)
@@ -299,13 +299,11 @@ Neg = 48.
 % Language alphabet for the constraints defeined
 % in grammar_constraints_weak_setting.pl
 %
-grammar_constraints:target(s).
-grammar_constraints:invented(inv_1).
-grammar_constraints:preterminal(a).
-grammar_constraints:preterminal(b).
-grammar_constraints:preterminal(empty).
-
-configuration:tri_chain metarule 'P(x,y):- Q(x,z), R(z,u), S(u,y)'.
+weak_cgnf:target(s).
+weak_cgnf:invented(inv_1).
+weak_cgnf:preterminal(a).
+weak_cgnf:preterminal(b).
+weak_cgnf:preterminal(empty).
 
 
 %!	safe_example(-Example) is nondet.

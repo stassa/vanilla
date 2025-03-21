@@ -8,11 +8,11 @@
 		,generate_examples/5
 		]).
 
-:-use_module(l_systems_constraints).
 :-use_module(project_root(configuration),[]).
 :-use_module(lib(poker/poker_configuration),[]).
 :-use_module(lib(poker/poker_auxiliaries)).
 :-use_module(data(poker_examples/test_harness)).
+:-use_module(lib(poker/normal_forms/lindenmayer_normal_form)).
 
 /** <module> Learn a simple L-System grammar.
 
@@ -258,14 +258,14 @@ Labelling = Program, Program = [1.0,1.0,1.0].
 */
 
 % Language alphabet for the constraints defeined
-% in grammar_constraints.pl
+% in lib/poker/norma_forms/lindenmayer_normal_form.pl
 %
-l_systems_constraints:target(s).
-l_systems_constraints:invented(inv_1).
-l_systems_constraints:invented(inv_2).
-l_systems_constraints:preterminal(a).
-l_systems_constraints:preterminal(b).
-l_systems_constraints:preterminal(empty).
+lnf:target(s).
+lnf:invented(inv_1).
+lnf:invented(inv_2).
+lnf:preterminal(a).
+lnf:preterminal(b).
+lnf:preterminal(empty).
 
 /*
 % Raises error despite importing poker_auxiliaries. Why?

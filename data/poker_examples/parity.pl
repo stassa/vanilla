@@ -11,10 +11,8 @@
 :-use_module(project_root(configuration),[]).
 :-use_module(lib(poker/poker_configuration),[]).
 :-use_module(lib(poker/poker_auxiliaries)).
-
 :-use_module(data(poker_examples/test_harness)).
-
-:-use_module(grammar_constraints).
+:-use_module(lib(poker/normal_forms/chomsky_greibach_normal_form)).
 
 /** <poker> Learn even parity by inventing odd parity with Poker.
 
@@ -204,11 +202,11 @@ Neg = 15.
 % Language alphabet for the constraints defeined
 % in grammar_constraints.pl
 %
-grammar_constraints:target(q0).
-grammar_constraints:invented(inv_1).
-grammar_constraints:preterminal(zero).
-grammar_constraints:preterminal(one).
-grammar_constraints:preterminal(empty).
+cgnf:target(q0).
+cgnf:invented(inv_1).
+cgnf:preterminal(zero).
+cgnf:preterminal(one).
+cgnf:preterminal(empty).
 
 /*
 % Raises error despite importing poker_auxiliaries. Why?

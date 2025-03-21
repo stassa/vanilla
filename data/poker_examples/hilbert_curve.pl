@@ -12,11 +12,11 @@
                         ,generate_examples/5
                         ]).
 
-:-use_module(l_systems_constraints).
 :-use_module(project_root(configuration)).
 :-use_module(lib(poker/poker_configuration),[]).
 :-use_module(lib(poker/poker_auxiliaries)).
 :-use_module(data(poker_examples/test_harness)).
+:-use_module(lib(poker/normal_forms/lindenmayer_normal_form)).
 
 /** <module> Learn an L-System grammar modelling the Hilbert Curve.
 
@@ -305,22 +305,22 @@ Neg = 58.
 */
 
 % Language alphabet for the constraints defeined
-% in grammar_constraints.pl
+% in lib/poker/normal_form
 %
-l_systems_constraints:target(s).
-l_systems_constraints:invented(inv_1).
-l_systems_constraints:invented(inv_2).
-l_systems_constraints:invented(inv_3).
-l_systems_constraints:invented(inv_4).
-l_systems_constraints:invented(inv_5).
-l_systems_constraints:invented(inv_6).
-l_systems_constraints:preterminal(f).
-l_systems_constraints:preterminal(g).
-l_systems_constraints:preterminal(x).
-l_systems_constraints:preterminal(y).
-l_systems_constraints:preterminal(plus).
-l_systems_constraints:preterminal(minus).
-l_systems_constraints:preterminal(empty).
+lnf:target(s).
+lnf:invented(inv_1).
+lnf:invented(inv_2).
+lnf:invented(inv_3).
+lnf:invented(inv_4).
+lnf:invented(inv_5).
+lnf:invented(inv_6).
+lnf:preterminal(f).
+lnf:preterminal(g).
+lnf:preterminal(x).
+lnf:preterminal(y).
+lnf:preterminal(plus).
+lnf:preterminal(minus).
+lnf:preterminal(empty).
 
 /*
 % Raises error despite importing poker_auxiliaries. Why?

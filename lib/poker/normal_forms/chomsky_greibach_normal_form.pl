@@ -1,8 +1,10 @@
-:-module(grammar_constraints, [target/1
-			      ,invented/1
-			      ,nonterminal/1
-			      ,preterminal/1
-			      ]).
+:-module(cgnf, [target/1
+	       ,invented/1
+	       ,nonterminal/1
+	       ,preterminal/1
+	       ]).
+
+:-use_module(project_root(configuration)).
 
 /** <module> Constraints enforcing Chomsky-Greibach Normal Form.
 

@@ -1,8 +1,10 @@
-:-module(grammar_constraints, [target/1
-			      ,invented/1
-			      ,nonterminal/1
-			      ,preterminal/1
-			      ]).
+:-module(weak_cgnf, [target/1
+		    ,invented/1
+		    ,nonterminal/1
+		    ,preterminal/1
+		    ]).
+
+:-use_module(project_root(configuration)).
 
 /** <module> Constraints enforcing a "natural" triadic CFG definition.
 
@@ -47,6 +49,8 @@ Zero --> 0
 
 
 */
+
+configuration:tri_chain metarule 'P(x,y):- Q(x,z), R(z,u), S(u,y)'.
 
 :- multifile target/1.
 :- multifile invented/1.

@@ -8,11 +8,11 @@
 	       ,generate_examples/5
 	       ]).
 
-:-use_module(grammar_constraints).
 :-use_module(project_root(configuration)).
 :-use_module(lib(poker/poker_auxiliaries)).
 :-use_module(lib(poker/poker_configuration)).
 :-use_module(data(poker_examples/test_harness)).
+:-use_module(lib(poker/normal_forms/chomsky_greibach_normal_form)).
 
 % Identify thine self.
 :-poker_configuration:experiment_file(P,M)
@@ -240,7 +240,7 @@ there.
 :-poker_auxiliaries:set_poker_configuration_option(max_invented,[1]).
 :-poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true]).
 :-poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all]).
-:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100]).
+:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[40]).
 :-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
 						  ,[deterministic]).
 */
