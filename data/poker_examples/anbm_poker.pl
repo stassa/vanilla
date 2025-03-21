@@ -1,6 +1,7 @@
 :-module(anbm, [background_knowledge/2
 	       ,metarules/2
-	       ,initial_example/2
+	       ,labelled_example/2
+	       ,unlabelled_example/2
 	       ,a/2
 	       ,b/2
                ,empty/2
@@ -233,16 +234,14 @@ the case.
 % Best way to use currently is to load file for the first time when this
 % is commented out, then uncomment and reload the file (with make/0).
 
-%:-poker_auxiliaries:set_configuration_option(fetch_clauses,[[builtins,bk,metarules]]).
-%:-poker_auxiliaries:set_configuration_option(table_meta_interpreter, [false]).
-%:-poker_auxiliaries:set_configuration_option(untable_meta_interpreter, [true]).
 :-poker_auxiliaries:set_poker_configuration_option(clause_limit,[4]).
 :-poker_auxiliaries:set_poker_configuration_option(max_invented,[1]).
+:-poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true]).
+:-poker_auxiliaries:set_poker_configuration_option(respecialise,[true]).
+:-poker_auxiliaries:set_poker_configuration_option(unfold_invented,[learned]).
 :-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[1500]).
 :-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
 						  ,[random]).
-:-poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true]).
-:-poker_auxiliaries:set_poker_configuration_option(respecialise,[true]).
 */
 
 
@@ -276,16 +275,11 @@ background_knowledge(s/2,[a/2,b/2,empty/2]).
 metarules(s/2,[identity,chain]).
 
 % Hand-picked examples. The empty string is needed.
-initial_example(s/2,s([],[])).
-initial_example(s/2,s([a,a,a,b],[])).
-initial_example(s/2,s([a,a,a],[])).
+labelled_example(s/2,s([],[])).
+labelled_example(s/2,s([a,a,a,b],[])).
+labelled_example(s/2,s([a,a,a],[])).
 
-% Uncomment to learn from randomly generated examples.
-/*
-initial_example(s/2,E):-
-	generate_initial(anbm,2,0,4,Es)
-        ,distinct( member(E,Es) ).
-*/
+unlabelled_example(s/2,_):- fail.
 
 % The background knowledge is the set of pre-terminals in the language.
 % a^nb^n does not include the empty string.

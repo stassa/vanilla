@@ -61,7 +61,7 @@ clause_limit(2).
 %
 %	The Path and Module name of an experiment file.
 %
-experiment_file(data('poker_examples/hello_world_poker.pl'),hello_world_poker).
+experiment_file(data('poker_examples/hello_world_poker.pl'),hello_world).
 %experiment_file(data('poker_examples/anbn_poker.pl'),anbn).
 %experiment_file(data('poker_examples/anbn_poker_weak_setting.pl'),anbn).
 %experiment_file(data('poker_examples/anbn_poker_strong_setting.pl'),anbn).
@@ -72,6 +72,9 @@ experiment_file(data('poker_examples/hello_world_poker.pl'),hello_world_poker).
 %experiment_file(data('poker_examples/algae.pl'),algae).
 %experiment_file(data('poker_examples/dragon_curve.pl'),dragon_curve).
 %experiment_file(data('poker_examples/hilbert_curve.pl'),hilbert_curve).
+%experiment_file(data('poker_examples/koch_curve.pl'),koch_curve).
+%experiment_file(data('poker_examples/anbn_m.pl'),anbn_m).
+%experiment_file(data('poker_examples/hilbert_dragon.pl'),hilbert_dragon).
 
 
 %!      flatten_prove_all(?Bool) is semidet.

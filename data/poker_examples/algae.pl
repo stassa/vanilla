@@ -1,11 +1,12 @@
 :-module(algae, [background_knowledge/2
-                 ,metarules/2
-                 ,initial_example/2
-                 ,a/2
-                 ,b/2
-                 ,empty/2
-		 ,generate_examples/5
-                 ]).
+		,metarules/2
+		,labelled_example/2
+		,unlabelled_example/2
+		,a/2
+		,b/2
+		,empty/2
+		,generate_examples/5
+		]).
 
 :-use_module(l_systems_constraints).
 :-use_module(project_root(configuration),[]).
@@ -275,7 +276,6 @@ l_systems_constraints:preterminal(empty).
 :-poker_auxiliaries:set_poker_configuration_option(gestalt,[true]).
 :-poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true]).
 :-poker_auxiliaries:set_poker_configuration_option(max_invented,[1]).
-:-poker_auxiliaries:set_poker_configuration_option(respecialise,[false]).
 :-poker_auxiliaries:set_poker_configuration_option(unfold_invented,[learned]).
 :-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100]).
 :-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
@@ -308,9 +308,11 @@ background_knowledge(s/3,[a/2
 
 metarules(s/3,[ls_constant,ls_variable,ls_base,chain,tri_chain]).
 
-initial_example(s/3,E):-
+labelled_example(s/3,E):-
 	generate_initial(algae,all,0,4,Es)
         ,member(E,Es).
+
+unlabelled_example(s/3,_):- fail.
 
 a --> [a].
 b --> [b].

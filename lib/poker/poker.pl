@@ -1,6 +1,6 @@
 :-module(poker, [learn/1
 		,learn/4
-		,learn/6
+		,learn/7
 		]).
 
 :-use_module(src(vanilla)).
@@ -41,7 +41,7 @@ returned at the end.
 
 %!	learn(+Targets) is det.
 %
-%	Learn a deafinition of one or more learning Targets.
+%	Learn a program and labelling for one or more learning Targets.
 %
 learn(Ts):-
 	learn(Ts,Pos,Neg,Ps)
@@ -51,9 +51,9 @@ learn(Ts):-
 
 
 
-%!	learn(+Targets,-Definition) is det.
+%!	learn(+Targets,-Positive,-Negative,-Program) is det.
 %
-%	Learn a definition of one or more learning Targets.
+%	Learn a Program and labelling for one or more learning Targets.
 %
 learn(Ts,_Pos,_Neg,_Ps):-
 	(   \+ ground(Ts)
@@ -63,53 +63,56 @@ learn(Ts,_Pos,_Neg,_Ps):-
 learn(T,Pos,Neg,Ps):-
 	T = _F/_A
 	,!
-	,experiment_data(T,As,BK,MS)
-	,learn(As,BK,MS,Pos,Neg,Ps).
+	,experiment_data(T,Ls,Us,BK,MS)
+	,learn(Ls,Us,BK,MS,Pos,Neg,Ps).
 learn([F/A|Ts],Pos,Neg,Ps):-
 	!
-	,experiment_data([F/A|Ts],As,BK,MS)
-	,learn(As,BK,MS,Pos,Neg,Ps).
+	,experiment_data([F/A|Ts],Ls,Us,BK,MS)
+	,learn(Ls,Us,BK,MS,Pos,Neg,Ps).
 learn([A|As],Pos,Neg,Ps):-
 	!
         ,compound(A)
 	,functor(A,F,N)
-	,experiment_data(F/N,_,BK,MS)
-	,learn([A|As],BK,MS,Pos,Neg,Ps).
+	,experiment_data(F/N,_,Us,BK,MS)
+	,learn([A|As],Us,BK,MS,Pos,Neg,Ps).
 learn(A,Pos,Neg,Ps):-
 	!
         ,compound(A)
 	,functor(A,F,N)
-	,experiment_data(F/N,_,BK,MS)
-	,learn([A],BK,MS,Pos,Neg,Ps).
+	,experiment_data(F/N,_,Us,BK,MS)
+	,learn([A],Us,BK,MS,Pos,Neg,Ps).
 
 
 
-%!	learn(+Pos,+Neg,+BK,+Metarules,-Progam) is det.
+%!	learn(+Pos,+Neg,+BK,+Metarules,-Positive,-Negative,-Progam) is
+%!      det.
 %
-%	Learn a Progam from a MIL problem.
+%	Learn a Progam and labelling from a MIL problem.
 %
-learn([],_BK,_MS,_Pos,_Neg,_Ts):-
-	throw('learn/5: No example atoms found. Cannot train.').
-learn(As,BK,MS,_Pos,_Neg,_Ts):-
-	(   var(As)
-	->  throw('learn/5: unbound example atoms list!')
+learn([],_,_BK,_MS,_Pos,_Neg,_Ts):-
+	throw('learn/5: No labelled examples found. Cannot train.').
+learn(Ls,Us,BK,MS,_Pos,_Neg,_Ts):-
+	(   var(Ls)
+	->  throw('learn/5: unbound labelled examples list!')
+	;   var(Us)
+	->  throw('learn/5: unbound unlabelled examples list!')
 	;   var(BK)
 	->  throw('learn/5: unbound background symbols list!')
 	;   var(MS)
 	->  throw('learn/5: unbound metarule IDs list!')
 	;   fail
 	).
-learn(As,BK,MS,Pos,Neg,Us):-
+learn(Ls,Us,BK,MS,Pos,Neg,Fs):-
 	debug(learn,'Encapsulating problem...',[])
-	,encapsulated_problem(As,[],BK,MS,[As_,_,BK_,MS_])
+	,encapsulated_problem(Ls,Us,BK,MS,[Ls_,Us_,BK_,MS_])
 	,debug(learn,'Constructing Top program...',[])
-	,top_program(As_,BK_,MS_,Pos_,Neg_,Ms)
+	,top_program(Ls_,Us_,BK_,MS_,Pos_,Neg_,Ms)
 	,debug(learn,'Reducing Top program...',[])
-	,reduced_top_program(As_,BK_,MS_,Ms,Rs)
-	,examples_targets(As,Ss)
+	,reduced_top_program(Ls_,BK_,MS_,Ms,Rs)
+	,examples_targets(Ls,Ss)
 	,debug(learn,'Excapsulating hypothesis...',[])
 	,excapsulated_clauses(Ss,Rs,Ps)
-	,unfold_top_program(Ps,As,Us)
+	,unfold_top_program(Ps,Ls,Fs)
 	,debug(learn,'Excapsulating labelled examples...',[])
 	,excapsulated_clauses(Ss,Pos_,Pos)
 	,findall(En
@@ -118,7 +121,7 @@ learn(As,BK,MS,Pos,Neg,Us):-
 	,excapsulated_clauses(Ss,Neg_c,Neg).
 
 
-%!	top_program(+Pos,+Neg,+BK,+Metarules,-Top) is det.
+%!	top_program(+Pos,+Neg,+BK,+Metarules,-Pos,-Neg,-Top) is det.
 %
 %	Construct the Top program for a MIL problem.
 %
@@ -138,24 +141,22 @@ learn(As,BK,MS,Pos,Neg,Us):-
 %	but it's guaranteed to terminate. Note also that the TP operator
 %	only works for datalog definite programs.
 %
-%	@bug Top program specialisation using the TP operator is still a
-%	work in progress and may not fully eliminate too-general
-%	metasubstitutions.
-%
-top_program(As,BK,MS,_Pos,_Neg,_Ts):-
-	(   var(As)
-	->  throw('top_program/5: unbound positive examples list!')
+top_program(Ls,Us,BK,MS,_Pos,_Neg,_Ts):-
+	(   var(Ls)
+	->  throw('top_program/5: unbound labelled examples list!')
+	;   var(Us)
+	->  throw('top_program/5: unbound unlabelled examples list!')
 	;   var(BK)
 	->  throw('top_program/5: unbound background symbols list!')
 	;   var(MS)
 	->  throw('top_program/5: unbound metarule IDs list!')
 	;   fail
 	).
-top_program(As,BK,MS,Pos,Neg,Ts):-
+top_program(Ls,Us,BK,MS,Pos,Neg,Ts):-
 % Uses the Prolog engine and avoids using the dynamic db too much.
 	poker_configuration:clause_limit(K)
 	,(   K =< 1
-	 ->  Bs = [As,BK]
+	 ->  Bs = [Ls,BK]
 	 ;   Bs = [BK]
 	 )
 	,S = (write_problem(user,Bs,Refs)
@@ -163,7 +164,7 @@ top_program(As,BK,MS,Pos,Neg,Ts):-
 	     ,refresh_tables(table)
 	     )
 	,G = (debug(top_program,'Constructing Top program...',[])
-	     ,label(As,MS,K,Pos,Neg,Ts)
+	     ,label(Ls,Us,MS,K,Pos,Neg,Ts)
 	     )
 	,C = (erase_program_clauses(Refs)
 	     ,refresh_tables(untable)
@@ -172,10 +173,11 @@ top_program(As,BK,MS,Pos,Neg,Ts):-
 	% Fail if Top Program is empty.
 	,Ts \= []
 	,!.
-top_program(_As,_BK,_MS,[],[],[]):-
+top_program(_Ls,_Us,_BK,_MS,[],[],[]):-
 % If Top program construction fails return an empty program.
 % This is meant to send a clear message that learning failed.
 	debug(top_program,'INSUFFICIENT DATA FOR MEANINGFUL ANSWER',[]).
+
 
 
 %!	label(+Atoms,+Metarules,+Limit,-Positives,-Negatives,-Hypothsis)
@@ -199,30 +201,52 @@ top_program(_As,_BK,_MS,[],[],[]):-
 %	Hypothesis is a hypothesis learned by Atom, and with Negatives
 %	as negative examples.
 %
-label(Ep,MS,K,Pos,Neg,Ps):-
+label(Ls,Us,MS,K,Pos,Neg,Ps):-
 	poker_configuration:greedy_generalisation(false)
 	,poker_configuration:unlabelled_examples(N)
-	,debug_clauses(label,'Initial Examples:',Ep)
-	,generalise(Ep,MS,Subs_)
-	,respecialise(Subs_,Ep,MS,Subs)
+	,debug_clauses(label,'Initial Examples:',Ls)
+	,generalise(Ls,MS,Subs_)
+	,respecialise(Subs_,Ls,MS,Subs)
 	,debug_length(label,'Constructed ~w initial sub-hypotheses.',Subs)
-	,debug_all_metasubs(label_full,'Initial hypothesis:',Subs,Ep,MS)
-	,generate(N,Ep,K,MS,Subs,As)
-	,label(Ep,As,MS,K,Subs,Pos,[],Neg,Ps)
+	,debug_all_metasubs(label_full,'Initial hypothesis:',Subs,Ls,MS)
+	,generate(N,Ls,K,MS,Subs,Gs)
+	,combined_unlabelled(Gs,Us,Us_Gs)
+	,label(Ls,Us_Gs,MS,K,Subs,Pos,[],Neg,Ps)
 	,debug_length(label,'Kept ~w final sub-hypotheses.',Ps)
-	,debug_all_metasubs(label_full,'Final hypothesis:',Ps,Ep,MS).
-label(Ep,MS,K,Pos,Neg,Ps):-
+	,debug_all_metasubs(label_full,'Final hypothesis:',Ps,Ls,MS).
+label(Ls,Us,MS,K,Pos,Neg,Ps):-
         poker_configuration:greedy_generalisation(true)
 	,poker_configuration:unlabelled_examples(N)
-	,debug_clauses(label,'Initial Examples:',Ep)
-	,generalise_greedy(Ep,Ep,K,MS,Subs_)
-	,respecialise(Subs_,Ep,MS,Subs)
+	,debug_clauses(label,'Initial Examples:',Ls)
+	,generalise_greedy(Ls,Ls,K,MS,Subs_)
+	,respecialise(Subs_,Ls,MS,Subs)
 	,debug_length(label,'Constructed ~w initial sub-hypotheses.',Subs)
 	,debug_clauses(label_full,'Initial hypothesis:',Subs)
-	,generate(N,Ep,K,MS,Subs,As)
-	,label(Ep,As,MS,K,Subs,Pos,[],Neg,Ps)
+	,generate(N,Ls,K,MS,Subs,Gs)
+	,combined_unlabelled(Gs,Us,Us_Gs)
+	,label(Ls,Us_Gs,MS,K,Subs,Pos,[],Neg,Ps)
 	,debug_length(label,'Kept ~w final sub-hypotheses.',Ps)
 	,debug_clauses(label_full,'Final hypothesis:',Ps).
+
+
+%!	combined_unlabelled(+Generated,+Unlabelled,-Combined) is det.
+%
+%	Helper to combine Generated and Unlabelled examples.
+%
+%	Unlabelled examples need to be prefixed with the ":-" negation
+%	symbol, so that they are correctly treated as assumed-negative
+%	examples during learning.
+%
+%	Generated and Unlabelled examples must also be sorted to remove
+%	any duplicates mainly resulting from generation of already-given
+%	Unlabelled examples.
+%
+%	This predicate handles both transformations.
+%
+combined_unlabelled(Gs,Us,Us_Gs_s):-
+	negated(Us,Us_n)
+	,flatten([Us_n,Gs],Us_Gs_f)
+	,sort(Us_Gs_f,Us_Gs_s).
 
 
 %!	generalise_greedy(+Es,+Cs,+K,+Metarules,-Subs) is det.

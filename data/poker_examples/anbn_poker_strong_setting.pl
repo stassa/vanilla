@@ -1,6 +1,7 @@
 :-module(anbn, [background_knowledge/2
 	       ,metarules/2
-	       ,initial_example/2
+	       ,labelled_example/2
+	       ,unlabelled_example/2
 	       ,a/2
 	       ,b/2
                ,empty/2
@@ -235,14 +236,11 @@ there.
 % Best way to use currently is to load file for the first time when this
 % is commented out, then uncomment and reload the file (with make/0).
 
-% These should already be in the "default" ish config.
-%:-poker_auxiliaries:set_configuration_option(fetch_clauses,[all]).
-%:-poker_auxiliaries:set_configuration_option(table_meta_interpreter, [true]).
-%:-poker_auxiliaries:set_configuration_option(untable_meta_interpreter, [true]).
 :-poker_auxiliaries:set_poker_configuration_option(clause_limit,[3]).
 :-poker_auxiliaries:set_poker_configuration_option(max_invented,[1]).
 :-poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true]).
-:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[60]).
+:-poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all]).
+:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100]).
 :-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
 						  ,[deterministic]).
 */
@@ -276,9 +274,11 @@ background_knowledge(s/2,[a/2,b/2,empty/2]).
 
 metarules(s/2,[identity,chain]).
 
-initial_example(s/2,s([a,a,b,b],[])).
-initial_example(s/2,s([a,a,a,b,b,b],[])).
-initial_example(s/2,s([a,a,a,a,b,b,b,b],[])).
+labelled_example(s/2,s([a,a,b,b],[])).
+labelled_example(s/2,s([a,a,a,b,b,b],[])).
+labelled_example(s/2,s([a,a,a,a,b,b,b,b],[])).
+
+unlabelled_example(s/2,_):- fail.
 
 % The background knowledge is the set of pre-terminals in the language.
 % a^nb^n does not include the empty string.
@@ -286,5 +286,5 @@ a --> [a].
 b --> [b].
 empty --> [].
 
-generate_examples(pos,anbn,all,0,4).
-generate_examples(neg,not_anbn,all,0,4).
+generate_examples(pos,anbn,all,0,12).
+generate_examples(neg,not_anbn,all,0,12).

@@ -1,9 +1,8 @@
 :-module(hello_world, [program_signature/3
 		      ,background_knowledge/2
 		      ,metarules/2
-		      ,initial_example/2
-		      ,positive_example/2
-		      ,negative_example/2
+		      ,labelled_example/2
+		      ,unlabelled_example/2
 		      ,ancestor/2
 		      ,parent/2
 		      ,father/2
@@ -55,25 +54,21 @@ background_knowledge(p/2,[parent/2
 %
 metarules(p/2,[identity,chain]).
 
-%!	initial_example(+Target,-Examples) is nondet.
-%
-%	Generator of initial Examples for a learning Target.
-%
-initial_example(p/2,p(stathis,stassa)).
 
-%!	positive_example(+Target,-Examples) is nondet.
+%!	labelled_example(+Target,-Examples) is nondet.
 %
-%	Generator of positive Examples for a learning Target.
+%	Generator of labelled Examples for a learning Target.
 %
-positive_example(p/2,p(A,B)):-
-	ancestor(A,B).
+labelled_example(p/2,p(stathis,stassa)).
 
-%!	negative_example(+Target,-Examples) is nondet.
+
+%!	unlabelled_example(+Target,-Examples) is nondet.
 %
-%	Generator of negative Examples for a learning Target.
+%	Generator of unlabelled Examples for a learning Target.
 %
-negative_example(p/2,p(A,B)):-
-	ancestor(B,A).
+unlabelled_example(p/2,p(A,B)):-
+	ancestor(A,B)
+	,\+ labelled_example(p/2,p(A,B)).
 
 
 parent(stathis,kostas).

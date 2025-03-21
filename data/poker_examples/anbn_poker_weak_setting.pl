@@ -1,6 +1,7 @@
 :-module(anbn, [background_knowledge/2
                ,metarules/2
-               ,initial_example/2
+               ,labelled_example/2
+               ,unlabelled_example/2
                ,a/2
                ,b/2
                ,empty/2
@@ -326,9 +327,11 @@ background_knowledge(s/2,[a/2,b/2,empty/2]).
 
 metarules(s/2,[identity,chain,tri_chain]).
 
-initial_example(s/2,E):-
+labelled_example(s/2,E):-
 	generate_initial(anbn,all,0,12,Es)
         ,distinct( member(E,Es) ).
+
+unlabelled_example(s/2,_):- fail.
 
 % The background knowledge is the set of pre-terminals in the language.
 a --> [a].

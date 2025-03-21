@@ -1,6 +1,7 @@
 :-module(palindrome,[background_knowledge/2
                     ,metarules/2
-                    ,initial_example/2
+                    ,labelled_example/2
+                    ,unlabelled_example/2
                     ,zero/2
                     ,one/2
                     ,empty/2
@@ -410,11 +411,11 @@ background_knowledge(q0/2,[zero/2
 
 metarules(q0/2,[identity,chain,tri_chain]).
 
-initial_example(q0/2,E):-
-% Replace "all" with a number K to generate a random set of K initial
-% eamples.
+labelled_example(q0/2,E):-
 	generate_initial(palindrome,all,0,4,Es)
         ,member(E,Es).
+
+unlabelled_example(q0/2,_):- fail.
 
 zero --> [0].
 one --> [1].

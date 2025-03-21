@@ -1,6 +1,7 @@
 :-module(anbn, [background_knowledge/2
 	       ,metarules/2
-	       ,initial_example/2
+	       ,labelled_example/2
+	       ,unlabelled_example/2
 	       ,a/2
 	       ,b/2
                ,empty/2
@@ -166,7 +167,7 @@ Neg = 32.
 
 :-poker_auxiliaries:set_configuration_option(fetch_clauses,[[builtins,bk,metarules]]).
 :-poker_auxiliaries:set_configuration_option(table_meta_interpreter, [false]).
-:-poker_auxiliaries:set_poker_configuration_option(unfold_invented,[learned]).
+:-poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all]).
 :-poker_auxiliaries:set_configuration_option(untable_meta_interpreter, [true]).
 :-poker_auxiliaries:set_poker_configuration_option(clause_limit,[5]).
 :-poker_auxiliaries:set_poker_configuration_option(max_invented,[1]).
@@ -201,13 +202,10 @@ background_knowledge(s/2,[a/2,b/2,empty/2]).
 
 metarules(s/2,[identity,chain]).
 
-% For Poker
-initial_example(s/2,s([a,a,a,b,b,b],[])).
+labelled_example(s/2,s([a,a,a,b,b,b],[])).
 
-% The background knowledge is the set of pre-terminals in the target
-% language. a^nb^n does not include the empty string but we include it
-% anyway: the learner should be able to not use it if it doesn't need
-% it.
+unlabelled_example(s/2,_):- fail.
+
 a --> [a].
 b --> [b].
 empty --> [].

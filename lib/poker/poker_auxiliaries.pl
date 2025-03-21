@@ -11,7 +11,7 @@
 			     ,debug_all_metasubs/5
 	                     % Experiment file auxiliaries
 			     ,cleanup_experiment/0
-			     ,experiment_data/4
+			     ,experiment_data/5
 			     ,learning_target/1
 			     ,learning_targets/1
 			     ,load_experiment_file/0
@@ -57,9 +57,8 @@ format utiliesed in Poker.
 %	experiment file.
 %
 write_encapsulated_problem(T):-
-	experiment_data(T,Pos,BK,MS)
-	,write_encapsulated_problem(Pos,[],BK,MS).
-
+	experiment_data(T,Ls,Us,BK,MS)
+	,write_encapsulated_problem(Ls,Us,BK,MS).
 
 
 
@@ -79,12 +78,15 @@ write_encapsulated_problem(T):-
 %
 list_encapsulated_problem(Ts):-
 	poker_configuration:listing_limit(L)
-	,experiment_data(Ts,Pos,BK,MS)
-	,encapsulated_problem(Pos,[],BK,MS,[Pos_,_Neg,_BK_,MS_])
-	,format_underlined('Initial examples')
-	,print_limited(L,Pos_)
+	,experiment_data(Ts,Ls,Us,BK,MS)
+	,encapsulated_problem(Ls,Us,BK,MS,[Ls_,Us_,_BK_,MS_])
+	,format_underlined('Labelled examples')
+	,print_limited(L,Ls_)
 	,nl
-	,format_underlined('Background knowledge (First Order)')
+	,format_underlined('Unlabelled examples')
+	,print_limited(L,Us_)
+	,nl
+	,format_underlined('Background theory (First Order)')
 	,forall(member(P,BK)
 	       ,(encapsulated_bk([P],Ts,Ps)
 		,format('~w:~n',[P])
@@ -94,7 +96,7 @@ list_encapsulated_problem(Ts):-
 	       )
 	,nl
 	,expanded_metarules(MS,MS_)
-	,format_underlined('Background knowledge (Second Order)')
+	,format_underlined('Background theory (Second Order)')
 	,print_metarules(expanded,MS_).
 
 
@@ -184,20 +186,23 @@ list_learning_results(P/2):-
 %	MIL problem to be listed.
 %
 list_mil_problem(T):-
-	experiment_data(T,Pos,BK,MS)
-	,list_mil_problem(Pos,BK,MS)
+	experiment_data(T,Ls,Us,BK,MS)
+	,list_mil_problem(Ls,Us,BK,MS)
 	,nl
 	,print_constraints(MS,metasub).
 
 
-%!	list_mil_problem(+Pos,+BK,+MS) is det.
+%!	list_mil_problem(+Labelled,+Unlabelled,+BK,+MS) is det.
 %
 %	Business end of list_mil_problem/1.
 %
-list_mil_problem(Pos,BK,MS):-
+list_mil_problem(Ls,Us,BK,MS):-
 	poker_configuration:listing_limit(L)
-	,format_underlined('Initial examples')
-	,print_limited(L,Pos)
+	,format_underlined('Labelled examples')
+	,print_limited(L,Ls)
+	,nl
+	,format_underlined('Unlabelled examples')
+	,print_limited(L,Us)
 	,nl
 	,format_underlined('Background knowledge (First Order)')
 	,forall(member(P,BK)
@@ -297,9 +302,10 @@ prettify_vars(Vs,T,Ps):-
 %	List statistics of the MIL problem for Target.
 %
 list_problem_statistics(T):-
-	experiment_data(T,Pos,BK,MS)
-	,maplist(length,[Pos,BK,MS],[I,K,N])
-	,format('Initial examples:  ~w~n', [I])
+	experiment_data(T,Ls,Us,BK,MS)
+	,maplist(length,[Ls,Us,BK,MS],[I,J,K,N])
+	,format('Labelled examples:    ~w~n', [I])
+	,format('Unlabelled examples:  ~w~n', [J])
 	,format('Background knowledge: ~w ~w~n', [K,BK])
 	,format('Metarules:            ~w ~w ~n', [N,MS]).
 
@@ -407,17 +413,26 @@ cleanup_experiment:-
 
 
 
-%!	experiment_data(+Targets,-Initial,-BK,-Metarules) is det.
+%!	experiment_data(+Targets,-Labelled,-Unlabelled,-BK,-Metarules)
+%!	is det.
 %
 %	Collect experiment file data for one or more learning Targets.
 %
 %	Targets is either a single predicate indicator, or a list of
 %	predicate indicators of the predicates to be learned.
 %
-%	experiment_data/4 expects an experiment file to be loaded into
+%	Labelled, Unlabelled are sets of atoms, the labelled and
+%	unlabelled examples respectively.
+%
+%	BK is a list of predicate indicators of the first-order
+%	background theory in a learning problem.
+%
+%	Metarules is a list of metarule identifiers.
+%
+%	experiment_data/5 expects an experiment file to be loaded into
 %	memory and will fail without warning otherwise.
 %
-experiment_data(Ts,_,_,_):-
+experiment_data(Ts,_,_,_,_):-
 % A list of learning targets must be ground.
 	is_list(Ts)
 	,learning_targets(Ls)
@@ -428,15 +443,16 @@ experiment_data(Ts,_,_,_):-
 		)
 	       )
 	,fail.
-experiment_data(T,_,_,_):-
+experiment_data(T,_,_,_,_):-
 % A single learning target's predicate indicator must be ground.
 	\+ is_list(T)
 	,learning_targets(Ts)
 	,\+ memberchk(T,Ts)
 	,throw('Unknown learning target':T).
-experiment_data(T,Es,BK,MS):-
-	example_atoms(experiment_file,T,Es_)
-	,list_to_set(Es_,Es)
+experiment_data(T,Pos,Neg,BK,MS):-
+	labelled_examples(labelled,experiment_file,T,Pos_)
+	,labelled_examples(unlabelled,experiment_file,T,Neg_)
+	,maplist(list_to_set,[Pos_,Neg_],[Pos,Neg])
 	,bk_or_metarules(background_knowledge,experiment_file,T,BK)
 	,bk_or_metarules(metarules,experiment_file,T,MS_)
 	,(   (MS_ == [all]
@@ -447,9 +463,12 @@ experiment_data(T,Es,BK,MS):-
 	 ).
 
 
-%!	example_atoms(+Module,+Targets,-Atoms) is det.
+%!	labelled_examples(+Labelling,+Module,+Targets,-Examples) is det.
 %
-%	Collect Atoms of one or more target predicates.
+%	Collect labelled or unlabelled Examples of one or more Targets.
+%
+%	Labelling is one of: [labelled, unlabelled], denoting the kind
+%	of examples to collect.
 %
 %	Module is the module name of the current experiment file.
 %
@@ -457,26 +476,29 @@ experiment_data(T,Es,BK,MS):-
 %	arities as F/A predicate indicators, or a single predicate
 %	indicator.
 %
-%	Atoms is a list of atoms of all the learning Targets. These
-%	atoms can be used as examples to learn a hypothesis that can
-%	generate and label new atoms (i.e. assign truth values to them)
-%	depending on whether they are consistent with the initial
-%	examples.
+%	Examples is a list of examples of all the learning Targets. If
+%	Labelling is "labelled", Examples is a list of labelled
+%	examples. If Labelling is "negative", Examples is a list of
+%	unlabelled examples prefixed with ":-" to denote they are
+%	assumed negative Both kinds of examples are otherwise ground
+%	unit clauses.
 %
-example_atoms(M,Ts,Es):-
+labelled_examples(S,M,Ts,Es):-
 % Ts is a list of learning targets.
 	is_list(Ts)
 	,!
-	,C =.. [initial_example,T,Ep]
+	,atom_concat(S,'_example',F)
+	,C =.. [F,T,Ep]
 	,findall(Ep
 		,(member(T,Ts)
 		 ,M:C
 		 )
 		,Es_)
 	,flatten(Es_,Es).
-example_atoms(M,T,Es):-
+labelled_examples(S,M,T,Es):-
 % T is a single learning target.
-	C =.. [initial_example,T,Ep]
+	atom_concat(S,'_example',F)
+	,C =.. [F,T,Ep]
 	,findall(Ep
 		,(M:C
 		 )

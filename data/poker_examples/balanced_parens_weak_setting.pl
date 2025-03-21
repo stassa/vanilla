@@ -1,6 +1,7 @@
 :-module(balanced_parens, [background_knowledge/2
                           ,metarules/2
-                          ,initial_example/2
+                          ,labelled_example/2
+                          ,unlabelled_example/2
                           ,lp/2
                           ,rp/2
                           ,empty/2
@@ -325,6 +326,7 @@ readable manner.
 :-poker_auxiliaries:set_poker_configuration_option(clause_limit,[3]).
 :-poker_auxiliaries:set_poker_configuration_option(max_invented,[1]).
 :-poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true]).
+:-poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all]).
 :-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[50]).
 :-poker_auxiliaries:set_poker_configuration_option(respecialise,[true]).
 :-poker_auxiliaries:set_poker_configuration_option(gestalt,[false]).
@@ -364,9 +366,11 @@ background_knowledge(p/2,[lp/2,rp/2,empty/2]).
 
 metarules(p/2,[identity,chain,tri_chain]).
 
-initial_example(p/2,E):-
+labelled_example(p/2,E):-
 	generate_initial(parens,all,0,6,Es)
         ,distinct( member(E,Es) ).
+
+unlabelled_example(p/2,_):- fail.
 
 % The background knowledge is the set of pre-terminals in the language.
 lp --> ['('].
