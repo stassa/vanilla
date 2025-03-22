@@ -3,6 +3,7 @@
                       ,generate_initial/5
                       ,test_labelling/4
                       ,test_program/3
+                      ,test_draw/8
                       ]).
 
 :-use_module(lib(poker/poker)).
@@ -377,15 +378,18 @@ internal_symbol_(not,q0).
 internal_symbol_(not_not,q0).
 internal_symbol_(algae,s).
 internal_symbol_(not_algae,s).
-
+internal_symbol_(fractal_plant,s).
+internal_symbol_(not_fractal_plant,s).
 internal_symbol_(dragon_curve,s).
 internal_symbol_(not_dragon_curve,s).
-
 internal_symbol_(koch_curve,s).
+internal_symbol_(not_koch_curve,s).
 internal_symbol_(hilbert_curve,s).
+internal_symbol_(not_hilbert_curve,s).
 internal_symbol_(sierpinski_triangle,s).
+internal_symbol_(not_sierpinski_triangle,s).
 internal_symbol_(sierpinski_arrowhead,s).
-internal_symbol_(fractal_plant,s).
+internal_symbol_(not_sierpinski_arrowhead,s).
 
 
 %!      accuracy(+Module,+Target,+Pos,+Neg,-Accuracy) is det.
@@ -870,6 +874,22 @@ hilbert_curve([+,y,f,-,x,f,x,-,f,y,+|Ss]) --> x, hilbert_curve(Ss).
 hilbert_curve([-,x,f,+,y,f,y,+,f,x,-|Ss]) --> y, hilbert_curve(Ss).
 hilbert_curve([]) --> [].
 
+not_hilbert_curve(Ss) -->
+        hilbert_string(Ss)
+        ,{  \+ phrase(hilbert_curve(Ss),_,[])
+            ,maplist(length,[Ss,Xs],[N,N])
+            ,phrase(hilbert_string(Xs),_)
+         }
+        ,Xs.
+
+hilbert_string([C]) --> hilbert_char(C).
+hilbert_string([C|Ss]) --> hilbert_char(C), hilbert_string(Ss).
+
+hilbert_char(+) --> plus.
+hilbert_char(-) --> minus.
+hilbert_char(f) --> f.
+hilbert_char(x) --> x.
+hilbert_char(y) --> y.
 
 
 %!      sierpinski_triangle(?String) is semidet.
@@ -894,6 +914,22 @@ sierpinski_triangle([f,-,g,+,f,+,g,-,f|Ss]) --> f, sierpinski_triangle(Ss).
 sierpinski_triangle([g,g|Ss]) --> g, sierpinski_triangle(Ss).
 sierpinski_triangle([]) --> [].
 
+not_sierpinski_triangle(Ss) -->
+        sierpinski_string(Ss)
+        ,{  \+ phrase(sierpinski_triangle(Ss),_,[])
+            ,maplist(length,[Ss,Xs],[N,N])
+            ,phrase(sierpinski_string(Xs),_)
+         }
+        ,Xs.
+
+sierpinski_string([C]) --> sierpinski_char(C).
+sierpinski_string([C|Ss]) --> sierpinski_char(C), sierpinski_string(Ss).
+
+sierpinski_char(+) --> plus.
+sierpinski_char(-) --> minus.
+sierpinski_char(f) --> f.
+sierpinski_char(g) --> g.
+
 
 
 %!      sierpinski_arrowhead(?String) is semidet.
@@ -915,6 +951,12 @@ sierpinski_arrowhead([f|Ss])--> f, sierpinski_arrowhead(Ss).
 sierpinski_arrowhead([y,f,+,x,f,+,y|Ss])--> x, sierpinski_arrowhead(Ss).
 sierpinski_arrowhead([x,f,-,y,f,-,x|Ss])--> y, sierpinski_arrowhead(Ss).
 sierpinski_arrowhead([]) --> [].
+
+
+
+                /*******************************
+                *       L-SYSTEMS PLANTS       *
+                *******************************/
 
 
 
@@ -945,87 +987,13 @@ fractal_plant([]) --> [].
 
 
 
-%!	l_system(+Symbol,+Input,+Iteration,-Output) is semidet.
-%
-%	L-System interpreter.
-%
-%	Symbol is the starting symbol of an L-System grammar.
-%
-%	Input is a list of terminals accepted by an L-system grammar,
-%       given as an initial state.
-%
-%       Iteration is the final iteration of generation following from
-%       the initial state given as Input.
-%
-%	Output is the output string of the L-System at the given
-%	Iteration.
-%
-%       An L-System grammar must be loaded in memory as a set of DCG
-%       rules with the start symbol Symbol//1.
-%
-%       Example queries:
-%       ==
-%       ?- test_harness:( peano(1,_I), l_system(algae,[a],_I,Ss) ).
-%       Ss = [a,b] ;
-%       false.
-%
-%       ?- test_harness:( peano(3,_I), l_system(algae,[a,b],_I,Ss) ).
-%       Ss = [a,b,a,a,b,a,b,a] ;
-%       false.
-%
-%       ?- test_harness:( peano(2,_I), l_system(algae,[a,b,a],_I,Ss) ).
-%       Ss = [a,b,a,a,b,a,b,a] ;
-%       false.
-%       ==
-%
-l_system(_S,Os,0,Os):-
-        !.
-l_system(S,Is,s(N),Os):-
-        S_ =.. [S,Ss]
-	,phrase(S_, Is)
-        ,l_system(S,Ss,N,Os).
+                /*******************************
+                *L-SYSTEMS PARSING AND DRAWING *
+                *******************************/
 
 
 
-%!      peano(?Digit,?Peano) is nondet.
-%
-%       Convert between a Digit and a Peano number.
-%
-%       Use this program to quickly convert between Peano notation and
-%       arabic notation for easy testing of L-System grammars at
-%       specific iterations.
-%
-%       Accepted modes are (+,-) and (-,+). In mode (?,?) this predicate
-%       returns only 0 deterministically.
-%
-%       Examples:
-%       ==
-%       ?- test_harness:peano(1,P).
-%       P = s(0).
-%
-%       ?- test_harness:peano(I,s(0)).
-%       I = 1.
-%
-%       ?- test_harness:peano(N,P).
-%       N = P, P = 0.
-%       ==
-%
-peano(N,P):-
-        peano(P,0,N).
-
-%!      peano(+I,+N,+Acc) is nondet.
-%
-%       Business end of peano/2.
-%
-peano(0,N,N):-
-        !.
-peano(s(P),N,Acc):-
-        succ(N,N_)
-        ,peano(P,N_,Acc).
-
-
-
-%!      draw(+String,+LeftAngle,+RightAngle,+Distance,+Start) is det.
+%!      Draw(+String,+LeftAngle,+RightAngle,+Distance,+Start) is det.
 %
 %       Draw an L-System String to screen with Turtle graphics.
 %
@@ -1052,19 +1020,84 @@ draw(Is,S,A,D,P):-
         py_call(turtle_mapping:draw(Is,S,A,D,P)).
 
 
-
-%!      manual_tester(+Symbol,+Min,+Max,+Module,-Example) is det.
+%!      test_draw(+Tgt,+H,+I,+Axiom,+Right,+Left,+Dist,+Start) is
+%!      det.
 %
-%       Helper for top-level testing of learned, hand-crafted grammars.
+%       Draw an L-System string generated by a learned hypothesis.
 %
-manual_tester(S/2,I,J,M,E):-
-        between(I,J,K)
-        ,length(Xs,K)
-        ,E =.. [S,Xs,[]]
-        ,call(M:E).
-manual_tester(S/3,I,J,M,E):-
-        between(I,J,K)
-        ,length(Xs,K)
-        ,E =.. [S,Xs,_Is,[]]
-        ,call(M:E).
+%       Tgt is a predicate indicator, F/A, of a learning target.
+%
+%       H is the hypothesis, a learned logic program definition of Tgt.
+%       H should be a learned grammar of an L-System, in DCG form
+%       (unsugared).
+%
+%       I is an integer, the maximum iteration for L-System iteration.
+%
+%       Axiom is a list of characters, the input string of the L-System
+%       grammar defined in H.
+%
+%       Right and Left are the angles for left and right turns of the
+%       cursor drawing the L-System (a turtle-graphics cursor).
+%
+%       Distance is the distance covered by the cursor when moving in
+%       a straight line (in pixels).
+%
+%       Start is an atom denoting the initial position of the cursor.
+%       See draw/5 for options.
+%
+test_draw(S/Ar,Ps,I,Ax,RA,LA,D,St):-
+        PM = l_systems
+        ,experiment_data(S/Ar,_Ls,_Us,B,_MS)
+        ,closure(B,experiment_file,Bs)
+        ,flatten(Bs,Bs_f)
+        ,Sup = maplist(assert_program(PM),[Ps,Bs_f],[Rs_1,Rs_2])
+        ,G = once( l_system(S,PM,Ax,I,Ss) )
+        ,C = maplist(erase_program_clauses,[Rs_1,Rs_2])
+        ,setup_call_cleanup(Sup,G,C)
+        ,atomic_list_concat(Ss,'',Ss_)
+        ,draw(Ss_,LA,RA,D,St).
 
+
+%!      l_system(+Symbol,+Module,+Input,+Iteration,-Output) is det.
+%
+%       L-system interpreter.
+%
+%       Symbol is the starting symbol of an L-System grammar.
+%
+%       Module is the module where the L-System grammar is defined.
+%
+%       Input is a list of terminals accepted by an L-system grammar,
+%       given as an initial state.
+%
+%       Iteration is an integer, the final iteration of generation
+%       following from the initial state given as Input.
+%
+%       Output is the output string of the L-System at the given
+%       Iteration.
+%
+%       An L-System grammar must be loaded in memory as a set of DCG
+%       rules with the start symbol Symbol//1 and accessible from the
+%       named Module.
+%
+%       Examples:
+%       ==
+%       ?- test_harness:l_system(algae,test_harness,[a],3,Ss).
+%       Ss = [a,b,a,a,b] ;
+%       false.
+%
+%       ?- test_harness:l_system(algae,test_harness,[a,b,a,a,b],1,Ss).
+%       Ss = [a,b,a,a,b,a,b,a] ;
+%       false.
+%
+%       ?- test_harness:l_system(algae,test_harness,[a],4,Ss).
+%       Ss = [a,b,a,a,b,a,b,a] ;
+%       false.
+%       ==
+%
+l_system(_S,_M,Os,0,Os):-
+        !.
+l_system(S,M,Is,N,Os):-
+        S_ =.. [S,Ss]
+	,phrase(M:S_, Is)
+        ,N_ is N - 1
+        ,l_system(S,M,Ss,N_,Os).
