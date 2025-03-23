@@ -1,5 +1,8 @@
-:-module(test_harness,[experiments/6
+:-module(test_harness,[experiments/5
+                      ,experiments/6
+                      ,experiment/4
                       ,experiment/5
+                      ,generate_initial/2
                       ,generate_initial/5
                       ,test_labelling/4
                       ,test_program/3
@@ -20,6 +23,52 @@ labelled by Poker, or the programs it learns to label them.
 
 % To draw L-Systems with Python's turtle library, via Janus.
 :- py_add_lib_dir(data(poker_examples)).
+
+
+%!      experiments(+Target,+N,+Labelled,+Unlabelled,-Results) is det.
+%
+%       Run N experiments with both Labelld and Unlabelled examples.
+%
+%       Similar to experiments/6 but allows training and testing with
+%       both labelled and unlabeleld examples. Additionally the
+%       Unlabelled examples (but not the labelled examples) can be
+%       generated from a composition of grammars rather than a single
+%       grammar.
+%
+%       N is the number of experiments to run.
+%
+%       Labelled is a term S(M,J,K), denoting the language of the
+%       labelled examples and the quantity (M, a number or "all") and
+%       minimum (J) and maximum (K) length of strings of S in those
+%       examples. S must be defined in test_harness as a DCG.
+%
+%       Su is as in labelled, or a list of terms S(M,J,K), used to
+%       generate unlabelled examples. If Su is a list of terms, the
+%       unlabelled examples used for training are a mix of atoms of all
+%       the languages in the list.
+%
+%       Results is a list Labelling, Program, with the same meaning as
+%       in experiments/6. Copying from that predicate's documentation:
+%
+%       Means is a list of two lists [Ms_L, Ms_P], each of which is a
+%       list [Acc,TPR,TNR], where Acc is the mean accuracy, TPR the
+%       mean true positive rate and TNR the mean true negative rate of
+%       the N hypotheses learned from the sets of N examples generated
+%       in the N steps of the experiment. The first sub-list, Ms_L holds
+%       the means of the labelling results, and Ms_P holds the means of
+%       the program testing results.
+%
+experiments(T,N,Sl,Su,[Ms_l,Ms_p]):-
+        findall(Res_l-Res_p
+               ,(between(1,N,I)
+                ,debug(experiments,'Experiment ~w of ~w',[I,N])
+                ,experiment(T,Sl,Su,[_Ps,_Pos,_Neg,Res_l,Res_p])
+                )
+               ,Rs)
+        ,pairs_keys_values(Rs,Rs_l,Rs_p)
+        ,result_means(Rs_l,Ms_l)
+        ,result_means(Rs_p,Ms_p).
+
 
 
 %!      experiments(+Target,+N,+M,+J,+K,-Means) is det.
@@ -120,6 +169,91 @@ mean(N,X,M):-
 %
 sum(A,B,C):-
         C is A + B.
+
+
+
+%!      experiment(+Target,+Labelled,+Unlabelled,-Results) is det.
+%
+%       Run an experiment with both Labelled and Unlabelled examples.
+%
+%       Similar to experiment/5, but allows training and testing with
+%       both labelled and unlabelled examples. Additionally the
+%       Unlabelled examples (but not the labelled examples) can be
+%       generated from a composition of grammars rather than a single
+%       grammar.
+%
+%       T is a predicate indicator, S/A, of a learning target defined in
+%       the current experiment file. T is used to collect background
+%       knowledge and metarules for the experiment, but _not_ to
+%       generate examples. Examples are generated according to Labelled
+%       and Unlabelled.
+%
+%       Labelled is a term Sl(Nl,Jl,Kl), where Sl is the symbol of a
+%       grammar defined in test_harness and used to a) generate labelled
+%       examples and b) evaluate the labelling and c) the program
+%       learned by Poker from those examples, and Nl, Jl, and Kl, are
+%       the number (or atom "all" for ... all) of strings of the
+%       language Sl to generate as Definite Clause Grammars atoms, and
+%       minimum and maximum length of strings in those atoms.
+%
+%       Unlabelled is a term Su(Nu,Ju,Ku), with the same meaning as
+%       Labelled, except that Su is the symbol of a grammar used to
+%       generate unlabelled examples. Unlabelled can alterantively be a
+%       list of terms Su(Nu,Ju,Ku), in which case the generated
+%       unlabelled examples are a combination of atoms from all the
+%       listed languages and with the corresponding numbers.
+%
+%       Generation of both labelled and unlabelled examples is handled
+%       by generate_initial/3 and Labelled and Unlabelled are passed to
+%       that predicate. Refer to that predicate's comments for more
+%       details on generation. Note that while generate_initial/3
+%       accepts a list in the first argument, i.e. the argument passed
+%       from Labelled, experiment/4 doesn't currently allow Labelled to
+%       be a list, i.e. it is not currently possible to compose two
+%       grammars to create a set of labelled examples.
+%
+%       Results is as in experiment/5, a list [Ps,Pos,Neg,Ms_L,Ms_R],
+%       where:
+%
+%       * Ps is the learned hypothesis
+%       * Pos is the list of positive examples identified
+%       * Neg is the list of negative examples identified
+%       * Ms_L is the list of labelling results
+%       * Ms_R is the list of program results.
+%
+%       Each of Ms_L and Ms_R is a list [Acc,TPR,TNR], where:
+%
+%       In Ms_L
+%       * Acc is the accuracy of the labelling of atoms in Pos and Neg.
+%       * TPR is the True Positive Rate of the labelling in Pos and Neg.
+%       * TNR is the True Negative Rate of the labelling in Pos and Neg.
+%
+%       In Ms_P
+%       * Acc is the accuracy of the program learned from N examples
+%         measured against the ground truth of Language.
+%       * TPR is the True Positive Rate of the program.
+%       * TNR is the True Negative Rate of the program.
+%
+experiment(T,Sl,Su,[Ps,Pos,Neg,Rs_l,Rs_p]):-
+        generate_initial(Sl,Ls)
+        ,generate_initial(Su,Us)
+        ,experiment_data(T,_,_,BK,MS)
+        ,debug_length(experiment_initial,'Generated ~w labeleld examples.',Ls)
+        ,debug_length(experiment_initial,'Generated ~w unlabeleld examples.',Us)
+        ,debug_clauses_length(experiment_initial_full,'Generated ~w labelled examples:',Ls)
+        ,debug_clauses_length(experiment_initial_full,
+                              'Generated ~w unlabelled examples:',Us)
+        ,time( learn(Ls,Us,BK,MS,Pos,Neg,Ps) )
+        ,debug_length(experiment_learned,'Learned ~w clause hypothesis.',Ps)
+        ,debug_clauses(experiment_learned_full,'Learned hypothesis:',Ps)
+        ,debug_length(experiment_examples,'Labelled ~w Positive examples.',Pos)
+        ,debug_length(experiment_examples,'Labelled ~w Negative examples.',Neg)
+        ,debug_clauses_length(experiment_examples_full,'~w Positive examples:',Pos)
+        ,debug_clauses_length(experiment_examples_full,'~w Negative examples:',Neg)
+        ,Sl =.. [Sl_|_]
+        ,test_labelling(Sl_,Pos,Neg,Rs_l)
+        ,test_program(Sl_,Ps,Rs_p).
+
 
 
 %!      experiment(+Language,+N,+J,+K,-Results) is det.
@@ -268,6 +402,80 @@ generate_examples(Sign,Es):-
         ,format(atom(M),'Generated ~~w ~w testing examples',[Sign_])
         ,debug_length(generate_examples,M,Es)
         ,debug_clauses_length(generate_examples_full,M,Es).
+
+
+
+%!      generate_initial(+Targets,-Examples) is det.
+%
+%       Generate atoms used as examples for a set of targets.
+%
+%       Similar to generate_initial/5 but allows atoms to be generated
+%       from a compisition of two or more target languages.
+%
+%       Targets is either a list of terms S(N,J,K), or a single such
+%       term.
+%
+%       In each term S(N,J,K), S is the symbol of a target language
+%       that must be defined as a Definite Clause Grammar in
+%       test_harness.
+%
+%       N, J, K, are the numbers of atoms to generate and the minimum
+%       (J) and maximum (K) length of strings represented by those
+%       atoms. N can be the atom "all", in which case, you guessed it,
+%       _all_ examples of strings of S of length between J and K will be
+%       generated.
+%
+%       Examples is the list of atoms generated that way. Those are
+%       atoms of each S, therefore they are atoms in Definite Clause
+%       Grammars notation i.e. they are of the form S(Xs,Ys,...) where
+%       Xs, Ys, etc. are lists of characters representing strings in
+%       a language.
+%
+%       Example:
+%       ==
+%       ?- test_harness:generate_initial(anbn(all,0,12),_Es), maplist(writeln,_Es).
+%       s([a,b],[])
+%       s([a,a,b,b],[])
+%       s([a,a,a,b,b,b],[])
+%       s([a,a,a,a,b,b,b,b],[])
+%       s([a,a,a,a,a,b,b,b,b,b],[])
+%       s([a,a,a,a,a,a,b,b,b,b,b,b],[])
+%       true.
+%
+%       ?- test_harness:generate_initial([anbn(all,0,6),anbm(all,0,3)],_Es)
+%       ,maplist(writeln,_Es).
+%
+%       s([a,b],[])
+%       s([a,a,b,b],[])
+%       s([a,a,a,b,b,b],[])
+%       s([],[])
+%       s([a],[])
+%       s([a,a],[])
+%       s([a,b],[])
+%       s([a,a,a],[])
+%       s([a,a,b],[])
+%       s([a,a,b],[])
+%       true.
+%       ==
+%
+%       This predicate calls generate_initial/5 and passes it the name
+%       of each tagret language, and the corresponding number, and min
+%       and max length of strings to generate.
+%
+generate_initial(T,Es):-
+        \+ is_list(T)
+        ,compound(T)
+        ,T =.. [S,N,J,K]
+        ,generate_initial(S,N,J,K,Es)
+        ,!.
+generate_initial(Ts,Es):-
+        is_list(Ts)
+        ,findall(Es_s
+               ,(member(T,Ts)
+                ,generate_initial(T,Es_s)
+                )
+               ,Es_)
+        ,flatten(Es_,Es).
 
 
 
@@ -993,7 +1201,7 @@ fractal_plant([]) --> [].
 
 
 
-%!      Draw(+String,+LeftAngle,+RightAngle,+Distance,+Start) is det.
+%!      draw(+String,+LeftAngle,+RightAngle,+Distance,+Start) is det.
 %
 %       Draw an L-System String to screen with Turtle graphics.
 %
