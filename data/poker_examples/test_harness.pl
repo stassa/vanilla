@@ -390,10 +390,15 @@ test_program(T,Cs,[Acc,TPR,TNR]):-
 %       generate examples are defined in that predicate.
 %
 generate_examples(Sign,Es):-
-        experiment_file:generate_examples(Sign,S,N,J,K)
-        ,debug(generate_examples,'Generating ~w ~w examples of length in [~w,~w].'
-              ,[N,S,J,K])
-        ,generate_initial(S,N,J,K,Es)
+        findall(Es_f
+               ,(experiment_file:generate_examples(Sign,S,N,J,K)
+                ,debug(generate_examples,'Generating ~w ~w examples of length in [~w,~w].'
+                      ,[N,S,J,K])
+                ,generate_initial(S,N,J,K,Es_i)
+                ,filter_unlabelled(S,Es_i,Es_f)
+                )
+               ,Es_)
+        ,flatten(Es_,Es)
         ,(   Sign == pos
          ->  Sign_ = positive
          ;   Sign == neg
@@ -402,6 +407,80 @@ generate_examples(Sign,Es):-
         ,format(atom(M),'Generated ~~w ~w testing examples',[Sign_])
         ,debug_length(generate_examples,M,Es)
         ,debug_clauses_length(generate_examples_full,M,Es).
+
+
+%!      filter_unlabelled(+Filter,+Unlabelled,-Filtered) is det.
+%
+%       Filter, or not, Unlabelled examples by a target predicate.
+%
+%       Filter is the name of a DCG defined in terst_harness. If a
+%       clause of the predicate filter_negatives/2 is defined in
+%       the current experiment_file with Filter as its first argument,
+%       this predicate will remove from Unlabelled all examples that are
+%       also examples of Filter. This implies a definition of
+%       generate_examples/5 in the experiment file module used to
+%       generate negative examples in the first place.
+%
+%       Unlabelled is a list of negative examples of the current target
+%       lanuage.
+%
+%       Filtered is the list is Unlabelled, with examples of the grammar
+%       in Filter removed.
+%
+filter_unlabelled(_,Us,Us):-
+        \+ current_predicate(experiment_file:filter_negatives/2)
+        ,!.
+filter_unlabelled(F,Us,Us):-
+        current_predicate(experiment_file:filter_negatives/2)
+        ,compose(experiment_file,filter_negatives(F,_),C)
+        ,\+ call(C)
+        ,!.
+filter_unlabelled(F,Us,Us_f):-
+        current_predicate(experiment_file:filter_negatives/2)
+        ,compose(experiment_file,filter_negatives(F,_),C)
+        ,call(C)
+        ,once( internal_symbol(S,S_) )
+        ,current_predicate(S,E)
+        % S may be S//0 or S//1. Or...?
+        ,functor(E,S,A)
+        ,length(Args,A)
+        % Atom with internal symbol name
+        ,E =.. [S|Args]
+        ,findall(U
+                ,(member(U,Us)
+                 % Atom with external symbol name
+                 ,U =.. [S_|Args]
+                 % Call the internal one
+                 ,\+ call(E)
+                 )
+                ,Us_f).
+
+
+%!      compose(+Module,+Predicate,-Qualified) is semidet.
+%
+%       Just my little hack there.
+%
+%       In filter_unlabelled/3 we want to call a predicate
+%       filter_negatives/2 but only if it exists. If it doesn't exist
+%       and we have a call to it in filter_unlabelled/3, even if we
+%       guard against making this call when the predicate is not defined
+%       (e.g. after searching with it with current_predicate/2 and
+%       failing to find it) Prolog will still raise a warning when
+%       test_harness.pl (this file) is loaded or reloaded (e.g. with
+%       make/0).
+%
+%       This hack allows filter_unlabelled/3 to compose a call to
+%       filter_negatives/2 at a level where Prolog's compiler won't warn
+%       that it doesn't exist, so no warnings will be raised when this
+%       file is compiled.
+%
+%       The alterantive is to declare filter_negatives/2 as dynamic or
+%       multifile or something like that, and that may be a better
+%       choice, but then again, maybe not.
+%
+%       In any case this is a hack so don't do as I hack, do as I suck.
+%
+compose(M,P,M:P).
 
 
 
