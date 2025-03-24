@@ -1,4 +1,6 @@
-:-module(test_harness,[experiments/5
+:-module(test_harness,[experiments_moderate_uncertainty/6
+                      ,experiments_low_uncertainty/7
+                      ,experiments/5
                       ,experiments/6
                       ,experiment/4
                       ,experiment/5
@@ -13,6 +15,7 @@
 :-use_module(lib(poker/poker_auxiliaries)).
 :-use_module(src(auxiliaries)).
 :-use_module(lib(poker/sampling/sampling)).
+:-use_module(lib(mathemancy/mathemancy)).
 
 /** <module> A test harness for Poker.
 
@@ -23,6 +26,178 @@ labelled by Poker, or the programs it learns to label them.
 
 % To draw L-Systems with Python's turtle library, via Janus.
 :- py_add_lib_dir(data(poker_examples)).
+
+
+%!      experiments_moderate_uncertainty(+Lang,+N,+Gend,+Lab,+Unl,-Res)
+%!      is det.
+%
+%       Run an experiment under the moderate uncertainty regime.
+%
+%       The low uncertainty regime is when we have both labelled and
+%       unlabelled examples and we know that the labelled examples are
+%       all positive examples of the same predicate under one
+%       interpretation, and the unlabelled examples are a mix of
+%       examples of the same interpretation as the labelled examples,
+%       and just one other interpretation. The purpose of learning then
+%       is to not only return a hypothesis of the interpretation of the
+%       labelled examples but also a labelling that labels examples of
+%       the interpretation of the labelled examples as positive, and
+%       examples of the other interpretation as negatives.
+%
+%       Lang is a predicate indicator, symbol/arity, of a target
+%       language that must be defined as a learning target in the
+%       current experiment file.
+%
+%       N is the number of times to repeat the experiment in each
+%       iteration.
+%
+%       Gend is a list [Min,Max], the minimum and maximum number of
+%       negative examples to generate internally in each iteration of
+%       the experiment.
+%
+%       Lab is a specification of the labelled examples, as expected by
+%       experiments/5, a compound T(K,Min,Max), where T is a
+%       test language defined as a DCG in this module, K is the number
+%       of atoms of T to generate as initial, labelled examples, and Min
+%       Max are the minimum and maximum length of strings in the
+%       labelled examples.
+%
+%       Unl is a specification of the unlabelled examples, same as Lab,
+%       but a list thereof, allowing for a composition of multiple
+%       target languages as unlabelled examples. In fact.
+%
+%       Res Is a list of terms I/Sl/Su/Rs_i, where I, Sl, Su are the
+%       iteration, number of labelled and number of unlabelled examples
+%       in the listed iteration and Rs_i are the results for that
+%       iteration, given as a list of two lists, [L,P], where each of L,
+%       P is of the form [Acc,Tpr,TNR], listing the mean of accuracy,
+%       TPR and TNR in the iteration I.
+%
+%       TODO: Needs example query.
+%
+experiments_moderate_uncertainty(T,M,[Min,Max],Ss_l,Ss_u,Rs):-
+        is_list(Ss_l)
+        ,S = poker_configuration:unlabelled_examples(C)
+        ,G = findall(N/Sl/Su/Rs_i
+                ,(nth1(I,Ss_l,Sl)
+                 ,debug('experiments_neg','Labelled examples: ~w',[Sl])
+                 ,nth1(I,Ss_u,Su)
+                 ,debug('experiments_neg','Unlabelled examples: ~w',[Su])
+                 ,between(Min,Max,N)
+                 ,debug('experiments_neg','Generated examples: ~w',[N])
+                 ,set_poker_configuration_option(unlabelled_examples,[N])
+                 ,experiments(T,M,Sl,Su,Rs_i)
+                 )
+                ,Rs)
+        ,Cl = set_poker_configuration_option(unlabelled_examples,[C])
+        ,setup_call_cleanup(S,G,Cl).
+
+
+%!      experiments_low_uncertainty(+Lang,+N,+Gend,+Init,+Min,+Max,+Res)
+%!      is det.
+%
+%       Run an experiment under the low uncertainty regime.
+%
+%       The "low uncertainty regime" is when we have only labelled
+%       positive examples, we know they're positive and we know that
+%       they are all positive examples under the same interpretation.
+%
+%       This predicate runs a "set" of experiments, each repeating N
+%       times, and performing K iterations, determined by Gend, Init,
+%       Min, and Max. Those are explained below.
+%
+%       Lang is the symbol, but not arity, of a target theory defined as
+%       a DCG in test_harness.pl, from which initial training examples
+%       are generated.
+%
+%       N is the number of steps, the times to repeat the experiment in
+%       each iteration of the experiment.
+%
+%       Gend, Init, Min and Max are range definitions of the form
+%       I:J/K, used to generate lists of numbers, each used in each
+%       iteration of the experiment.
+%
+%       Gend determines the number of negative examples generated for
+%       each iteration of the experiment. If Gend is I:J/K, in the first
+%       iteration the number of generated examples will be set to I,
+%       then in the next iteration it will be set to I + K, and so on up
+%       to J.
+%
+%       Init is the number of initial training examples of Lang to
+%       generate in each iteration, acting as labelled positive
+%       examples. If Init is I:J/K, in the first iteration I examples of
+%       J will be generated, then in the next generation I + K examples
+%       will be generated, and so on up to K.
+%
+%       Min and Max are the minimum and maximum lengths of lists of
+%       characters in DCG atoms representing examples of Lang in the
+%       initial generated examples. If Min is I0:J0/K0 and Max is
+%       I1:J1/K1, then in the first iteration the length of strings in
+%       initial, labelled examples will be between I0 and I1, then in
+%       the next iteration the length of strings will be between I0+K0
+%       and I1+K1, and so on up to J0 and J1.
+%
+%       If the number of initial labelled examples to generate in the
+%       current generation, i.e. in Init, is an integer, then example
+%       atoms will be generated with a random number of characters
+%       between the limits set by Min and Max. If instead of a number of
+%       examples to generate the atom "all" is given, then all examples
+%       are generated with strings of length between Min and Max.
+%
+%       TODO: needs example query.
+%
+%       TODO: this predicate really needs some error checking to make
+%       sure we're not giving as arguments totally bogus ranges, or
+%       ones that will raise an error.
+%
+experiments_low_uncertainty(T,N,Gen,In,Min,Max,Rs):-
+        maplist(experiment_interval,[Gen,In,Min,Max],[Gs,Ms,Js,Ks])
+        ,Set = poker_configuration:unlabelled_examples(C)
+        ,Call = findall(I/G/M/J/K-Rs_i
+                       ,(maplist(nth1(I),[Gs,Ms,Js,Ks],[G,M,J,K])
+                        ,set_poker_configuration_option(unlabelled_examples,[G])
+                        ,debug(experiments,'Experiment set ~w of ~w with:',[I,N])
+                        ,debug(experiments,'Generated negative examples: ~w',[G])
+                        ,debug(experiments,'Initial examples: ~w',[M])
+                        ,debug(experiments,'Min,max length of strings: ~w, ~w',[J,K])
+                        ,experiments(T,N,M,J,K,Rs_i)
+                        )
+                       ,Rs)
+        ,Clean = set_poker_configuration_option(unlabelled_examples,[C])
+        ,setup_call_cleanup(Set,Call,Clean).
+
+
+%!      experiment_interval(+Range,-Interval) is det.
+%
+%       Expand a Range specification to a list of numbers.
+%
+%       Helper to allow ranges with the same minimum and maximum value,
+%       which still have to be expanded to the same length as other
+%       ranges.
+%
+experiment_interval(I:I/K,Ss):-
+        !
+        ,length(Ss,K)
+        ,findall(I
+                ,member(I,Ss)
+                ,Ss).
+experiment_interval(I:J/K,Ss):-
+        interval(I,J,K,Ss).
+
+
+%!      experiment_helper(+Range,-Max) is det.
+%
+%       Calculate the Max value in a Range.
+%
+%       Helper to faciliate setting the values of intervals in the input
+%       of experiments like experiments_low_uncertainty/7.
+%
+%       TODO: give example.
+%
+experiment_helper(I:J/K,N):-
+        M is J - I
+        ,N is M / K + 1.
+
 
 
 %!      experiments(+Target,+N,+Labelled,+Unlabelled,-Results) is det.
@@ -59,7 +234,8 @@ labelled by Poker, or the programs it learns to label them.
 %       the program testing results.
 %
 experiments(T,N,Sl,Su,[Ms_l,Ms_p]):-
-        findall(Res_l-Res_p
+        must_be(\list,Sl)
+        ,findall(Res_l-Res_p
                ,(between(1,N,I)
                 ,debug(experiments,'Experiment ~w of ~w',[I,N])
                 ,experiment(T,Sl,Su,[_Ps,_Pos,_Neg,Res_l,Res_p])
@@ -243,7 +419,7 @@ experiment(T,Sl,Su,[Ps,Pos,Neg,Rs_l,Rs_p]):-
         ,debug_clauses_length(experiment_initial_full,'Generated ~w labelled examples:',Ls)
         ,debug_clauses_length(experiment_initial_full,
                               'Generated ~w unlabelled examples:',Us)
-        ,time( learn(Ls,Us,BK,MS,Pos,Neg,Ps) )
+        ,debug_time(experiment_learned, learn(Ls,Us,BK,MS,Pos,Neg,Ps) )
         ,debug_length(experiment_learned,'Learned ~w clause hypothesis.',Ps)
         ,debug_clauses(experiment_learned_full,'Learned hypothesis:',Ps)
         ,debug_length(experiment_examples,'Labelled ~w Positive examples.',Pos)
@@ -253,6 +429,16 @@ experiment(T,Sl,Su,[Ps,Pos,Neg,Rs_l,Rs_p]):-
         ,Sl =.. [Sl_|_]
         ,test_labelling(Sl_,Pos,Neg,Rs_l)
         ,test_program(Sl_,Ps,Rs_p).
+
+
+%!      debug_time(+Subject,+Goal) is det.
+%
+%       Debug helper to log time taken to run a goal.
+%
+debug_time(S,G):-
+        call_time(G,T)
+        ,debug(S,'Wall Clock time: ~4f CPU time: ~4f Inferences: ~D'
+              ,[T.wall,T.cpu,T.inferences]).
 
 
 
@@ -296,7 +482,7 @@ experiment(S,N,J,K,[Ps,Pos,Neg,Rs_l,Rs_p]):-
         generate_initial(S,N,J,K,Es)
         ,debug_length(experiment_initial,'Generated ~w initial examples.',Es)
         ,debug_clauses_length(experiment_initial_full,'Generated ~w initial examples:',Es)
-        ,time( learn(Es,Pos,Neg,Ps) )
+        ,debug_time(experiment_initial, learn(Es,Pos,Neg,Ps) )
         ,debug_length(experiment_learned,'Learned ~w clause hypothesis.',Ps)
         ,debug_clauses(experiment_learned_full,'Learned hypothesis:',Ps)
         ,debug_length(experiment_examples,'Labelled ~w Positive examples.',Pos)
