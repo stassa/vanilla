@@ -1,5 +1,6 @@
 :-module(test_harness,[experiments_moderate_uncertainty/6
                       ,experiments_low_uncertainty/7
+                      ,experiment_helper/2
                       ,experiments/5
                       ,experiments/6
                       ,experiment/4
@@ -152,14 +153,16 @@ experiments_moderate_uncertainty(T,M,[Min,Max],Ss_l,Ss_u,Rs):-
 %
 experiments_low_uncertainty(T,N,Gen,In,Min,Max,Rs):-
         maplist(experiment_interval,[Gen,In,Min,Max],[Gs,Ms,Js,Ks])
+        ,length(Gs,L)
         ,Set = poker_configuration:unlabelled_examples(C)
         ,Call = findall(I/G/M/J/K-Rs_i
                        ,(maplist(nth1(I),[Gs,Ms,Js,Ks],[G,M,J,K])
                         ,set_poker_configuration_option(unlabelled_examples,[G])
-                        ,debug(experiments,'Experiment set ~w of ~w with:',[I,N])
+                        ,debug(experiments,'Experiment set ~w of ~w with:',[I,L])
+                        ,debug(experiments,'Experiments per set: ~w',[N])
                         ,debug(experiments,'Generated negative examples: ~w',[G])
                         ,debug(experiments,'Initial examples: ~w',[M])
-                        ,debug(experiments,'Min,max length of strings: ~w, ~w',[J,K])
+                        ,debug(experiments,'Min, max length of strings: ~w, ~w',[J,K])
                         ,experiments(T,N,M,J,K,Rs_i)
                         )
                        ,Rs)
@@ -225,15 +228,29 @@ experiment_helper(I:J/K,N):-
 %       Results is a list Labelling, Program, with the same meaning as
 %       in experiments/6. Copying from that predicate's documentation:
 %
-%       Means is a list of two lists [Ms_L, Ms_P], each of which is a
-%       list [Acc,TPR,TNR], where Acc is the mean accuracy, TPR the
-%       mean true positive rate and TNR the mean true negative rate of
-%       the N hypotheses learned from the sets of N examples generated
-%       in the N steps of the experiment. The first sub-list, Ms_L holds
-%       the means of the labelling results, and Ms_P holds the means of
-%       the program testing results.
+%       Results is a list of four sub-lists [Ms_L, SEs_L, Ms_P, SEs_P],
+%       each of which is a list [Acc,TPR,TNR], where Acc is the
+%       accuracy, TPR true positive rate and TNR true negative rate of
+%       the N labellings returned, or hypotheses learned from the sets
+%       of N examples generated in the N steps of the experiment. The
+%       values of the three metrics in the four sub-lists are as
+%       follows:
 %
-experiments(T,N,Sl,Su,[Ms_l,Ms_p]):-
+%       * Ms_L: [Acc,TPR,TNR] are the means of accuracy, TPR and TNR
+%         over all N labellings.
+%       * SEs_L: [Acc,TPR,TNR] are the standard errors of accuracy, TPR,
+%         and TNR over all N labellings, according to the means in MS_L.
+%       * Ms_P: [Acc,TPR,TNR] are the means of accuracy, TPR, and TNR,
+%         over all N programs learned.
+%       * SEs_P: [Acc,TPR,TNR] are the standard errors of accuracy, TPR,
+%         and TNR over all N programs learned.
+%
+%       TODO: This and experiments/6 have a lot of common code,
+%       basically everything but a single line, that calls experiment/4
+%       in this predicate, or experiment/5 in the other. Reduce code
+%       duplication.
+%
+experiments(T,N,Sl,Su,[Ms_l,SEs_l,Ms_p,SEs_p]):-
         must_be(\list,Sl)
         ,findall(Res_l-Res_p
                ,(between(1,N,I)
@@ -243,11 +260,15 @@ experiments(T,N,Sl,Su,[Ms_l,Ms_p]):-
                ,Rs)
         ,pairs_keys_values(Rs,Rs_l,Rs_p)
         ,result_means(Rs_l,Ms_l)
-        ,result_means(Rs_p,Ms_p).
+        ,result_means(Rs_p,Ms_p)
+        ,result_SEs(Rs_l,Ms_l,SEs_l)
+        ,result_SEs(Rs_p,Ms_p,SEs_p)
+        ,debug(experiments,'Labelling means ~w, standard errors: ~w: ',[Ms_l,SEs_l])
+        ,debug(experiments,'Program means ~w, standard errors: ~w: ',[Ms_p,SEs_p]).
 
 
 
-%!      experiments(+Target,+N,+M,+J,+K,-Means) is det.
+%!      experiments(+Target,+N,+M,+J,+K,-Results) is det.
 %
 %       Run N experiments learning a program and labelling with Poker.
 %
@@ -266,18 +287,27 @@ experiments(T,N,Sl,Su,[Ms_l,Ms_p]):-
 %       the input list and [] the output list. Each initial example will
 %       have an input list of length between J and K.
 %
-%       Means is a list of two lists [Ms_L, Ms_P], each of which is a
-%       list [Acc,TPR,TNR], where Acc is the mean accuracy, TPR the
-%       mean true positive rate and TNR the mean true negative rate of
-%       the N hypotheses learned from the sets of N examples generated
-%       in the N steps of the experiment. The first sub-list, Ms_L holds
-%       the means of the labelling results, and Ms_P holds the means of
-%       the program testing results.
+%       Results is a list of four sub-lists [Ms_L, SEs_L, Ms_P, SEs_P],
+%       each of which is a list [Acc,TPR,TNR], where Acc is the
+%       accuracy, TPR true positive rate and TNR true negative rate of
+%       the N labellings returned, or hypotheses learned from the sets
+%       of N examples generated in the N steps of the experiment. The
+%       values of the three metrics in the four sub-lists are as
+%       follows:
+%
+%       * Ms_L: [Acc,TPR,TNR] are the means of accuracy, TPR and TNR
+%         over all N labellings.
+%       * SEs_L: [Acc,TPR,TNR] are the standard errors of accuracy, TPR,
+%         and TNR over all N labellings, according to the means in MS_L.
+%       * Ms_P: [Acc,TPR,TNR] are the means of accuracy, TPR, and TNR,
+%         over all N programs learned.
+%       * SEs_P: [Acc,TPR,TNR] are the standard errors of accuracy, TPR,
+%         and TNR over all N programs learned.
 %
 %       This predicate runs N experiments calling experiment/5 with
 %       Target, M, J, and K as input.
 %
-experiments(S,N,M,J,K,[Ms_l,Ms_p]):-
+experiments(S,N,M,J,K,[Ms_l,SEs_l,Ms_p,SEs_p]):-
         findall(Res_l-Res_p
                ,(between(1,N,I)
                 ,debug(experiments,'Experiment ~w of ~w',[I,N])
@@ -286,7 +316,39 @@ experiments(S,N,M,J,K,[Ms_l,Ms_p]):-
                ,Rs)
         ,pairs_keys_values(Rs,Rs_l,Rs_p)
         ,result_means(Rs_l,Ms_l)
-        ,result_means(Rs_p,Ms_p).
+        ,result_means(Rs_p,Ms_p)
+        ,result_SEs(Rs_l,Ms_l,SEs_l)
+        ,result_SEs(Rs_p,Ms_p,SEs_p)
+        ,debug(experiments,'Labelling means ~w, standard errors: ~w: ',[Ms_l,SEs_l])
+        ,debug(experiments,'Program means ~w, standard errors: ~w: ',[Ms_p,SEs_p]).
+
+
+%!      result_SEs(+Results,+Means,-StandardErrors) is det.
+%
+%       Calculate the standard error of metrics in Results.
+%
+%       Results is a list of lists [Acc,TPR,TNR], where Acc, TPR and TNR
+%       are numbers representing the Accuracy, True Positive Rate and
+%       True Negative Rate calculated of each of a number of
+%       experiments, in experiments/6.
+%
+%       Means is a list of numbers: [M_Acc,M_TPR,M_TNR], the means of
+%       Acc, TPR, and TNR, respectively, in the list Results, as
+%       returned by result_means/2.
+%
+%       StandardErrors is a list of numbers [Acc_SE,TPR_SE,TNR_SE], the
+%       standard error of Acc, TPR and TNR in Results, calculated with
+%       respect to Means.
+%
+result_SEs(Rs,Ms,SEs):-
+        findall(Acc-TPR-TNR
+               ,member([Acc,TPR,TNR],Rs)
+               ,Vs)
+        ,pairs_keys_values(Vs,Accs_Tprs,TNRs)
+        ,pairs_keys_values(Accs_Tprs,Accs,TPRs)
+        ,maplist(standard_deviation,[Accs,TPRs,TNRs],Ms,SDs)
+        ,maplist(standard_error,[Accs,TPRs,TNRs],SDs,SEs_)
+        ,maplist(atomize,SEs_,SEs).
 
 
 %!      result_means(+Results,-Means) is det.
