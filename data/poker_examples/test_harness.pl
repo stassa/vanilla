@@ -1,5 +1,5 @@
-:-module(test_harness,[experiments_moderate_uncertainty/6
-                      ,experiments_low_uncertainty/7
+:-module(test_harness,[%experiments_moderate_uncertainty/6
+                      experiments_low_uncertainty/7
                       ,experiment_helper/2
                       ,experiments/5
                       ,experiments/6
@@ -76,6 +76,11 @@ labelled by Poker, or the programs it learns to label them.
 %
 %       TODO: Needs example query.
 %
+%       @tbd This will increment generated and initial examples
+%       together. It must instead increment initial examples for each
+%       increment of the generated examples, like in
+%       experiments_low_uncertainty/7. Leaving un-exported until fixed.
+%
 experiments_moderate_uncertainty(T,M,[Min,Max],Ss_l,Ss_u,Rs):-
         is_list(Ss_l)
         ,S = poker_configuration:unlabelled_examples(C)
@@ -103,26 +108,34 @@ experiments_moderate_uncertainty(T,M,[Min,Max],Ss_l,Ss_u,Rs):-
 %       positive examples, we know they're positive and we know that
 %       they are all positive examples under the same interpretation.
 %
-%       This predicate runs a "set" of experiments, each repeating N
-%       times, and performing K iterations, determined by Gend, Init,
-%       Min, and Max. Those are explained below.
+%       This predicate runs a set of experiments determined by Gend,
+%       each with K iteration determined by Init, and repeating N times:
+%
+%       For each setting G in |Gend| experiment sets
+%           Set unlabelled_examples(G)
+%           For each itereation I in |Init| iterations
+%               For each 1 in N repeats
+%                   Call: experiments(Lang,1,I,Min,Max,-Res)
+%
+%       Arguments are as follows.
 %
 %       Lang is the symbol, but not arity, of a target theory defined as
 %       a DCG in test_harness.pl, from which initial training examples
 %       are generated.
 %
-%       N is the number of steps, the times to repeat the experiment in
-%       each iteration of the experiment.
+%       N is the number of experiments to run in each iteration of one
+%       experiment set.
 %
 %       Gend, Init, Min and Max are range definitions of the form
 %       I:J/K, used to generate lists of numbers, each used in each
 %       iteration of the experiment.
 %
 %       Gend determines the number of negative examples generated for
-%       each iteration of the experiment. If Gend is I:J/K, in the first
-%       iteration the number of generated examples will be set to I,
-%       then in the next iteration it will be set to I + K, and so on up
-%       to J.
+%       each experiment set. If Gend is I:J/K, in the first experiment
+%       set the number of generated examples will be set to I, then in
+%       the next experiment set it will be set to I + K, and so on up to
+%       J. The same setting of Gend will be used in all iterations in
+%       the same experiment set.
 %
 %       Init is the number of initial training examples of Lang to
 %       generate in each iteration, acting as labelled positive
@@ -145,21 +158,80 @@ experiments_moderate_uncertainty(T,M,[Min,Max],Ss_l,Ss_u,Rs):-
 %       examples to generate the atom "all" is given, then all examples
 %       are generated with strings of length between Min and Max.
 %
-%       TODO: needs example query.
+%       Results is a list of lists of results where each sub-list is one
+%       results list returned by experiments/6. Results list the mean
+%       and standard erros of accuracy, TPR and TNR for each experiment
+%       performed by experiments/6. See that predicate for more details
+%       on the exact contents of results lists.
 %
-%       TODO: this predicate really needs some error checking to make
-%       sure we're not giving as arguments totally bogus ranges, or
-%       ones that will raise an error.
+%       Example query:
+%       ==
+%       _T = parens
+%       , _N = 10
+%       , _Gend = 0:100/20
+%       , _Init = 1:61/10
+%       , _Min = 0:0/N,
+%       , _Max = 10:10/N
+%       , test_harness:( experiment_helper(_Init,N)
+%       , experiments_low_uncertainty(_T,_N,_Gend,_Init,_Min,_Max,_Res)
+%       )
+%       , maplist(writeln,_Res).
+%       ==
 %
-experiments_low_uncertainty(T,N,Gen,In,Min,Max,Rs):-
-        maplist(experiment_interval,[Gen,In,Min,Max],[Gs,Ms,Js,Ks])
-        ,length(Gs,L)
+%       The query above runs a set of experiments with parens as the
+%       target language (parens is the language of balanced parentheses,
+%       defined in test_harness.pl as a DCG parens/2). In the example,
+%       the test harness predicate experiment_helper/2 is used to
+%       simplify setting the options for Min and Max. Arguments are as
+%       follows:
+%
+%       * _T = parens: the name of the target language
+%
+%       * _N = 10: The number of experiments to run per iteration.
+%
+%       * _Gend = 0:100/20: "Set the values for generated examples,
+%       starting at 0 and going up to 100 in steps of 20". This means
+%       that experiment sets will be run with unlabelled_examples/1 set
+%       to the values in [0,20,40,60,80,100], one value per set,
+%       therefore there will be 5 experiment sets.
+%
+%       * _Init = 1:61/10: "Set the values for initial labelled examples
+%       starting at 1 and going up to 61 in steps of 10". This means
+%       that one iteration will be run with the number of labelled
+%       examples taken from the list [1,11,21,31,41,51,61], so that 7
+%       iterations will be run per experiment set.
+%
+%       * test_harness:( experiment_helper(_Init,N) will bind the number
+%       7 to N, the number of iterations over which the lenghts of
+%       strings in examples will be incremented according to their
+%       respective arguments. This is just a helper to avoid having to
+%       set the number of iterations in Min and Max by hand.
+%
+%       * _Min = 0:0/N, _Max = 10:10/N: labelled examples will be
+%       generated with strings (of the parens language) in lengths
+%       between 0 and 10, over N iterations. The number of examples of
+%       that length is determined by init.
+%
+%       * _Res: the returned results list.
+%
+%       @tbd: this predicate really needs some error checking to make
+%       sure we're not giving as arguments totally bogus ranges, or ones
+%       that will raise an error.
+%
+experiments_low_uncertainty(T,N,Gen,Init,Min,Max,Rs):-
+        maplist(experiment_interval,[Gen,Init,Min,Max],[Gs,Ms,Js,Ks])
+        ,maplist(length,[Gs,Ms],[Sn,In])
         ,Set = poker_configuration:unlabelled_examples(C)
         ,Call = findall(I/G/M/J/K-Rs_i
-                       ,(maplist(nth1(I),[Gs,Ms,Js,Ks],[G,M,J,K])
+                       ,(nth1(S,Gs,G)
                         ,set_poker_configuration_option(unlabelled_examples,[G])
-                        ,debug(experiments,'Experiment set ~w of ~w with:',[I,L])
-                        ,debug(experiments,'Experiments per set: ~w',[N])
+                        ,debug(experiments,'Experiment set ~w of ~w.',[S,Sn])
+                        % Iteration: incrments of initial examples
+                        ,debug(experiments,'Iterations per set: ~w',[In])
+                        % Experiments: repetitions over each iteration
+                        ,debug(experiments,'Experiments per iteration: ~w',[N])
+                        ,maplist(nth1(I),[Ms,Js,Ks],[M,J,K])
+                        ,debug(experiments,'Iteration ~w of ~w with:',[I,In])
                         ,debug(experiments,'Generated negative examples: ~w',[G])
                         ,debug(experiments,'Initial examples: ~w',[M])
                         ,debug(experiments,'Min, max length of strings: ~w, ~w',[J,K])
