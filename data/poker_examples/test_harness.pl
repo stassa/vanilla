@@ -34,6 +34,8 @@ labelled by Poker, or the programs it learns to label them.
 %
 %       Run an experiment under the moderate uncertainty regime.
 %
+%       Work in Progress. Keep private while being worked on.
+%
 %       The low uncertainty regime is when we have both labelled and
 %       unlabelled examples and we know that the labelled examples are
 %       all positive examples of the same predicate under one
@@ -45,59 +47,81 @@ labelled by Poker, or the programs it learns to label them.
 %       the interpretation of the labelled examples as positive, and
 %       examples of the other interpretation as negatives.
 %
-%       Lang is a predicate indicator, symbol/arity, of a target
-%       language that must be defined as a learning target in the
-%       current experiment file.
+%       TODO: document.
 %
-%       N is the number of times to repeat the experiment in each
-%       iteration.
-%
-%       Gend is a list [Min,Max], the minimum and maximum number of
-%       negative examples to generate internally in each iteration of
-%       the experiment.
-%
-%       Lab is a specification of the labelled examples, as expected by
-%       experiments/5, a compound T(K,Min,Max), where T is a
-%       test language defined as a DCG in this module, K is the number
-%       of atoms of T to generate as initial, labelled examples, and Min
-%       Max are the minimum and maximum length of strings in the
-%       labelled examples.
-%
-%       Unl is a specification of the unlabelled examples, same as Lab,
-%       but a list thereof, allowing for a composition of multiple
-%       target languages as unlabelled examples. In fact.
-%
-%       Res Is a list of terms I/Sl/Su/Rs_i, where I, Sl, Su are the
-%       iteration, number of labelled and number of unlabelled examples
-%       in the listed iteration and Rs_i are the results for that
-%       iteration, given as a list of two lists, [L,P], where each of L,
-%       P is of the form [Acc,Tpr,TNR], listing the mean of accuracy,
-%       TPR and TNR in the iteration I.
-%
-%       TODO: Needs example query.
-%
-%       @tbd This will increment generated and initial examples
-%       together. It must instead increment initial examples for each
-%       increment of the generated examples, like in
-%       experiments_low_uncertainty/7. Leaving un-exported until fixed.
-%
-experiments_moderate_uncertainty(T,M,[Min,Max],Ss_l,Ss_u,Rs):-
-        is_list(Ss_l)
-        ,S = poker_configuration:unlabelled_examples(C)
-        ,G = findall(N/Sl/Su/Rs_i
-                ,(nth1(I,Ss_l,Sl)
-                 ,debug('experiments_neg','Labelled examples: ~w',[Sl])
-                 ,nth1(I,Ss_u,Su)
-                 ,debug('experiments_neg','Unlabelled examples: ~w',[Su])
-                 ,between(Min,Max,N)
-                 ,debug('experiments_neg','Generated examples: ~w',[N])
-                 ,set_poker_configuration_option(unlabelled_examples,[N])
-                 ,experiments(T,M,Sl,Su,Rs_i)
-                 )
-                ,Rs)
-        ,Cl = set_poker_configuration_option(unlabelled_examples,[C])
-        ,setup_call_cleanup(S,G,Cl).
+experiments_moderate_uncertainty(T,N,Gen,Ls,Us1,Us2,Rs):-
+        Ls = [Ll,Init_l,Min_l,Max_l]
+        ,Us1 = [Lu1,Init_u1,Min_u1,Max_u1]
+        ,Us2 = [Lu2,Init_u2,Min_u2,Max_u2]
+        ,experiment_interval(Gen,Gs)
+        ,expanded_range(Ll,Init_l,Min_l,Max_l,Es_l)
+        ,expanded_range(Lu1,Init_u1,Min_u1,Max_u1,Es_u1)
+        ,expanded_range(Lu2,Init_u2,Min_u2,Max_u2,Es_u2)
+        ,maplist(length,[Gs,Es_l],[Sn,In])
+        ,Set = poker_configuration:unlabelled_examples(C)
+        ,Call = findall(I/G/Ls_i/Us_i1/Us_i2-Rs_i
+                       ,(nth1(S,Gs,G)
+                        ,set_poker_configuration_option(unlabelled_examples,[G])
+                        ,debug(experiments,'Experiment set ~w of ~w.',[S,Sn])
+                        % Iteration: incrments of initial examples
+                        ,debug(experiments,'Iterations per set: ~w',[In])
+                        % Experiments: repetitions over each iteration
+                        ,debug(experiments,'Experiments per iteration: ~w',[N])
+                        ,maplist(nth1(I),[Es_l,Es_u1,Es_u2],[Ls_i,Us_i1,Us_i2])
+                        ,debug(experiments,'Iteration ~w of ~w with:',[I,In])
+                        ,debug(experiments,'Generated negative examples: ~w',[G])
+                        ,debug(experiments,'Labelled examples: ~w',[Ls_i])
+                        ,debug(experiments,'Unlabelled examples: ~w',[[Us_i1,Us_i2]])
+                        ,experiments(T,N,Ls_i,[Us_i1,Us_i2],Rs_i)
+                        )
+                       ,Rs)
+        ,Clean = set_poker_configuration_option(unlabelled_examples,[C])
+        ,setup_call_cleanup(Set,Call,Clean).
 
+
+%!      expanded_range(+Language,+Init,+Min,+Max,-Expanded) is det.
+%
+%       Expand a group of range definitions to language terms.
+%
+%       Helper for experiments_moderate_uncertainty/n to expand range
+%       specifications to language terms S(M,J,K) as expected by
+%       experiments/5.
+%
+%       Language is the symbol, but not arity, of a target language.
+%
+%       Init, Min and Max are ranges of the form I:J/K, where I, J are
+%       integers that define a closed interval [I,J] and K is the stride
+%       by which to increement I until it reaches J.
+%
+%       Init is the range of numbers of initial, labelled or unlabelled
+%       examples of Language that will be genereated.
+%
+%       Min and Max are the ranges of the lengths of strings of Language
+%       in the initial examples of Language generated according to Init.
+%
+%       Expanded is a list of terms language(N,Min,Max) where N is in
+%       the range I0:J0 increasing by K0, and Min and Max are in the
+%       ranges I1:J1 increasing by K1 and I2:J2 increasing by K2.
+%
+%       Example query:
+%       ==
+%       ?- test_harness:expanded_range(dragon_curve,0:10/2,0:0/5,10:10/5,_Es)
+%       ,maplist(writeln,_Es).
+%       dragon_curve(0,0,10)
+%       dragon_curve(2,0,10)
+%       dragon_curve(4,0,10)
+%       dragon_curve(6,0,10)
+%       dragon_curve(8,0,10)
+%       true.
+%       ==
+%
+expanded_range(L,RIs,RMin,RMax,Es):-
+        maplist(experiment_interval,[RIs,RMin,RMax],[Is,Mins,Maxs])
+        ,findall(T
+                ,(maplist(nth1(_I),[Is,Mins,Maxs],[In_i,Min_i,Max_i])
+                 ,T =.. [L,In_i,Min_i,Max_i]
+                 )
+                ,Es).
 
 
 %!      experiments_low_uncertainty(+Lang,+N,+Gend,+Init,+Min,+Max,+Res)
