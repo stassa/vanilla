@@ -99,6 +99,7 @@ experiments_moderate_uncertainty(T,M,[Min,Max],Ss_l,Ss_u,Rs):-
         ,setup_call_cleanup(S,G,Cl).
 
 
+
 %!      experiments_low_uncertainty(+Lang,+N,+Gend,+Init,+Min,+Max,+Res)
 %!      is det.
 %
@@ -553,7 +554,7 @@ experiment(T,Sl,Su,[Ps,Pos,Neg,Rs_l,Rs_p]):-
         ,debug_clauses_length(experiment_initial_full,'Generated ~w labelled examples:',Ls)
         ,debug_clauses_length(experiment_initial_full,
                               'Generated ~w unlabelled examples:',Us)
-        ,debug_time(experiment_learned, learn(Ls,Us,BK,MS,Pos,Neg,Ps) )
+        ,debug_time(experiment_time, learn(Ls,Us,BK,MS,Pos,Neg,Ps) )
         ,debug_length(experiment_learned,'Learned ~w clause hypothesis.',Ps)
         ,debug_clauses(experiment_learned_full,'Learned hypothesis:',Ps)
         ,debug_length(experiment_examples,'Labelled ~w Positive examples.',Pos)
@@ -616,7 +617,7 @@ experiment(S,N,J,K,[Ps,Pos,Neg,Rs_l,Rs_p]):-
         generate_initial(S,N,J,K,Es)
         ,debug_length(experiment_initial,'Generated ~w initial examples.',Es)
         ,debug_clauses_length(experiment_initial_full,'Generated ~w initial examples:',Es)
-        ,debug_time(experiment_initial, learn(Es,Pos,Neg,Ps) )
+        ,debug_time(experiment_time, learn(Es,Pos,Neg,Ps) )
         ,debug_length(experiment_learned,'Learned ~w clause hypothesis.',Ps)
         ,debug_clauses(experiment_learned_full,'Learned hypothesis:',Ps)
         ,debug_length(experiment_examples,'Labelled ~w Positive examples.',Pos)
@@ -716,6 +717,7 @@ generate_examples(Sign,Es):-
                       ,[N,S,J,K])
                 ,generate_initial(S,N,J,K,Es_i)
                 ,filter_unlabelled(S,Es_i,Es_f)
+                ,debug_length(generate_examples,'Filtered examples: ~w',Es_f)
                 )
                ,Es_)
         ,flatten(Es_,Es)
@@ -757,7 +759,7 @@ filter_unlabelled(F,Us,Us):-
         ,!.
 filter_unlabelled(F,Us,Us_f):-
         current_predicate(experiment_file:filter_negatives/2)
-        ,compose(experiment_file,filter_negatives(F,_),C)
+        ,compose(experiment_file,filter_negatives(F,S),C)
         ,call(C)
         ,once( internal_symbol(S,S_) )
         ,current_predicate(S,E)
@@ -992,6 +994,7 @@ internal_symbol_(not_dragon_curve,s).
 internal_symbol_(koch_curve,s).
 internal_symbol_(not_koch_curve,s).
 internal_symbol_(hilbert_curve,s).
+internal_symbol_(hilbert_curve_with_vars,s).
 internal_symbol_(not_hilbert_curve,s).
 internal_symbol_(sierpinski_triangle,s).
 internal_symbol_(not_sierpinski_triangle,s).
@@ -1497,6 +1500,29 @@ hilbert_char(-) --> minus.
 hilbert_char(f) --> f.
 hilbert_char(x) --> x.
 hilbert_char(y) --> y.
+
+
+%!      hilbert_curve_with_vars(?Is,?Os,?Rs) is nondet.
+%
+%       Generator for Hilbert Curve strings with variable symbols.
+%
+%       Hilbert Curve strings begin including variable symbols at length
+%       11. This predicate ensures that examples can be generated that
+%       include variables.
+%
+hilbert_curve_with_vars(Is,Os,[]):-
+% The first Hilbert Curve string that contains variable symbols has
+% length 11.
+        generate_initial(hilbert_curve,all,11,14,Es)
+        ,findall(s(Is,Os,[])
+                ,(member(s(Is,Os,[]),Es)
+                 ,( member(x,Is)
+                  ; member(y,Is)
+                  )
+                 )
+                ,Vs)
+        ,member(s(Is,Os,[]),Vs).
+
 
 
 %!      sierpinski_triangle(?String) is semidet.
