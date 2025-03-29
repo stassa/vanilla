@@ -327,7 +327,7 @@ readable manner.
 :-poker_auxiliaries:set_poker_configuration_option(max_invented,[1]).
 :-poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true]).
 :-poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all]).
-:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[50]).
+:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100]).
 :-poker_auxiliaries:set_poker_configuration_option(respecialise,[true]).
 :-poker_auxiliaries:set_poker_configuration_option(gestalt,[false]).
 :-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order

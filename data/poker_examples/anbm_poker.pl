@@ -239,7 +239,7 @@ the case.
 :-poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true]).
 :-poker_auxiliaries:set_poker_configuration_option(respecialise,[true]).
 :-poker_auxiliaries:set_poker_configuration_option(unfold_invented,[learned]).
-:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[1500]).
+:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[20]).
 :-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
 						  ,[random]).
 */
@@ -287,5 +287,5 @@ a --> [a].
 b --> [b].
 empty --> [].
 
-generate_examples(pos,anbm,all,0,4).
+generate_examples(pos,anbm,all,5,8).
 generate_examples(neg,not_anbm,all,0,4).

@@ -387,6 +387,9 @@ Program = [1.0,1.0,1.0].
 
 :-poker_auxiliaries:set_poker_configuration_option(clause_limit,[5]).
 :-poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true]).
+:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[250]).
+:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+						  ,[random]).
 */
 
 

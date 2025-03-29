@@ -240,9 +240,9 @@ there.
 :-poker_auxiliaries:set_poker_configuration_option(max_invented,[1]).
 :-poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true]).
 :-poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all]).
-:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[40]).
+:-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[20]).
 :-poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
-						  ,[deterministic]).
+						  ,[random]).
 */
 
 % Language alphabet for the constraints defeined
