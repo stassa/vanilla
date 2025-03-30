@@ -29,6 +29,51 @@ labelled by Poker, or the programs it learns to label them.
 :- py_add_lib_dir(data(poker_examples)).
 
 
+filtering_experiment(T,Sl,Su
+                    ,[Ps_l,Pos_l,Neg_l,Rs_ll,Rs_pl]
+                    ,[Ps_u,Pos_u,Neg_u,Rs_lu,Rs_pu]):-
+        generate_initial(Sl,Ls)
+        ,generate_initial(Su,Us)
+        ,experiment_data(T,_,_,BK,MS)
+        ,debug(experiment,'Learning from labelled examples.',[])
+        ,debug_length(experiment_initial,'Generated ~w labeleld examples.',Ls)
+        ,debug_length(experiment_initial,'Generated ~w unlabeleld examples.',Us)
+        ,debug_clauses_length(experiment_initial_full,'Generated ~w labelled examples:',Ls)
+        ,debug_clauses_length(experiment_initial_full,
+                              'Generated ~w unlabelled examples:',Us)
+        ,debug_time(experiment_time, learn(Ls,Us,BK,MS,Pos_l,Neg_l,Ps_l) )
+        ,debug_length(experiment_learned,'Learned ~w clause hypothesis.',Ps_l)
+        ,debug_clauses(experiment_learned_full,'Learned hypothesis:',Ps_l)
+        ,debug_length(experiment_examples,'Labelled ~w Positive examples.',Pos_l)
+        ,debug_length(experiment_examples,'Labelled ~w Negative examples.',Neg_l)
+        ,debug_clauses_length(experiment_examples_full,'~w Positive examples:',Pos_l)
+        ,debug_clauses_length(experiment_examples_full,'~w Negative examples:',Neg_l)
+        ,Sl =.. [Sl_|_]
+        % Test labelling and program learned from labelled examples
+        ,test_labelling(Sl_,Pos_l,Neg_l,Rs_ll)
+        ,test_program(Sl_,Ps_l,Rs_pl)
+        ,maplist(sort,[Us,Neg_l],[Us_s,Neg_s])
+        % All unlabelled examples that were labelled negative
+        ,ord_intersect(Us_s,Neg_s,Ss)
+        ,debug_length(experiment_learned,'Filtered ~w unlabelled examples.',Ss)
+        ,debug_clauses_length(experiment_learned_full
+                             ,'Filtered ~w unlabeleld examples:',Ss)
+        ,debug(experiment,'Learning from unlabelled examples.',[])
+        ,learn(Ss,Ls,BK,MS,Pos_u,Neg_u,Ps_u)
+        ,debug_length(experiment_learned,'Learned ~w clause hypothesis.',Ps_u)
+        ,debug_clauses(experiment_learned_full,'Learned hypothesis:',Ps_u)
+        ,debug_length(experiment_examples,'Labelled ~w Positive examples.',Pos_u)
+        ,debug_length(experiment_examples,'Labelled ~w Negative examples.',Neg_u)
+        ,debug_clauses_length(experiment_examples_full,'~w Positive examples:',Pos_u)
+        ,debug_clauses_length(experiment_examples_full,'~w Negative examples:',Neg_u)
+        ,Su = [Su_1|_]
+        ,Su_1 =.. [Su_|_]
+        % Test labelling and program learned from filtered unlabelled examples
+        ,test_labelling(Su_,Pos_u,Neg_u,Rs_lu)
+        ,test_program(Su_,Ps_u,Rs_pu).
+
+
+
 %!      experiments_moderate_uncertainty(+Lang,+N,+Gend,+Lab,+Unl,-Res)
 %!      is det.
 %
