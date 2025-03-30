@@ -875,6 +875,11 @@ compose(M,P,M:P).
 
 
 
+                /*******************************
+                *     LANGUAGE GENERATION      *
+                *******************************/
+
+
 %!      generate_initial(+Targets,-Examples) is det.
 %
 %       Generate atoms used as examples for a set of targets.
@@ -1069,6 +1074,12 @@ internal_symbol_(sierpinski_triangle,s).
 internal_symbol_(not_sierpinski_triangle,s).
 internal_symbol_(sierpinski_arrowhead,s).
 internal_symbol_(not_sierpinski_arrowhead,s).
+
+
+
+                /*******************************
+                *          EVALUATION          *
+                *******************************/
 
 
 %!      accuracy(+Module,+Target,+Pos,+Neg,-Accuracy) is det.
@@ -1399,9 +1410,11 @@ fractal_tree([1,'[',0,']',0|Ss]) --> zero,  fractal_tree(Ss).
 fractal_tree([]) --> [].
 
 
+
                 /*******************************
                 *      L-SYSTEM FRACTALS       *
                 *******************************/
+
 
 % Vocabulary, used to command a turtle.
 % Note: b//0 is not declared here because it is already declared earlier
@@ -1661,7 +1674,6 @@ sierpinski_arrowhead([]) --> [].
                 *******************************/
 
 
-
 %!      fractal_plant(?String) is semidet.
 %
 %       Calculate a fractal plant String.
@@ -1692,7 +1704,6 @@ fractal_plant([]) --> [].
                 /*******************************
                 *L-SYSTEMS PARSING AND DRAWING *
                 *******************************/
-
 
 
 %!      draw(+String,+LeftAngle,+RightAngle,+Distance,+Start) is det.
@@ -1803,3 +1814,9 @@ l_system(S,M,Is,N,Os):-
 	,phrase(M:S_, Is)
         ,N_ is N - 1
         ,l_system(S,M,Ss,N_,Os).
+
+
+                /*******************************
+                *  I JUST LIKE CTRL+C-CTRL+H   *
+                *******************************/
+
