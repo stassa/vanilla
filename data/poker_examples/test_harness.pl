@@ -1,14 +1,9 @@
-:-module(test_harness,[%experiments_moderate_uncertainty/6
-                      experiments_low_uncertainty/7
-                      ,experiment_helper/2
-                      ,experiments/5
-                      ,experiments/6
-                      ,experiment/4
-                      ,experiment/5
+:-module(test_harness,[experiments/7
+                      ,experiment/6
                       ,generate_initial/2
                       ,generate_initial/5
                       ,test_labelling/4
-                      ,test_program/3
+                      ,test_program/5
                       ,test_draw/8
                       ]).
 
@@ -29,343 +24,33 @@ labelled by Poker, or the programs it learns to label them.
 :- py_add_lib_dir(data(poker_examples)).
 
 
-filtering_experiment(T,Sl,Su
-                    ,[Ps_l,Pos_l,Neg_l,Rs_ll,Rs_pl]
-                    ,[Ps_u,Pos_u,Neg_u,Rs_lu,Rs_pu]):-
-        generate_initial(Sl,Ls)
-        ,generate_initial(Su,Us)
-        ,experiment_data(T,_,_,BK,MS)
-        ,debug(experiment,'Learning from labelled examples.',[])
-        ,debug_length(experiment_initial,'Generated ~w labeleld examples.',Ls)
-        ,debug_length(experiment_initial,'Generated ~w unlabeleld examples.',Us)
-        ,debug_clauses_length(experiment_initial_full,'Generated ~w labelled examples:',Ls)
-        ,debug_clauses_length(experiment_initial_full,
-                              'Generated ~w unlabelled examples:',Us)
-        ,debug_time(experiment_time, learn(Ls,Us,BK,MS,Pos_l,Neg_l,Ps_l) )
-        ,debug_length(experiment_learned,'Learned ~w clause hypothesis.',Ps_l)
-        ,debug_clauses(experiment_learned_full,'Learned hypothesis:',Ps_l)
-        ,debug_length(experiment_examples,'Labelled ~w Positive examples.',Pos_l)
-        ,debug_length(experiment_examples,'Labelled ~w Negative examples.',Neg_l)
-        ,debug_clauses_length(experiment_examples_full,'~w Positive examples:',Pos_l)
-        ,debug_clauses_length(experiment_examples_full,'~w Negative examples:',Neg_l)
-        ,Sl =.. [Sl_|_]
-        % Test labelling and program learned from labelled examples
-        ,test_labelling(Sl_,Pos_l,Neg_l,Rs_ll)
-        ,test_program(Sl_,Ps_l,Rs_pl)
-        ,maplist(sort,[Us,Neg_l],[Us_s,Neg_s])
-        % All unlabelled examples that were labelled negative
-        ,ord_intersect(Us_s,Neg_s,Ss)
-        ,debug_length(experiment_learned,'Filtered ~w unlabelled examples.',Ss)
-        ,debug_clauses_length(experiment_learned_full
-                             ,'Filtered ~w unlabeleld examples:',Ss)
-        ,debug(experiment,'Learning from unlabelled examples.',[])
-        ,learn(Ss,Ls,BK,MS,Pos_u,Neg_u,Ps_u)
-        ,debug_length(experiment_learned,'Learned ~w clause hypothesis.',Ps_u)
-        ,debug_clauses(experiment_learned_full,'Learned hypothesis:',Ps_u)
-        ,debug_length(experiment_examples,'Labelled ~w Positive examples.',Pos_u)
-        ,debug_length(experiment_examples,'Labelled ~w Negative examples.',Neg_u)
-        ,debug_clauses_length(experiment_examples_full,'~w Positive examples:',Pos_u)
-        ,debug_clauses_length(experiment_examples_full,'~w Negative examples:',Neg_u)
-        ,Su = [Su_1|_]
-        ,Su_1 =.. [Su_|_]
-        % Test labelling and program learned from filtered unlabelled examples
-        ,test_labelling(Su_,Pos_u,Neg_u,Rs_lu)
-        ,test_program(Su_,Ps_u,Rs_pu).
-
-
-
-%!      experiments_moderate_uncertainty(+Lang,+N,+Gend,+Lab,+Unl,-Res)
+%!      experiments(+Target,+N,+Labelled,+Unlabelled,+TestPos,+TestNeg,-Results)
 %!      is det.
-%
-%       Run an experiment under the moderate uncertainty regime.
-%
-%       Work in Progress. Keep private while being worked on.
-%
-%       The low uncertainty regime is when we have both labelled and
-%       unlabelled examples and we know that the labelled examples are
-%       all positive examples of the same predicate under one
-%       interpretation, and the unlabelled examples are a mix of
-%       examples of the same interpretation as the labelled examples,
-%       and just one other interpretation. The purpose of learning then
-%       is to not only return a hypothesis of the interpretation of the
-%       labelled examples but also a labelling that labels examples of
-%       the interpretation of the labelled examples as positive, and
-%       examples of the other interpretation as negatives.
-%
-%       TODO: document.
-%
-experiments_moderate_uncertainty(T,N,Gen,Ls,Us1,Us2,Rs):-
-        Ls = [Ll,Init_l,Min_l,Max_l]
-        ,Us1 = [Lu1,Init_u1,Min_u1,Max_u1]
-        ,Us2 = [Lu2,Init_u2,Min_u2,Max_u2]
-        ,experiment_interval(Gen,Gs)
-        ,expanded_range(Ll,Init_l,Min_l,Max_l,Es_l)
-        ,expanded_range(Lu1,Init_u1,Min_u1,Max_u1,Es_u1)
-        ,expanded_range(Lu2,Init_u2,Min_u2,Max_u2,Es_u2)
-        ,maplist(length,[Gs,Es_l],[Sn,In])
-        ,Set = poker_configuration:unlabelled_examples(C)
-        ,Call = findall(I/G/Ls_i/Us_i1/Us_i2-Rs_i
-                       ,(nth1(S,Gs,G)
-                        ,set_poker_configuration_option(unlabelled_examples,[G])
-                        ,debug(experiments,'Experiment set ~w of ~w.',[S,Sn])
-                        % Iteration: incrments of initial examples
-                        ,debug(experiments,'Iterations per set: ~w',[In])
-                        % Experiments: repetitions over each iteration
-                        ,debug(experiments,'Experiments per iteration: ~w',[N])
-                        ,maplist(nth1(I),[Es_l,Es_u1,Es_u2],[Ls_i,Us_i1,Us_i2])
-                        ,debug(experiments,'Iteration ~w of ~w with:',[I,In])
-                        ,debug(experiments,'Generated negative examples: ~w',[G])
-                        ,debug(experiments,'Labelled examples: ~w',[Ls_i])
-                        ,debug(experiments,'Unlabelled examples: ~w',[[Us_i1,Us_i2]])
-                        ,experiments(T,N,Ls_i,[Us_i1,Us_i2],Rs_i)
-                        )
-                       ,Rs)
-        ,Clean = set_poker_configuration_option(unlabelled_examples,[C])
-        ,setup_call_cleanup(Set,Call,Clean).
-
-
-%!      expanded_range(+Language,+Init,+Min,+Max,-Expanded) is det.
-%
-%       Expand a group of range definitions to language terms.
-%
-%       Helper for experiments_moderate_uncertainty/n to expand range
-%       specifications to language terms S(M,J,K) as expected by
-%       experiments/5.
-%
-%       Language is the symbol, but not arity, of a target language.
-%
-%       Init, Min and Max are ranges of the form I:J/K, where I, J are
-%       integers that define a closed interval [I,J] and K is the stride
-%       by which to increement I until it reaches J.
-%
-%       Init is the range of numbers of initial, labelled or unlabelled
-%       examples of Language that will be genereated.
-%
-%       Min and Max are the ranges of the lengths of strings of Language
-%       in the initial examples of Language generated according to Init.
-%
-%       Expanded is a list of terms language(N,Min,Max) where N is in
-%       the range I0:J0 increasing by K0, and Min and Max are in the
-%       ranges I1:J1 increasing by K1 and I2:J2 increasing by K2.
-%
-%       Example query:
-%       ==
-%       ?- test_harness:expanded_range(dragon_curve,0:10/2,0:0/5,10:10/5,_Es)
-%       ,maplist(writeln,_Es).
-%       dragon_curve(0,0,10)
-%       dragon_curve(2,0,10)
-%       dragon_curve(4,0,10)
-%       dragon_curve(6,0,10)
-%       dragon_curve(8,0,10)
-%       true.
-%       ==
-%
-expanded_range(L,RIs,RMin,RMax,Es):-
-        maplist(experiment_interval,[RIs,RMin,RMax],[Is,Mins,Maxs])
-        ,findall(T
-                ,(maplist(nth1(_I),[Is,Mins,Maxs],[In_i,Min_i,Max_i])
-                 ,T =.. [L,In_i,Min_i,Max_i]
-                 )
-                ,Es).
-
-
-%!      experiments_low_uncertainty(+Lang,+N,+Gend,+Init,+Min,+Max,+Res)
-%!      is det.
-%
-%       Run an experiment under the low uncertainty regime.
-%
-%       The "low uncertainty regime" is when we have only labelled
-%       positive examples, we know they're positive and we know that
-%       they are all positive examples under the same interpretation.
-%
-%       This predicate runs a set of experiments determined by Gend,
-%       each with K iteration determined by Init, and repeating N times:
-%
-%       For each setting G in |Gend| experiment sets
-%           Set unlabelled_examples(G)
-%           For each itereation I in |Init| iterations
-%               For each 1 in N repeats
-%                   Call: experiments(Lang,1,I,Min,Max,-Res)
-%
-%       Arguments are as follows.
-%
-%       Lang is the symbol, but not arity, of a target theory defined as
-%       a DCG in test_harness.pl, from which initial training examples
-%       are generated.
-%
-%       N is the number of experiments to run in each iteration of one
-%       experiment set.
-%
-%       Gend, Init, Min and Max are range definitions of the form
-%       I:J/K, used to generate lists of numbers, each used in each
-%       iteration of the experiment.
-%
-%       Gend determines the number of negative examples generated for
-%       each experiment set. If Gend is I:J/K, in the first experiment
-%       set the number of generated examples will be set to I, then in
-%       the next experiment set it will be set to I + K, and so on up to
-%       J. The same setting of Gend will be used in all iterations in
-%       the same experiment set.
-%
-%       Init is the number of initial training examples of Lang to
-%       generate in each iteration, acting as labelled positive
-%       examples. If Init is I:J/K, in the first iteration I examples of
-%       J will be generated, then in the next generation I + K examples
-%       will be generated, and so on up to K.
-%
-%       Min and Max are the minimum and maximum lengths of lists of
-%       characters in DCG atoms representing examples of Lang in the
-%       initial generated examples. If Min is I0:J0/K0 and Max is
-%       I1:J1/K1, then in the first iteration the length of strings in
-%       initial, labelled examples will be between I0 and I1, then in
-%       the next iteration the length of strings will be between I0+K0
-%       and I1+K1, and so on up to J0 and J1.
-%
-%       If the number of initial labelled examples to generate in the
-%       current generation, i.e. in Init, is an integer, then example
-%       atoms will be generated with a random number of characters
-%       between the limits set by Min and Max. If instead of a number of
-%       examples to generate the atom "all" is given, then all examples
-%       are generated with strings of length between Min and Max.
-%
-%       Results is a list of lists of results where each sub-list is one
-%       results list returned by experiments/6. Results list the mean
-%       and standard erros of accuracy, TPR and TNR for each experiment
-%       performed by experiments/6. See that predicate for more details
-%       on the exact contents of results lists.
-%
-%       Example query:
-%       ==
-%       _T = parens
-%       , _N = 10
-%       , _Gend = 0:100/20
-%       , _Init = 1:61/10
-%       , _Min = 0:0/N,
-%       , _Max = 10:10/N
-%       , test_harness:( experiment_helper(_Init,N)
-%       , experiments_low_uncertainty(_T,_N,_Gend,_Init,_Min,_Max,_Res)
-%       )
-%       , maplist(writeln,_Res).
-%       ==
-%
-%       The query above runs a set of experiments with parens as the
-%       target language (parens is the language of balanced parentheses,
-%       defined in test_harness.pl as a DCG parens/2). In the example,
-%       the test harness predicate experiment_helper/2 is used to
-%       simplify setting the options for Min and Max. Arguments are as
-%       follows:
-%
-%       * _T = parens: the name of the target language
-%
-%       * _N = 10: The number of experiments to run per iteration.
-%
-%       * _Gend = 0:100/20: "Set the values for generated examples,
-%       starting at 0 and going up to 100 in steps of 20". This means
-%       that experiment sets will be run with unlabelled_examples/1 set
-%       to the values in [0,20,40,60,80,100], one value per set,
-%       therefore there will be 5 experiment sets.
-%
-%       * _Init = 1:61/10: "Set the values for initial labelled examples
-%       starting at 1 and going up to 61 in steps of 10". This means
-%       that one iteration will be run with the number of labelled
-%       examples taken from the list [1,11,21,31,41,51,61], so that 7
-%       iterations will be run per experiment set.
-%
-%       * test_harness:( experiment_helper(_Init,N) will bind the number
-%       7 to N, the number of iterations over which the lenghts of
-%       strings in examples will be incremented according to their
-%       respective arguments. This is just a helper to avoid having to
-%       set the number of iterations in Min and Max by hand.
-%
-%       * _Min = 0:0/N, _Max = 10:10/N: labelled examples will be
-%       generated with strings (of the parens language) in lengths
-%       between 0 and 10, over N iterations. The number of examples of
-%       that length is determined by init.
-%
-%       * _Res: the returned results list.
-%
-%       @tbd: this predicate really needs some error checking to make
-%       sure we're not giving as arguments totally bogus ranges, or ones
-%       that will raise an error.
-%
-experiments_low_uncertainty(T,N,Gen,Init,Min,Max,Rs):-
-        maplist(experiment_interval,[Gen,Init,Min,Max],[Gs,Ms,Js,Ks])
-        ,maplist(length,[Gs,Ms],[Sn,In])
-        ,Set = poker_configuration:unlabelled_examples(C)
-        ,Call = findall(I/G/M/J/K-Rs_i
-                       ,(nth1(S,Gs,G)
-                        ,set_poker_configuration_option(unlabelled_examples,[G])
-                        ,debug(experiments,'Experiment set ~w of ~w.',[S,Sn])
-                        % Iteration: incrments of initial examples
-                        ,debug(experiments,'Iterations per set: ~w',[In])
-                        % Experiments: repetitions over each iteration
-                        ,debug(experiments,'Experiments per iteration: ~w',[N])
-                        ,maplist(nth1(I),[Ms,Js,Ks],[M,J,K])
-                        ,debug(experiments,'Iteration ~w of ~w with:',[I,In])
-                        ,debug(experiments,'Generated negative examples: ~w',[G])
-                        ,debug(experiments,'Initial examples: ~w',[M])
-                        ,debug(experiments,'Min, max length of strings: ~w, ~w',[J,K])
-                        ,experiments(T,N,M,J,K,Rs_i)
-                        )
-                       ,Rs)
-        ,Clean = set_poker_configuration_option(unlabelled_examples,[C])
-        ,setup_call_cleanup(Set,Call,Clean).
-
-
-%!      experiment_interval(+Range,-Interval) is det.
-%
-%       Expand a Range specification to a list of numbers.
-%
-%       Helper to allow ranges with the same minimum and maximum value,
-%       which still have to be expanded to the same length as other
-%       ranges.
-%
-experiment_interval(I:I/K,Ss):-
-        !
-        ,length(Ss,K)
-        ,findall(I
-                ,member(I,Ss)
-                ,Ss).
-experiment_interval(I:J/K,Ss):-
-        interval(I,J,K,Ss).
-
-
-%!      experiment_helper(+Range,-Max) is det.
-%
-%       Calculate the Max value in a Range.
-%
-%       Helper to faciliate setting the values of intervals in the input
-%       of experiments like experiments_low_uncertainty/7.
-%
-%       TODO: give example.
-%
-experiment_helper(I:J/K,N):-
-        M is J - I
-        ,N is M / K + 1.
-
-
-
-%!      experiments(+Target,+N,+Labelled,+Unlabelled,-Results) is det.
 %
 %       Run N experiments with both Labelld and Unlabelled examples.
 %
-%       Similar to experiments/6 but allows training and testing with
-%       both labelled and unlabeleld examples. Additionally the
-%       Unlabelled examples (but not the labelled examples) can be
-%       generated from a composition of grammars rather than a single
-%       grammar.
+%       Target is a predicate indicator, S/A, of a learning target
+%       defined in the current experiment file. T is used to collect
+%       background knowledge and metarules for the experiment, but _not_
+%       to generate examples. Examples are generated according to
+%       Labelled and Unlabelled.
 %
 %       N is the number of experiments to run.
 %
-%       Labelled is a term S(M,J,K), denoting the language of the
-%       labelled examples and the quantity (M, a number or "all") and
-%       minimum (J) and maximum (K) length of strings of S in those
-%       examples. S must be defined in test_harness as a DCG.
+%       Labelled is a language generartion specification term S(M,J,K),
+%       denoting the language of the labelled examples and the quantity
+%       (M, a number or "all") and minimum (J) and maximum (K) length of
+%       strings of S in those examples. S must be defined in
+%       test_harness as a DCG.
 %
-%       Su is as in labelled, or a list of terms S(M,J,K), used to
+%       Su is as in Labelled, or a list of terms S(M,J,K), used to
 %       generate unlabelled examples. If Su is a list of terms, the
 %       unlabelled examples used for training are a mix of atoms of all
 %       the languages in the list.
+%
+%       TestPos and TestNeg are language generation specification terms,
+%       or lists thereof, as in Labelled and Unlabelled where, used to
+%       generate positive and negative testing examples, respectively.
 %
 %       Results is a list Labelling, Program, with the same meaning as
 %       in experiments/6. Copying from that predicate's documentation:
@@ -387,73 +72,22 @@ experiment_helper(I:J/K,N):-
 %       * SEs_P: [Acc,TPR,TNR] are the standard errors of accuracy, TPR,
 %         and TNR over all N programs learned.
 %
-%       TODO: This and experiments/6 have a lot of common code,
-%       basically everything but a single line, that calls experiment/4
-%       in this predicate, or experiment/5 in the other. Reduce code
-%       duplication.
+%       Example query:
+%       ==
+%       _T = s/2
+%       , _Sl = anbn(all,0,6)
+%       , _Su = [anbm(all,0,8),anbn(all,7,18)]
+%       , _TPos = anbn(all,19,40)
+%       , _TNeg = [anbm(all,0,4),not_anbn(all,4,8)]
+%       , experiment(_T,_Sl,_Su,_TPos,_TNeg,[_Ps,_Pos,_Neg,LabellingMeans,ProgramMeans])
+%       , maplist(print_clauses,['Hypothesis:','Positives:','Negatives:'],[_Ps,_Pos,_Neg]).
+%       ==
 %
-experiments(T,N,Sl,Su,[Ms_l,SEs_l,Ms_p,SEs_p]):-
-        must_be(\list,Sl)
-        ,findall(Res_l-Res_p
-               ,(between(1,N,I)
-                ,debug(experiments,'Experiment ~w of ~w',[I,N])
-                ,experiment(T,Sl,Su,[_Ps,_Pos,_Neg,Res_l,Res_p])
-                )
-               ,Rs)
-        ,pairs_keys_values(Rs,Rs_l,Rs_p)
-        ,result_means(Rs_l,Ms_l)
-        ,result_means(Rs_p,Ms_p)
-        ,result_SEs(Rs_l,Ms_l,SEs_l)
-        ,result_SEs(Rs_p,Ms_p,SEs_p)
-        ,debug(experiments,'Labelling means ~w, standard errors: ~w: ',[Ms_l,SEs_l])
-        ,debug(experiments,'Program means ~w, standard errors: ~w: ',[Ms_p,SEs_p]).
-
-
-
-%!      experiments(+Target,+N,+M,+J,+K,-Results) is det.
-%
-%       Run N experiments learning a program and labelling with Poker.
-%
-%       Language is the symbol, but not arity, of the target theory used
-%       to verify examples learned by Poker.
-%
-%       N is the number of experiments to run.
-%
-%       M is the number of initial (training) examples to generate, with
-%       generate_initial/5.
-%
-%       J and K are the upper and lower bounds of the length of input
-%       lists in generated initial example strings of Language. Examples
-%       are in atomic Definite Clause Grammars form, with two lists:
-%       an input list and output list; like this- p(Xs,[]), where Xs is
-%       the input list and [] the output list. Each initial example will
-%       have an input list of length between J and K.
-%
-%       Results is a list of four sub-lists [Ms_L, SEs_L, Ms_P, SEs_P],
-%       each of which is a list [Acc,TPR,TNR], where Acc is the
-%       accuracy, TPR true positive rate and TNR true negative rate of
-%       the N labellings returned, or hypotheses learned from the sets
-%       of N examples generated in the N steps of the experiment. The
-%       values of the three metrics in the four sub-lists are as
-%       follows:
-%
-%       * Ms_L: [Acc,TPR,TNR] are the means of accuracy, TPR and TNR
-%         over all N labellings.
-%       * SEs_L: [Acc,TPR,TNR] are the standard errors of accuracy, TPR,
-%         and TNR over all N labellings, according to the means in MS_L.
-%       * Ms_P: [Acc,TPR,TNR] are the means of accuracy, TPR, and TNR,
-%         over all N programs learned.
-%       * SEs_P: [Acc,TPR,TNR] are the standard errors of accuracy, TPR,
-%         and TNR over all N programs learned.
-%
-%       This predicate runs N experiments calling experiment/5 with
-%       Target, M, J, and K as input.
-%
-experiments(S,N,M,J,K,[Ms_l,SEs_l,Ms_p,SEs_p]):-
+experiments(T,N,Sl,Su,TPos,TNeg,[Ms_l,SEs_l,Ms_p,SEs_p]):-
         findall(Res_l-Res_p
                ,(between(1,N,I)
                 ,debug(experiments,'Experiment ~w of ~w',[I,N])
-                ,experiment(S,M,J,K,[_Ps,_Pos,_Neg,Res_l,Res_p])
+                ,experiment(T,Sl,Su,TPos,TNeg,[_Ps,_Pos,_Neg,Res_l,Res_p])
                 )
                ,Rs)
         ,pairs_keys_values(Rs,Rs_l,Rs_p)
@@ -552,7 +186,8 @@ sum(A,B,C):-
 
 
 
-%!      experiment(+Target,+Labelled,+Unlabelled,-Results) is det.
+%!      experiment(+Target,+Labelled,+Unlabelled,+TestPos,+TestNeg,-Results)
+%!      is det.
 %
 %       Run an experiment with both Labelled and Unlabelled examples.
 %
@@ -568,23 +203,30 @@ sum(A,B,C):-
 %       generate examples. Examples are generated according to Labelled
 %       and Unlabelled.
 %
-%       Labelled is a term Sl(Nl,Jl,Kl), where Sl is the symbol of a
-%       grammar defined in test_harness and used to a) generate labelled
-%       examples and b) evaluate the labelling and c) the program
-%       learned by Poker from those examples, and Nl, Jl, and Kl, are
-%       the number (or atom "all" for ... all) of strings of the
-%       language Sl to generate as Definite Clause Grammars atoms, and
-%       minimum and maximum length of strings in those atoms.
+%       Labelled is a language generation specification term
+%       Sl(Nl,Jl,Kl), where Sl is the symbol of a grammar defined in
+%       test_harness and used to a) generate labelled examples and b)
+%       evaluate the labelling and c) the program learned by Poker from
+%       those examples, and Nl, Jl, and Kl, are the number (or atom
+%       "all" for ... all) of strings of the language Sl to generate as
+%       Definite Clause Grammars atoms, and minimum and maximum length
+%       of strings in those atoms.
 %
-%       Unlabelled is a term Su(Nu,Ju,Ku), with the same meaning as
-%       Labelled, except that Su is the symbol of a grammar used to
-%       generate unlabelled examples. Unlabelled can alterantively be a
-%       list of terms Su(Nu,Ju,Ku), in which case the generated
-%       unlabelled examples are a combination of atoms from all the
-%       listed languages and with the corresponding numbers.
+%       Unlabelled is a languge generation specification term
+%       Su(Nu,Ju,Ku), with the same meaning as Labelled, except that Su
+%       is the symbol of a grammar used to generate unlabelled examples.
+%       Unlabelled can alterantively be a list of terms Su(Nu,Ju,Ku), in
+%       which case the generated unlabelled examples are a combination
+%       of atoms from all the listed languages and with the
+%       corresponding numbers.
 %
-%       Generation of both labelled and unlabelled examples is handled
-%       by generate_initial/3 and Labelled and Unlabelled are passed to
+%       TestPos and TestNeg are language generation specification terms,
+%       or lists thereof, as in Labelled and Unlabelled where, used to
+%       generate positive and negative testing examples, respectively.
+%
+%       Generation of labelled and unlabelled training examples, and
+%       positive and negative testing examples is handled by
+%       generate_initial/3 and Labelled and Unlabelled are passed to
 %       that predicate. Refer to that predicate's comments for more
 %       details on generation. Note that while generate_initial/3
 %       accepts a list in the first argument, i.e. the argument passed
@@ -614,7 +256,7 @@ sum(A,B,C):-
 %       * TPR is the True Positive Rate of the program.
 %       * TNR is the True Negative Rate of the program.
 %
-experiment(T,Sl,Su,[Ps,Pos,Neg,Rs_l,Rs_p]):-
+experiment(T,Sl,Su,TPos,TNeg,[Ps,Pos,Neg,Rs_l,Rs_p]):-
         generate_initial(Sl,Ls)
         ,generate_initial(Su,Us)
         ,experiment_data(T,_,_,BK,MS)
@@ -630,9 +272,9 @@ experiment(T,Sl,Su,[Ps,Pos,Neg,Rs_l,Rs_p]):-
         ,debug_length(experiment_examples,'Labelled ~w Negative examples.',Neg)
         ,debug_clauses_length(experiment_examples_full,'~w Positive examples:',Pos)
         ,debug_clauses_length(experiment_examples_full,'~w Negative examples:',Neg)
-        ,Sl =.. [Sl_|_]
+        ,test_target(Sl,Sl_)
         ,test_labelling(Sl_,Pos,Neg,Rs_l)
-        ,test_program(Sl_,Ps,Rs_p).
+        ,test_program(Sl_,Ps,TPos,TNeg,Rs_p).
 
 
 %!      debug_time(+Subject,+Goal) is det.
@@ -645,56 +287,24 @@ debug_time(S,G):-
               ,[T.wall,T.cpu,T.inferences]).
 
 
-
-%!      experiment(+Language,+N,+J,+K,-Results) is det.
+%!      test_target(+Specification,-Target) is det.
 %
-%       Run an experiment learning a program and labelling examples.
+%       Extract the symbol of a Target from a generator Specification.
 %
-%       Language is the symbol, but not arity, of the target theory used
-%       to verify examples learned by Poker.
+%       Specification is a single language generation specification
+%       term, or a list thereof.
 %
-%       M is the number of initial examples to generate, with a call
-%       to generate_initial/5. N can be the atom all in which case all
-%       the input lists of length between J and K are generated.
+%       Target is the symbol of the language in the term in
+%       Specification, if Specification is only one term, or the first
+%       term in the list if Specification is a list.
 %
-%       J and K are the upper and lower bounds of the length of input
-%       lists in in generated initial examples of strings of the Target
-%       language. Each initial example will have an input list of length
-%       between J and K.
-%
-%       Results is a list [Ps,Pos,Neg,Ms_L,Ms_R], where:
-%       * Ps is the learned hypothesis
-%       * Pos is the list of positive examples identified
-%       * Neg is the list of negative examples identified
-%       * Ms_L is the list of labelling results
-%       * Ms_R is the list of program results.
-%
-%       Each of Ms_L and Ms_R is a list [Acc,TPR,TNR], where:
-%
-%       In Ms_L
-%       * Acc is the accuracy of the labelling of atoms in Pos and Neg.
-%       * TPR is the True Positive Rate of the labelling in Pos and Neg.
-%       * TNR is the True Negative Rate of the labelling in Pos and Neg.
-%
-%       In Ms_P
-%       * Acc is the accuracy of the program learned from N examples
-%         measured against the ground truth of Language.
-%       * TPR is the True Positive Rate of the program.
-%       * TNR is the True Negative Rate of the program.
-%
-experiment(S,N,J,K,[Ps,Pos,Neg,Rs_l,Rs_p]):-
-        generate_initial(S,N,J,K,Es)
-        ,debug_length(experiment_initial,'Generated ~w initial examples.',Es)
-        ,debug_clauses_length(experiment_initial_full,'Generated ~w initial examples:',Es)
-        ,debug_time(experiment_time, learn(Es,Pos,Neg,Ps) )
-        ,debug_length(experiment_learned,'Learned ~w clause hypothesis.',Ps)
-        ,debug_clauses(experiment_learned_full,'Learned hypothesis:',Ps)
-        ,debug_length(experiment_examples,'Labelled ~w Positive examples.',Pos)
-        ,debug_length(experiment_examples,'Labelled ~w Negative examples.',Neg)
-        ,debug_clauses_length(experiment_examples_full,'~w Positive examples:',Pos)
-        ,debug_clauses_length(experiment_examples_full,'~w Negative examples:',Neg)
-        ,test_labelling(S,Pos,Neg,Rs_l)
-        ,test_program(S,Ps,Rs_p).
+test_target([T|_Ts],T_):-
+        !
+        ,T =.. [T_|_].
+test_target(T,F):-
+        \+ is_list(T)
+        ,compound(T)
+        ,functor(T,F,_).
 
 
 
@@ -722,8 +332,8 @@ test_labelling(S,Pos,Neg,[Acc,TPR,TNR]):-
         ,debug(test_labelling,'Labelling: Measured Acc: ~w TPR: ~w TNR: ~w',[Acc,TPR,TNR]).
 
 
-
-%!      test_program(+Language,+Program,-Results) is det.
+%!      test_program(+Language,+Program,+TestPos,+TestNeg,-Results) is
+%!      det.
 %
 %       Test a Program on positive and negative examples.
 %
@@ -733,18 +343,22 @@ test_labelling(S,Pos,Neg,[Acc,TPR,TNR]):-
 %       Program is the learned program to test against the examples
 %       generated by Language.
 %
+%       TestPos, TestNeg are language generation specification terms for
+%       the generation of the positive and negative testing examples,
+%       respectively.
+%
 %       Results is a list [Acc, TPR, TNR], the accuracy, True Positive
 %       Rate and True Negative Rate, respectively, of the Program's
 %       labelling of examples generated by Language.
 %
-test_program(_,[],[0.5,0.0,1.0]):-
+test_program(_,[],_,_,[0.5,0.0,1.0]):-
 % The empty hypothesis rejects all.
         !.
-test_program(T/_,Cs,[Acc,TPR,TNR]):-
+test_program(T/_,Cs,TPs,TNs,[Acc,TPR,TNR]):-
 % Allow the target to be a predicate indicator.
-        test_program(T,Cs,[Acc,TPR,TNR])
+        test_program(T,Cs,TPs,TNs,[Acc,TPR,TNR])
         ,!.
-test_program(T,Cs,[Acc,TPR,TNR]):-
+test_program(T,Cs,Test_Pos,Test_Neg,[Acc,TPR,TNR]):-
         debug(test_program,'Testing learned program for target: ~w',[T])
         ,debug_clauses_length(test_program_full,'Testing ~w-clause learned program:',Cs)
         ,Program_module = experiment_file
@@ -753,9 +367,9 @@ test_program(T,Cs,[Acc,TPR,TNR]):-
              ,poker:table_untable_predicates(table,Program_module,Cs)
              )
         ,G = (debug(test_program_full,'Generating positive testing examples.',[])
-             ,generate_examples(pos,Pos)
+             ,generate_examples(pos,Test_Pos,Pos)
              ,debug(test_program_full,'Generating negative testing examples.',[])
-             ,generate_examples(neg,Neg)
+             ,generate_examples(neg,Test_Neg,Neg)
              ,accuracy(Program_module,T_,Pos,Neg,Acc)
              ,tpr(Program_module,T_,Pos,TPR)
              ,tnr(Program_module,T_,Neg,TNR)
@@ -767,9 +381,11 @@ test_program(T,Cs,[Acc,TPR,TNR]):-
         ,debug(test_program,'Program: Measured Acc: ~w TPR: ~w TNR: ~w',[Acc,TPR,TNR]).
 
 
-%!      generate_positives(+Sign,-Examples) is det.
+%!      generate_positives(+Sign,+Spec,-Examples) is det.
 %
 %       Generate Examples of the given Sign to test a learned program.
+%
+%       Spec is a language generation specification term.
 %
 %       Sign is one of [pos,neg], for positive and negative examples,
 %       respectively.
@@ -779,14 +395,14 @@ test_program(T,Cs,[Acc,TPR,TNR]):-
 %       current experiment file; the symbols of grammars to use to
 %       generate examples are defined in that predicate.
 %
-generate_examples(Sign,Es):-
-        findall(Es_f
-               ,(experiment_file:generate_examples(Sign,S,N,J,K)
-                ,debug(generate_examples,'Generating ~w ~w examples of length in [~w,~w].'
-                      ,[N,S,J,K])
-                ,generate_initial(S,N,J,K,Es_i)
-                ,filter_unlabelled(S,Es_i,Es_f)
-                ,debug_length(generate_examples,'Filtered examples: ~w',Es_f)
+generate_examples(Sign,Ts,Es):-
+        findall(Es_i
+               ,(%T =.. [S,N,J,K]
+                %,debug(generate_examples,'Generating ~w ~w examples of length in [~w,~w].'
+                %      ,[N,S,J,K])
+                generate_initial(Ts,Es_i)
+                %,filter_unlabelled(S,Es_i,Es_f)
+                %,debug_length(generate_examples,'Filtered examples: ~w',Es_f)
                 )
                ,Es_)
         ,flatten(Es_,Es)
@@ -1066,6 +682,7 @@ internal_symbol_(not_fractal_plant,s).
 internal_symbol_(dragon_curve,s).
 internal_symbol_(not_dragon_curve,s).
 internal_symbol_(koch_curve,s).
+internal_symbol_(koch_curve_with_vars,s).
 internal_symbol_(not_koch_curve,s).
 internal_symbol_(hilbert_curve,s).
 internal_symbol_(hilbert_curve_with_vars,s).
@@ -1543,6 +1160,18 @@ koch_curve([f,+,f,-,-,f,+,f|Ss]) --> f, koch_curve(Ss).
 %koch_curve([f,+,f,-,f,-,f,+,f|Ss]) --> f, koch_curve(Ss).
 %koch_curve([f,-,f,+,+,f,-,f|Ss]) --> f, koch_curve(Ss).
 koch_curve([]) --> [].
+
+
+koch_curve_with_vars(Is,Os,[]):-
+% The first Koch Curve string that contains variable symbols has
+% length 8.
+        generate_initial(koch_curve,all,8,9,Es)
+        ,findall(s(Is,Os,[])
+                ,(member(s(Is,Os,[]),Es)
+                 ,member(f,Is)
+                 )
+                ,Vs)
+        ,member(s(Is,Os,[]),Vs).
 
 
 
