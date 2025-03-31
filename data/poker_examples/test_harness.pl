@@ -1,4 +1,6 @@
-:-module(test_harness,[experiments/7
+:-module(test_harness,[experiments_ranges/8
+                      ,range_helper/2
+                      ,experiments/7
                       ,experiment/6
                       ,generate_initial/2
                       ,generate_initial/5
@@ -22,6 +24,343 @@ labelled by Poker, or the programs it learns to label them.
 
 % To draw L-Systems with Python's turtle library, via Janus.
 :- py_add_lib_dir(data(poker_examples)).
+
+
+%!      experiments_ranges(+Target,+N,+Gen,+Lab,+Unlab,+TPos,+TNeg,-Results)
+%!      is det.
+%
+%       Run N experiments with example numbers increasing over a range.
+%
+%       This predicate runs a set of experiments determined by Gend,
+%       each with K iteration determined by Init, and repeating N times:
+%
+%       For each setting G in |Gen| experiment sets
+%           Set unlabelled_examples(G)
+%           For each itereation I in |Lab| iterations
+%                   expand Lab, Unlab -> Li, Ui
+%                   Call: experiments(Target,N,Li,Ui,TPos,TNeg,Res)
+%
+%       Arguments are as follows.
+%
+%       Target is a predicate indicator, S/A, of a learning target
+%       defined in the current experiment file. T is used to collect
+%       background knowledge and metarules for the experiment, but _not_
+%       to generate examples. Examples are generated according to
+%       Labelled and Unlabelled.
+%
+%       N is the number of experiments to run.
+%
+%       Lab is a language generartion specification term S(M,J,K), or a
+%       list thereof, denoting the languages of the labelled examples
+%       and the quantity (M, a number or "all") and minimum (J) and
+%       maximum (K) length of strings of S in those examples. S must be
+%       defined in test_harness as a DCG.
+%
+%       Unlab is as in Labelled, a term or list of terms S(M,J,K), used
+%       to generate unlabelled examples. If Su is a list of terms, the
+%       unlabelled examples used for training are a mix of atoms of all
+%       the languages in the list.
+%
+%       TestPos and TestNeg are language generation specification terms,
+%       or lists thereof, as in Labelled and Unlabelled where, used to
+%       generate positive and negative testing examples, respectively.
+%
+%       Results is a list of lists of terms I/G/L/U-Rs, where I is the
+%       iteration, G is the number of internally generated examples, L
+%       and U are the numbers of labelled and unlabelled examples
+%       respectively and Rs is a list-of-lists of results lists as
+%       returned by experiments/7.
+%
+%       Example query:
+%       ==
+%       test_harness:experiments_ranges(
+%       s/2
+%       ,10
+%       ,0:5/1
+%       ,anbn(1:5/1,0,12)
+%       ,[]
+%       ,anbn(all,13,18)
+%       ,not_anbn(all,0,3)
+%       ,_Rs
+%       )
+%       , maplist(writeln,_Rs).
+%       ==
+%
+%       The query above runs an experiment with anbn as the target
+%       language, used to generate labelled examples, and no unlabelled
+%       examples, iterating over the number of internally generated,
+%       and labelled examples. Parameters are as follows:
+%
+%       * s/2: The symbol and arity of a learning target defined in the
+%       current experiment file.
+%
+%       * 10: The number of experiments to run in each iteration.
+%
+%       * 0:5/1: The range of values for internally generated examples.
+%       Defines the range of integers in [0,5] increasing by 1.
+%
+%       * anbn(1:5/1,0,12): Language generation specification for
+%       labelled examples. 1:5/1 defines the numbers of examples of anbn
+%       that will be generated in successive iterations: from 1 to 5,
+%       increasing by 1, therefore for 5 total iterations. 0 and 12 are
+%       the maximum and minimum lengths of strings in examples.
+%
+%       * []: No unlabelled examples will be generated.
+%
+%       * anbn(all,13,18): language generation specification for
+%       positive testing examples. All examples of anbn of length
+%       between 13 and 18 will be generated and used to test the
+%       hypothesis learned at each iteration.
+%
+%       * not_anbn(all,0,3): language generation specification term for
+%       negative testing examples. All exampls of anbm of length between
+%       0 and 3 will be generated and used to test the hypothesis
+%       learned at each iteration.
+%
+%       * _Rs: List of results.
+%
+%       @tbd: this predicate really needs some error checking to make
+%       sure we're not giving as arguments totally bogus ranges, or ones
+%       that will raise an error.
+%
+experiments_ranges(T,N,Gs,Ls,Us,TestPos,TestNeg,Rs):-
+        range_interval(Gs,Gs_e)
+        ,maplist(expanded_range,[Ls,Us],[Ls_e,Us_e])
+        ,maplist(length,[Gs_e,Ls_e],[Gn,Ln])
+        ,Set =  poker_configuration:unlabelled_examples(C)
+        ,Call = findall(I/G/L/U-Rs_i
+                       ,(nth1(Gi,Gs_e,G)
+                        ,set_poker_configuration_option(unlabelled_examples,[G])
+                        ,debug(experiments,'Experiment set ~w of ~w.',[Gi,Gn])
+                        % Iteration: incrments of initial examples
+                        ,debug(experiments,'Iterations per set: ~w',[Ln])
+                        % Experiments: repetitions over each iteration
+                        %,maplist(nth1(I),[Ls_e,Us_e],[Ls_i,Us_i])
+                        ,nth1_labelled_unlabelled(I,Ls_e,Us_e,Ls_i,Us_i)
+                        ,debug(experiments,'Iteration ~w of ~w with:',[I,Ln])
+                        ,debug(experiments,'Generated negative examples: ~w',[G])
+                        ,maplist(spec_value,[Ls_i,Us_i],[L,U])
+                        ,debug(experiments,'Labelled examples: ~w',[L])
+                        ,debug(experiments,'Unlabelled examples: ~w',[U])
+                        ,experiments(T,N,Ls_i,Us_i,TestPos,TestNeg,Rs_i)
+                        )
+                       ,Rs)
+        ,Clean = set_poker_configuration_option(unlabelled_examples,[C])
+        ,setup_call_cleanup(Set,Call,Clean).
+
+
+%!      nth1_labelled_unlabelled(?I,?Labelled,?Unlabelled,?IthLab,?IthUnlab)
+%!      is nondet.
+%
+%       Iterate over sets of Labelled and Unlabelled examples.
+%
+%       Wrapper around nth1/3 to allow for an empty list of Unlabelled
+%       examples. experiment_ranges/8 allows experiments with 0
+%       unlabelled examples but when Labelled is non-empty and
+%       Unlabelled is empty we can't iterate over both in tandem with
+%       nth1/3. This predicate ensures correct iteration over both
+%       lists by binding the empty list to IthUnlab every time IthLab
+%       is bound to an element in labelled, if Unlabelled is empty;
+%       otherwise this iterates over the elements in Labelled and
+%       Unlabelled in tandem.
+%
+nth1_labelled_unlabelled(I,Ls,[],Ls_i,[]):-
+        !
+        ,nth1(I,Ls,Ls_i).
+nth1_labelled_unlabelled(I,Ls,Us,Ls_i,Us_i):-
+        maplist(nth1(I),[Ls,Us],[Ls_i,Us_i]).
+
+
+%!      spec_value(+Specification,-Value) is det.
+%
+%       Unpack a quantity value from a Specification term.
+%
+%       Specification is a language generation specification term.
+%
+%       Value is the first argument of Specification, denoting a
+%       quantity of examples to be generated.
+%
+%       Helper to simplify unpacking experiment set, iteration, examples
+%       numbers etc values for outputting at the end of a set
+%       ofexperiments with experiments_ranges/8.
+%
+spec_value([],0):-
+        !.
+spec_value(S,V):-
+        S =.. [_,V|_].
+
+
+%!      expanded_range(+Spec,-Expanded) is det.
+%
+%       Expand a group of range definitions to language terms.
+%
+%       Helper for to expand range specifications for ranged
+%       experiments to language terms S(M,J,K) as expected by
+%       experiments/7.
+%
+%       Spec is a range specification term of the form
+%       Language(Init,Min,Max). Language, Init, Min and Max are as
+%       follows.
+%
+%       Language is the symbol, but not arity, of a target language
+%       defined as a DCG in this file.
+%
+%       Init, Min and Max are ranges of the form I:J/K, where I, J are
+%       integers that define a closed interval [I,J] and K is the stride
+%       by which to increment I until it reaches J.
+%
+%       Additionally, Min and Max (but not Init) can be singe integers
+%       in whihh case they are interpredted as the range I:I/0.
+%
+%       Init is the range of numbers of initial, labelled or unlabelled,
+%       training examples or positive or negative testing examples of
+%       Language that are to be genereated for an experiment.
+%
+%       Min and Max are the ranges of the lengths of strings of Language
+%       in the initial examples of Language generated according to Init.
+%
+%       Expanded is a list of language generation specification terms of
+%       the form Language(N,Min,Max) where N is in the range I0:J0
+%       increasing by K0, and Min and Max are in the ranges I1:J1
+%       increasing by K1 and I2:J2 increasing by K2. Each term in
+%       Expanded can be passed to experiments/7 to iterate over a
+%       language specification for an iterated experiment.
+%
+%       Example query:
+%       ==
+%       % Min and Max can both be single integers:
+%
+%       ?- test_harness:expanded_range(anbn(1:5/1,0,3),_Es), maplist(writeln,_Es).
+%       anbn(1,0,3)
+%       anbn(2,0,3)
+%       anbn(3,0,3)
+%       anbn(4,0,3)
+%       anbn(5,0,3)
+%       true.
+%
+%       % Min and Max can both be ranges:
+%       ?- test_harness:expanded_range(anbn(1:5/1,0:0/5,4:4/5),_Es), maplist(writeln,_Es).
+%       anbn(1,0,4)
+%       anbn(2,0,4)
+%       anbn(3,0,4)
+%       anbn(4,0,4)
+%       anbn(5,0,4)
+%       true.
+%
+%       % Either of Min or Max can be a single integer or a range:
+%       ?- test_harness:expanded_range(anbn(1:5/1,0,4:4/5),_Es), maplist(writeln,_Es).
+%       anbn(1,0,4)
+%       anbn(2,0,4)
+%       anbn(3,0,4)
+%       anbn(4,0,4)
+%       anbn(5,0,4)
+%       true.
+%
+%       ?- test_harness:expanded_range(anbn(1:5/1,0:0/5,4),_Es), maplist(writeln,_Es).
+%       anbn(1,0,4)
+%       anbn(2,0,4)
+%       anbn(3,0,4)
+%       anbn(4,0,4)
+%       anbn(5,0,4)
+%       true.
+%       ==
+%
+%       When specifying Min and Max as ranges, the predicate
+%       range_helper/2 can be used to calculate the number of
+%       language specification terms that will be generated for the
+%       range in Init, so that the right upper limit can be set:
+%       ==
+%       ?- test_harness:(_Init = 1:5/1
+%       , range_helper(_Init,N)
+%       , expanded_range(anbn(_Init,0:0/N,4:4/N),_Es)
+%       , maplist(writeln,_Es)
+%       )
+%       , length(_Es,M).
+%
+%       anbn(1,0,4)
+%       anbn(2,0,4)
+%       anbn(3,0,4)
+%       anbn(4,0,4)
+%       anbn(5,0,4)
+%       N = M, M = 5.
+%       ==
+%
+%       However this is not absolutely necessary and is only given for
+%       more clear debugging of experiment options, as the number of
+%       language specification terms in Expanded is determined by the
+%       range in Init anyway.
+%
+expanded_range([],[]):-
+        !.
+expanded_range(Spec,Es):-
+        Spec =.. [L,RIs,RMin,RMax]
+        ,range_interval(RIs,Is)
+        ,string_lengths(RIs,RMin,RMax,Mins,Maxs)
+        ,findall(T
+                ,(maplist(nth1(_I),[Is,Mins,Maxs],[In_i,Min_i,Max_i])
+                 ,T =.. [L,In_i,Min_i,Max_i]
+                 )
+                ,Es).
+
+
+%!      range_interval(+Range,-Interval) is det.
+%
+%       Expand a Range specification to a list of numbers.
+%
+%       Helper to allow ranges with the same minimum and maximum value,
+%       which still have to be expanded to the same length as other
+%       ranges.
+%
+range_interval(I:I/K,Ss):-
+        !
+        ,length(Ss,K)
+        ,findall(I
+                ,member(I,Ss)
+                ,Ss).
+range_interval(I:J/K,Ss):-
+        interval(I,J,K,Ss).
+
+
+%!      string_lengths(+Init,+Min,+Max,-Mins,-Maxs) is det.
+%
+%       Expanded Min and Max ranges of string lengths.
+%
+%       Helper to allow ranges of string lenghts in expanded_range/2 to
+%       be given as any mix of one or two integers or ranges.
+%
+string_lengths(_R,MinI:MinJ/MinK,MaxI:MaxJ/MaxK,Ms,Ns):-
+        !
+        ,maplist(range_interval,[MinI:MinJ/MinK,MaxI:MaxJ/MaxK],[Ms,Ns]).
+string_lengths(R,Min,I:J/K,Ms,Ns):-
+        number(Min)
+        ,!
+        ,range_helper(R,N)
+        ,maplist(range_interval,[Min:Min/N,I:J/K],[Ms,Ns]).
+string_lengths(R,I:J/K,Max,Ms,Ns):-
+        number(Max)
+        ,!
+        ,range_helper(R,N)
+        ,maplist(range_interval,[I:J/K,Max:Max/N],[Ms,Ns]).
+string_lengths(R,Min,Max,Ms,Ns):-
+        number(Min)
+        ,number(Max)
+        ,range_helper(R,N)
+        ,maplist(range_interval,[Min:Min/N,Max:Max/N],[Ms,Ns]).
+
+
+%!      range_helper(+Range,-Max) is det.
+%
+%       Calculate the Max value in a Range.
+%
+%       Helper to faciliate setting the values of intervals in the input
+%       of experiments like experiments_low_uncertainty/7.
+%
+%       TODO: give example.
+%
+range_helper(I:J/K,N):-
+        M is J - I
+        ,N is M / K + 1.
+
 
 
 %!      experiments(+Target,+N,+Labelled,+Unlabelled,+TestPos,+TestNeg,-Results)
