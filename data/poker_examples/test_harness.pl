@@ -258,13 +258,13 @@ sum(A,B,C):-
 %
 experiment(T,Sl,Su,TPos,TNeg,[Ps,Pos,Neg,Rs_l,Rs_p]):-
         generate_initial(Sl,Ls)
-        ,generate_initial(Su,Us)
-        ,experiment_data(T,_,_,BK,MS)
-        ,debug_length(experiment_initial,'Generated ~w labeleld examples.',Ls)
-        ,debug_length(experiment_initial,'Generated ~w unlabeleld examples.',Us)
+        ,debug_length(experiment_initial,'Generated ~w labelled examples.',Ls)
         ,debug_clauses_length(experiment_initial_full,'Generated ~w labelled examples:',Ls)
+        ,generate_initial(Su,Us)
+        ,debug_length(experiment_initial,'Generated ~w unlabelled examples.',Us)
         ,debug_clauses_length(experiment_initial_full,
                               'Generated ~w unlabelled examples:',Us)
+        ,experiment_data(T,_,_,BK,MS)
         ,debug_time(experiment_time, learn(Ls,Us,BK,MS,Pos,Neg,Ps) )
         ,debug_length(experiment_learned,'Learned ~w clause hypothesis.',Ps)
         ,debug_clauses(experiment_learned_full,'Learned hypothesis:',Ps)
@@ -397,13 +397,7 @@ test_program(T,Cs,Test_Pos,Test_Neg,[Acc,TPR,TNR]):-
 %
 generate_examples(Sign,Ts,Es):-
         findall(Es_i
-               ,(%T =.. [S,N,J,K]
-                %,debug(generate_examples,'Generating ~w ~w examples of length in [~w,~w].'
-                %      ,[N,S,J,K])
-                generate_initial(Ts,Es_i)
-                %,filter_unlabelled(S,Es_i,Es_f)
-                %,debug_length(generate_examples,'Filtered examples: ~w',Es_f)
-                )
+               ,generate_initial(Ts,Es_i)
                ,Es_)
         ,flatten(Es_,Es)
         ,(   Sign == pos
@@ -414,80 +408,6 @@ generate_examples(Sign,Ts,Es):-
         ,format(atom(M),'Generated ~~w ~w testing examples',[Sign_])
         ,debug_length(generate_examples,M,Es)
         ,debug_clauses_length(generate_examples_full,M,Es).
-
-
-%!      filter_unlabelled(+Filter,+Unlabelled,-Filtered) is det.
-%
-%       Filter, or not, Unlabelled examples by a target predicate.
-%
-%       Filter is the name of a DCG defined in terst_harness. If a
-%       clause of the predicate filter_negatives/2 is defined in
-%       the current experiment_file with Filter as its first argument,
-%       this predicate will remove from Unlabelled all examples that are
-%       also examples of Filter. This implies a definition of
-%       generate_examples/5 in the experiment file module used to
-%       generate negative examples in the first place.
-%
-%       Unlabelled is a list of negative examples of the current target
-%       lanuage.
-%
-%       Filtered is the list is Unlabelled, with examples of the grammar
-%       in Filter removed.
-%
-filter_unlabelled(_,Us,Us):-
-        \+ current_predicate(experiment_file:filter_negatives/2)
-        ,!.
-filter_unlabelled(F,Us,Us):-
-        current_predicate(experiment_file:filter_negatives/2)
-        ,compose(experiment_file,filter_negatives(F,_),C)
-        ,\+ call(C)
-        ,!.
-filter_unlabelled(F,Us,Us_f):-
-        current_predicate(experiment_file:filter_negatives/2)
-        ,compose(experiment_file,filter_negatives(F,S),C)
-        ,call(C)
-        ,once( internal_symbol(S,S_) )
-        ,current_predicate(S,E)
-        % S may be S//0 or S//1. Or...?
-        ,functor(E,S,A)
-        ,length(Args,A)
-        % Atom with internal symbol name
-        ,E =.. [S|Args]
-        ,findall(U
-                ,(member(U,Us)
-                 % Atom with external symbol name
-                 ,U =.. [S_|Args]
-                 % Call the internal one
-                 ,\+ call(E)
-                 )
-                ,Us_f).
-
-
-%!      compose(+Module,+Predicate,-Qualified) is semidet.
-%
-%       Just my little hack there.
-%
-%       In filter_unlabelled/3 we want to call a predicate
-%       filter_negatives/2 but only if it exists. If it doesn't exist
-%       and we have a call to it in filter_unlabelled/3, even if we
-%       guard against making this call when the predicate is not defined
-%       (e.g. after searching with it with current_predicate/2 and
-%       failing to find it) Prolog will still raise a warning when
-%       test_harness.pl (this file) is loaded or reloaded (e.g. with
-%       make/0).
-%
-%       This hack allows filter_unlabelled/3 to compose a call to
-%       filter_negatives/2 at a level where Prolog's compiler won't warn
-%       that it doesn't exist, so no warnings will be raised when this
-%       file is compiled.
-%
-%       The alterantive is to declare filter_negatives/2 as dynamic or
-%       multifile or something like that, and that may be a better
-%       choice, but then again, maybe not.
-%
-%       In any case this is a hack so don't do as I hack, do as I suck.
-%
-compose(M,P,M:P).
 
 
 
@@ -504,7 +424,7 @@ compose(M,P,M:P).
 %       from a compisition of two or more target languages.
 %
 %       Targets is either a list of terms S(N,J,K), or a single such
-%       term.
+%       term. Targets may also be a pair Targets/Filter.
 %
 %       In each term S(N,J,K), S is the symbol of a target language
 %       that must be defined as a Definite Clause Grammar in
@@ -516,11 +436,18 @@ compose(M,P,M:P).
 %       _all_ examples of strings of S of length between J and K will be
 %       generated.
 %
+%       If Targets is a term Targets/Filter, Filter is an atom, the
+%       symbol, but not arity, of a language by which to filter
+%       Examples.
+%
 %       Examples is the list of atoms generated that way. Those are
 %       atoms of each S, therefore they are atoms in Definite Clause
 %       Grammars notation i.e. they are of the form S(Xs,Ys,...) where
 %       Xs, Ys, etc. are lists of characters representing strings in
 %       a language.
+%
+%       If a Filter option is given all examples of the filtering
+%       language are removed from Examples before returning.
 %
 %       Example:
 %       ==
@@ -553,6 +480,13 @@ compose(M,P,M:P).
 %       of each tagret language, and the corresponding number, and min
 %       and max length of strings to generate.
 %
+%       Also see filter_by_language/3 for examples of calling
+%       generate_initial/2 with a filtering term.
+%
+generate_initial(T/F,Es_f):-
+        !
+        ,generate_initial(T,Es)
+        ,filter_by_language(F,Es,Es_f).
 generate_initial(T,Es):-
         \+ is_list(T)
         ,compound(T)
@@ -567,6 +501,82 @@ generate_initial(Ts,Es):-
                 )
                ,Es_)
         ,flatten(Es_,Es).
+
+
+%!      filter_by_language(+Filter,+Unlabelled,-Filtered) is det.
+%
+%       Filter, or not, Unlabelled examples by a target predicate.
+%
+%       Filter is the name of a DCG defined in test_harness. This
+%       predicate will remove from Unlabelled all examples that are also
+%       examples of Filter.
+%
+%       Unlabelled is a list of negative examples of the current target
+%       lanuage.
+%
+%       Filtered is the list Unlabelled with examples of the grammar in
+%       Filter removed.
+%
+%       Example use:
+%       ==
+%       % No filtering
+%       ?- test_harness:generate_initial(anbm(all,0,4),_Es)
+%       , maplist(writeln,_Es), length(_Es,N).s([],[])
+%       s([a],[])
+%       s([a,a],[])
+%       s([a,b],[])
+%       s([a,a,a],[])
+%       s([a,a,b],[])
+%       s([a,a,b],[])
+%       s([a,a,a,a],[])
+%       s([a,a,a,b],[])
+%       s([a,a,a,b],[])
+%       s([a,a,a,b],[])
+%       s([a,a,b,b],[])
+%       N = 12.
+%
+%       % Filtering by anbn; note aabb is gone:
+%
+%       ?- test_harness:generate_initial(anbm(all,0,4)/anbn,_Es)
+%       , maplist(writeln,_Es), length(_Es,N).
+%       s([],[])
+%       s([a],[])
+%       s([a,a],[])
+%       s([a,a,a],[])
+%       s([a,a,b],[])
+%       s([a,a,b],[])
+%       s([a,a,a,a],[])
+%       s([a,a,a,b],[])
+%       s([a,a,a,b],[])
+%       s([a,a,a,b],[])
+%       N = 10.
+%
+%       %Filter by anbm itself: everything's gone:
+%
+%       ?- test_harness:generate_initial(anbm(all,0,4)/anbm,_Es)
+%       , maplist(writeln,_Es), length(_Es,N).
+%       N = 0.
+%       ==
+%
+filter_by_language(S,Us,Us_f):-
+        debug(filter_by_language,'Filtering examples by ~w',[S])
+        ,once( internal_symbol(S,S_) )
+        ,current_predicate(S,E)
+        % S may be S//0 or S//1. Or...?
+        ,functor(E,S,A)
+        ,length(Args,A)
+        % Atom with internal symbol name
+        ,E =.. [S|Args]
+        ,findall(U
+                ,(member(U,Us)
+                 % Atom with external symbol name
+                 ,U =.. [S_|Args]
+                 % Call the internal one
+                 ,\+ call(E)
+                 )
+                ,Us_f)
+        % Cuts backtracking over more call(E)results.
+        ,!.
 
 
 
@@ -593,7 +603,9 @@ generate_initial(Ts,Es):-
 %       atoms are returned in Atoms.
 %
 generate_initial(S,N,J,K,Es):-
-        findall(E
+        debug(generate_initial,'Generating ~w ~w examples of length in [~w,~w].'
+             ,[N,S,J,K])
+        ,findall(E
                ,(between(J,K,I)
                 ,generate_example(S,I,E)
                 )
