@@ -1039,6 +1039,7 @@ internal_symbol_(hilbert_curve,s).
 internal_symbol_(hilbert_curve_with_vars,s).
 internal_symbol_(not_hilbert_curve,s).
 internal_symbol_(sierpinski_triangle,s).
+internal_symbol_(sierpinski_triangle_with_vars,s).
 internal_symbol_(not_sierpinski_triangle,s).
 internal_symbol_(sierpinski_arrowhead,s).
 internal_symbol_(not_sierpinski_arrowhead,s).
@@ -1624,6 +1625,28 @@ sierpinski_char(+) --> plus.
 sierpinski_char(-) --> minus.
 sierpinski_char(f) --> f.
 sierpinski_char(g) --> g.
+
+
+%!      sierpinski_triangle_with_vars(?Is,?Os,?Rs) is nondet.
+%
+%       Generator for Sierpinski Triangle strings with variable symbols.
+%
+%       Sierpinski Triangle strings begin including variable symbols at
+%       length 9. This predicate ensures that examples can be generated
+%       that include variables.
+%
+sierpinski_triangle_with_vars(Is,Os,[]):-
+% The first Hilbert Curve string that contains variable symbols has
+% length 9.
+        generate_initial(sierpinski_triangle,all,9,15,Es)
+        ,findall(s(Is,Os,[])
+                ,(member(s(Is,Os,[]),Es)
+                 ,(   member(f,Is)
+                  ;   member(g,Is)
+                  )
+                 )
+                ,Vs)
+        ,member(s(Is,Os,[]),Vs).
 
 
 
