@@ -73,8 +73,9 @@ experiment_file(data('poker_examples/hello_world_poker.pl'),hello_world).
 %experiment_file(data('poker_examples/dragon_curve.pl'),dragon_curve).
 %experiment_file(data('poker_examples/hilbert_curve.pl'),hilbert_curve).
 %experiment_file(data('poker_examples/koch_curve.pl'),koch_curve).
-%experiment_file(data('poker_examples/anbn_m.pl'),anbn_m).
-%experiment_file(data('poker_examples/hilbert_dragon.pl'),hilbert_dragon).
+%experiment_file(data('poker_examples/experiment_script_cgnf.pl'),exp_script_cgnf).
+%experiment_file(data('poker_examples/experiment_script_weak_cgnf.pl'),exp_script_wcgnf).
+%experiment_file(data('poker_examples/experiment_script_lnf.pl'),exp_script_lnf).
 
 
 %!      flatten_prove_all(?Bool) is semidet.
