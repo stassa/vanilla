@@ -8,6 +8,7 @@
                          ,test_hilbert_curve/1
                          ,test_koch_curve/1
                          ,test_sierpinski_triangle/1
+                         ,test_hilbert_dragon_filtering/0
                          ,set_configs/1
                          ,cleanup_safe_example/0
                          ,setup_safe_example/1
