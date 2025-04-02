@@ -1,8 +1,11 @@
 :-module(experiment_output,[setup_and_run_experiment/7
                            ,setup_and_run_experiments/7
                            ,setup_and_run_range_experiments/9
-                           ,setup_and_run_filter_experiment/8
+                           ,setup_and_run_filter_experiment/9
+                           ,setup_run_filter_experiment_draw/9
                            ]).
+
+:-use_module(data(poker_examples/test_harness)).
 
 :- poker_configuration:experiment_file(P,_M)
   ,use_module(P).
@@ -189,7 +192,7 @@ print_range_result(Stm,I,G,L,U,[[LAccM,LTPRM,LTNRM]
 
 
 
-%!      setup_and_run_filter_experiment(+Lang,+Tgt,+Sl,+Su,+TPosL,+TNegL,+TPosU,+TNegU)
+%!      setup_and_run_filter_experiment(+Lang,+Tgt,+Sl,+Su,+TPosL,+TNegL,+TPosU,+TNegU,+Pr)
 %!      is det.
 %
 %       Configure Poker and run a filtering experiment.
@@ -206,19 +209,86 @@ print_range_result(Stm,I,G,L,U,[[LAccM,LTPRM,LTNRM]
 %       matched in the argument of one clause of set_confgis/1 and
 %       safe_example/1 to setup correct configuration options.
 %
-%       Remaining arguments are passed to the test_harness.pl predicate
-%       experiment_filtering/9. See that predicate for a detailed
-%       description of arguments.
+%       Remaining arguments up to Pr are passed to the test_harness.pl
+%       predicate experiment_filtering/9. See that predicate for a
+%       detailed description of arguments.
 %
-setup_and_run_filter_experiment(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU):-
+%       Pr is a list: [ print_labelled(BoolP), print_unlabelled(BoolN) ]
+%       where the two booleans denote whether to print the labelling
+%       learned from the labelled, and unlabelled, examples,
+%       respectively.
+%
+setup_and_run_filter_experiment(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU
+                               ,[print_labelled(Pl)
+                                ,print_unlabelled(Pu)
+                                ]):-
         experiment_file:set_configs(Lang)
         ,experiment_file:setup_safe_example(Lang)
         ,test_harness:experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u)
         ,writeln('Results for labelled:')
         ,Res_l = [PsL,PosL,NegL,LabL,ProgL]
-        ,experiment_output:print_results(PsL,PosL,NegL,LabL,ProgL,print_examples(false))
-        %,maplist(writeln,Res_l)
+        ,experiment_output:print_results(PsL,PosL,NegL,LabL,ProgL,print_examples(Pl))
         ,writeln('Results for unlabelled:')
-        %,maplist(writeln,Res_U)
-        ,Res_u = [PsP,PosP,NegP,LabP,ProgP]
-        ,experiment_output:print_results(PsP,PosP,NegP,LabP,ProgP,print_examples(false)).
+        ,Res_u = [PsU,PosU,NegU,LabU,ProgU]
+        ,experiment_output:print_results(PsU,PosU,NegU,LabU,ProgU,print_examples(Pu)).
+
+
+%!      setup_run_filter_experiment_draw(r+Lang,+T,+Sl,+Su,+TPL,+TNgL,+TPU,+TNgU,+Os)
+%!      is det.
+%
+%       Run a filtering experiment on L-Systems and draw the results.
+%
+%       Like setup_and_run_filter_experiment/9 but also draws the
+%       learned L-Systems with turtle graphics for er visual
+%       inspections.
+%
+%       Os is a list: [print_examples(Bool), draw_labelled(ParamsL),
+%       draw_unlabelled(ParamsU] where Bool is a boolean denoting
+%       whether to print the learned programs and evaluation results and
+%       ParamsL, ParamsU are lists [T,I,Ax,RA,LA,D,St], passed to
+%       test_draw/8, along with the clauses of each learned program.
+%
+%       In particular, if the clauses of the learned prorgam are in a
+%       list Cs, test_draw/9 is called like this:
+%       ==
+%       test_draw(T,Cs,I,Ax,RA,LA,D,St)
+%       ==
+%
+%       Cs is not passed in as an argument from the calling script, but
+%       returned in the output of experiment_filtering/9 called by this
+%       predicate.
+%
+setup_run_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Os):-
+        Os = [print_labelled(Pl)
+             ,print_unlabelled(Pu)
+             ,draw_labelled(DsL)
+             ,draw_unlabelled(DsU)
+             ]
+        ,experiment_file:set_configs(Lang)
+        ,experiment_file:setup_safe_example(Lang)
+        ,test_harness:experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u)
+        ,writeln('Results for labelled:')
+        ,Res_l = [PsL,PosL,NegL,LabL,ProgL]
+        ,experiment_output:print_results(PsL,PosL,NegL,LabL,ProgL,print_examples(Pl))
+        ,writeln('Results for unlabelled:')
+        ,Res_u = [PsU,PosU,NegU,LabU,ProgU]
+        ,experiment_output:print_results(PsU,PosU,NegU,LabU,ProgU,print_examples(Pu))
+        ,draw_results(PsL,DsL)
+        ,draw_results(PsU,DsU).
+
+
+%!      draw_results(+Program,+Params) is det.
+%
+%       Draw the results of a filtering experiments.
+%
+%       Only for L-Systems.
+%
+%       Program is a program learned from a filtering experiment.
+%
+%       Params are the parameters passed to test_draw/8 together with
+%       Program to draw the output of Program with turtle graphics.
+%
+draw_results(_,false):-
+        !.
+draw_results(Ps,[T,I,Ax,RA,LA,D,St]):-
+        test_draw(T,Ps,I,Ax,RA,LA,D,St).

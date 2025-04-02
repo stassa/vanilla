@@ -45,6 +45,7 @@
 :-debug(generalise).
 :-debug(generate).
 :-debug(experiments).
+:-debug(experiment).
 :-debug(experiment_initial).
 :-debug(experiment_time).
 :-debug(experiment_examples).
@@ -197,17 +198,25 @@ test_sierpinski_triangle(N):-
 % from the labelled examples, and the labelled-negative examples.
 
 test_hilbert_dragon_filtering:-
+% Trying to draw one L-system after the other raises an error.
         Lang = hilbert_dragon
         ,T = s/3
         ,Sl = dragon_curve(all,0,4)
         ,Su = [hilbert_curve(all,0,3)
               ,hilbert_curve_with_vars(all,11,11)
               ]
-        ,TPosL = dragon_curve(all,5,10)
-        ,TNegL = not_dragon_curve(all,0,4)
-        ,TPosU = hilbert_curve(all,0,12)
-        ,TNegU = not_hilbert_curve(all,0,4)
-        ,setup_and_run_filter_experiment(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU).
+        ,TPosL = dragon_curve(1500,5,10)
+        ,TNegL = not_dragon_curve(1500,0,4)
+        ,TPosU = hilbert_curve(1500,0,12)
+        ,TNegU = not_hilbert_curve(1500,0,4)
+        ,PL = print_labelled(false)
+        ,PU = print_unlabelled(false)
+        ,DL = draw_labelled(false)
+        %,DL = draw_labelled([T,15,[f],90,90,2,'center'])
+        ,DU = draw_unlabelled(false)
+        %,DU = draw_unlabelled([T,7,[x],90,90,8,'bottom_left'])
+        ,Os = [PL,PU,DL,DU]
+        ,setup_run_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Os).
 
 
                 /*******************************

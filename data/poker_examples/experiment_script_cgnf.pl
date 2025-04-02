@@ -9,7 +9,7 @@
                           ,test_parens/1
                           ,test_palindrome/1
                           ,test_anbn_range/2
-                          ,test_anbn_filtering/0
+                          ,test_anbn_anbm_filtering/0
                           ,set_configs/1
                           ,cleanup_safe_example/0
                           ,setup_safe_example/1
@@ -242,7 +242,7 @@ test_anbn_range(N,S):-
 % negative with respect to labelling examples and learning a program
 % from the labelled examples, and the labelled-negative examples.
 
-test_anbn_filtering:-
+test_anbn_anbm_filtering:-
         Lang = anbn_anbm
         ,T = s/2
         ,Sl = anbn(all,0,4)
@@ -251,7 +251,10 @@ test_anbn_filtering:-
         ,TNegL = not_anbn(all,0,3)
         ,TPosU = anbm(all,5,8)
         ,TNegU = not_anbm(all,0,4)
-        ,setup_and_run_filter_experiment(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU).
+        ,Pp = print_labelled(false)
+        ,Pn = print_unlabelled(false)
+        ,Ps = [Pp,Pn]
+        ,setup_and_run_filter_experiment(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Ps).
 
 
                 /*******************************
