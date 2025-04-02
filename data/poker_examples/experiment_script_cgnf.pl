@@ -9,6 +9,7 @@
                           ,test_parens/1
                           ,test_palindrome/1
                           ,test_anbn_range/2
+                          ,test_anbn_filtering/0
                           ,set_configs/1
                           ,cleanup_safe_example/0
                           ,setup_safe_example/1
@@ -44,6 +45,7 @@
 :-debug(generalise).
 :-debug(generate).
 :-debug(experiments).
+:-debug(experiment).
 :-debug(experiment_initial).
 :-debug(experiment_time).
 :-debug(experiment_examples).
@@ -233,6 +235,26 @@ test_anbn_range(N,S):-
 
 
                 /*******************************
+                *    FILTERING EXPERIMENTS     *
+                *******************************/
+
+% Experiments into separating unlabelled examples into positive and
+% negative with respect to labelling examples and learning a program
+% from the labelled examples, and the labelled-negative examples.
+
+test_anbn_filtering:-
+        Lang = anbn_anbm
+        ,T = s/2
+        ,Sl = anbn(all,0,4)
+        ,Su = [anbm(all,0,4),anbn(all,5,8)]
+        ,TPosL = anbn(all,9,12)
+        ,TNegL = not_anbn(all,0,3)
+        ,TPosU = anbm(all,5,8)
+        ,TNegU = not_anbm(all,0,4)
+        ,setup_and_run_filter_experiment(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU).
+
+
+                /*******************************
                 *        CONFIGURATION         *
                 *******************************/
 
@@ -293,6 +315,16 @@ set_configs(palindrome):-
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
                                                          ,[random]).
 
+set_configs(anbn_anbm):-
+        poker_auxiliaries:set_poker_configuration_option(clause_limit,[4])
+        ,poker_auxiliaries:set_poker_configuration_option(max_invented,[1])
+        ,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
+        ,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
+        ,poker_auxiliaries:set_poker_configuration_option(respecialise,[true])
+        ,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[learned])
+        ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100])
+        ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+                                                         ,[random]).
 
                 /*******************************
                 *       EXPERIMENT DATA        *
@@ -368,6 +400,14 @@ setup_safe_example(palindrome):-
              between(0,8,L)
              ,length(Ls,L))
         ,assert(G).
+setup_safe_example(anbn_anbm):-
+        !
+        ,cleanup_safe_example
+        ,G = (poker_configuration:safe_example(m(s,Ls,[])):-
+             between(0,9,L)
+             ,length(Ls,L))
+        ,assert(G).
+
 
 
 % s/2: anbn, anbm

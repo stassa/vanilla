@@ -1,6 +1,7 @@
 :-module(experiment_output,[setup_and_run_experiment/7
                            ,setup_and_run_experiments/7
                            ,setup_and_run_range_experiments/9
+                           ,setup_and_run_filter_experiment/8
                            ]).
 
 :- poker_configuration:experiment_file(P,_M)
@@ -185,3 +186,39 @@ print_range_result(Stm,I,G,L,U,[[LAccM,LTPRM,LTNRM]
                               )
                           ]
                          ,[]).
+
+
+
+%!      setup_and_run_filter_experiment(+Lang,+Tgt,+Sl,+Su,+TPosL,+TNegL,+TPosU,+TNegU)
+%!      is det.
+%
+%       Configure Poker and run a filtering experiment.
+%
+%       A "filtering experiment" begins with labelled examples of a
+%       target program A, and unlabelled examples of program A and B,
+%       and must learn a hypothesis and labelling from both programs, by
+%       filtering the unlabelled examples to separate those of program A
+%       from those of program B. The filtered examples of program B are
+%       used as labelled examples to learn B. The "filtering" is done by
+%       Poker's labelling procedure.
+%
+%       Lang is the languege of the filtering experiment that must be
+%       matched in the argument of one clause of set_confgis/1 and
+%       safe_example/1 to setup correct configuration options.
+%
+%       Remaining arguments are passed to the test_harness.pl predicate
+%       experiment_filtering/9. See that predicate for a detailed
+%       description of arguments.
+%
+setup_and_run_filter_experiment(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU):-
+        experiment_file:set_configs(Lang)
+        ,experiment_file:setup_safe_example(Lang)
+        ,test_harness:experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u)
+        ,writeln('Results for labelled:')
+        ,Res_l = [PsL,PosL,NegL,LabL,ProgL]
+        ,experiment_output:print_results(PsL,PosL,NegL,LabL,ProgL,print_examples(false))
+        %,maplist(writeln,Res_l)
+        ,writeln('Results for unlabelled:')
+        %,maplist(writeln,Res_U)
+        ,Res_u = [PsP,PosP,NegP,LabP,ProgP]
+        ,experiment_output:print_results(PsP,PosP,NegP,LabP,ProgP,print_examples(false)).

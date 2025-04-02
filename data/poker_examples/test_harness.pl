@@ -1,4 +1,5 @@
-:-module(test_harness,[experiments_ranges/8
+:-module(test_harness,[experiment_filtering/9
+                      ,experiments_ranges/8
                       ,range_helper/2
                       ,experiments/7
                       ,experiment/6
@@ -24,6 +25,74 @@ labelled by Poker, or the programs it learns to label them.
 
 % To draw L-Systems with Python's turtle library, via Janus.
 :- py_add_lib_dir(data(poker_examples)).
+
+
+%!      experiment_filtering(+T,+Ls,+Us,+LPos,+LNeg,+UPos,+UNeg,+LRes,+URes)
+%!      is det.
+%
+%       Run an experiment separating unlabelled examples of two targets.
+%
+%       This predicate runs a "filtering" experiment: assuming labelled
+%       examples of program A and unlabelled examples of progam A U B,
+%       laern a program P and labelling L = {L+, L-} consistent with A
+%       and learn a program P' from L-, the unlabelled examples labelled
+%       negative during learning. If everything goes well then L- should
+%       be the examples of program B in the set of unlabelled examples,
+%       with L+ being the examples of program A in the set of
+%       unlabelled examples. In other words: filter the unlabelled
+%       examples for examples of A to keep those of B and learn from
+%       them.
+%
+%       Argument names are shorthand of the following, for brevity:
+%       T: Target
+%       Ls: Labelled
+%       Us: Unlabelled
+%       LPos: TestPosL (Positive testing examples for Labelled)
+%       LNeg: TestNegL (Negative testing examples for Lablled)
+%       UPos: TestPosU (Negative testing examples for Unlabelled)
+%       UNeg: TestNegU (Negative testing examples for Unlabelled)
+%       LRes: LabelledResults
+%       URes: UnlabelledResults.
+%
+%       The following sections use the expanded names.
+%
+%       Target (T) is a predicate indicator, S/A, of a learning target
+%       defined in the current experiment file. T is used to collect
+%       background knowledge and metarules for the experiment, but _not_
+%       to generate examples. Examples are generated according to
+%       Labelled and Unlabelled (Ls and Us). The programs represented in
+%       both Labelled and Unlabelled must use the same backgound
+%       knowledge and metarules.
+%
+%       Labelled and Unlabelled are language generation specification
+%       terms, or lists thereof, as in experiment/6, used to generate
+%       labelled and unlabelled training examples, respectively.
+%
+%       TestPosL, TestNegL, TestNegU and TestPosU are language
+%       specification terms, or lists thereof, for the positive and
+%       negative testing examples for the program learned from the
+%       labelled and (filtered) unlabelled examples, respectively.
+%
+%       LRes and URes are the evaluation results for the labeling and
+%       program learned from the Labelled and Unlabelled training
+%       examples, respectively. LRes and URes are as in experiment/6.
+%       Refer to that predicate for details.
+%
+experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u):-
+        debug(experiment,'Learning from labelled examples.',[])
+        ,experiment(T,Sl,Su,TPosL,TNegL,Res_l)
+        ,debug(experiment,'Learning from examples labelled negative.',[])
+        ,test_target(Su,Su_)
+        ,experiment_data(T,_,_,BK,MS)
+        ,debug(experiment,'Filtering out internally generated example.',[])
+        ,Res_l = [_Ps,_Pos,Neg,_Rs_l,_Rs_p]
+        ,generate_initial(Su,Us)
+        ,maplist(list_to_ord_set,[Us,Neg],[Us_s,Neg_s])
+        ,ord_intersect(Us_s,Neg_s,Ss)
+        ,debug_length(experiment_filtered,'Left with ~w negative examples.',Ss)
+        ,debug_clauses_length(experiment_filtered_full,'Left with ~w negative examples:',Ss)
+        ,experiment(Su_,Ss,[],BK,MS,TPosU,TNegU,Res_u).
+
 
 
 %!      experiments_ranges(+Target,+N,+Gen,+Lab,+Unlab,+TPos,+TNeg,-Results)
@@ -595,15 +664,55 @@ sum(A,B,C):-
 %       * TPR is the True Positive Rate of the program.
 %       * TNR is the True Negative Rate of the program.
 %
-experiment(T,Sl,Su,TPos,TNeg,[Ps,Pos,Neg,Rs_l,Rs_p]):-
-        generate_initial(Sl,Ls)
-        ,debug_length(experiment_initial,'Generated ~w labelled examples.',Ls)
-        ,debug_clauses_length(experiment_initial_full,'Generated ~w labelled examples:',Ls)
+experiment(T,Sl,Su,TPos,TNeg,Res):-
+        debug(experiment,'Genearting labelled examples...',[])
+        ,generate_initial(Sl,Ls)
+        ,debug(experiment,'Generating unlabelled examples...',[])
         ,generate_initial(Su,Us)
-        ,debug_length(experiment_initial,'Generated ~w unlabelled examples.',Us)
-        ,debug_clauses_length(experiment_initial_full,
-                              'Generated ~w unlabelled examples:',Us)
         ,experiment_data(T,_,_,BK,MS)
+        ,test_target(Sl,Sl_)
+        ,experiment(Sl_,Ls,Us,BK,MS,TPos,TNeg,Res).
+
+%!      experiment(+Tgt,+Lab,+Unlab,+BK,+MS,+TestPos,+TestNeg,-Results)
+%!      is det.
+%
+%       Business end of experiment/6
+%
+%       Learns from examples of Lab and Unlab, expanded from language
+%       generation specification terms passed to its parent
+%       (experiment/6).
+%
+%       Tgt is the symbol, but not arity, of a target theory, used to
+%       evaluate the labelling and program learned from Lab and Unlab.
+%
+%       Lab and Unlab are sets of ground atoms, labelled examples of
+%       Tgt and unlabelled examples of unknown programs, respectively.
+%
+%       BK and MS are the predicate indicators of predicates in the
+%       background knowledge given for Tgt, and MS are the atomic IDs of
+%       metarules.
+%
+%       TestPos and TestNeg are sets of ground atoms, used as positive
+%       and negative testing examples of the program learned from Lab
+%       and Unlab. Note that TestPos and TestNeg are not used to test
+%       the learned _labelling_, only the program. The learned labelling
+%       is evaluated according to the known definition of Tgt in this
+%       file.
+%
+%       Results is the list of evaluation results for the labelling and
+%       program learned from Lab and Unlab. Refer to the parent
+%       predicate, experiment/6, for a full description.
+%
+%       The motivation to have this as a separate predicate is that we
+%       reuse it e.g. in experiment_filtering/9 where it is not
+%       convenient to pass around language generation specification
+%       terms and it's more convenient to pass sets of examples.
+%
+experiment(Sl,Ls,Us,BK,MS,TPos,TNeg,[Ps,Pos,Neg,Rs_l,Rs_p]):-
+        debug_length(experiment_initial,'Got ~w labelled examples.',Ls)
+        ,debug_clauses_length(experiment_initial_full,'Got ~w labelled examples:',Ls)
+        ,debug_length(experiment_initial,'Got ~w unlabelled examples.',Us)
+        ,debug_clauses_length(experiment_initial_full,'Got ~w unlabelled examples:',Us)
         ,debug_time(experiment_time, learn(Ls,Us,BK,MS,Pos,Neg,Ps) )
         ,debug_length(experiment_learned,'Learned ~w clause hypothesis.',Ps)
         ,debug_clauses(experiment_learned_full,'Learned hypothesis:',Ps)
@@ -611,9 +720,8 @@ experiment(T,Sl,Su,TPos,TNeg,[Ps,Pos,Neg,Rs_l,Rs_p]):-
         ,debug_length(experiment_examples,'Labelled ~w Negative examples.',Neg)
         ,debug_clauses_length(experiment_examples_full,'~w Positive examples:',Pos)
         ,debug_clauses_length(experiment_examples_full,'~w Negative examples:',Neg)
-        ,test_target(Sl,Sl_)
-        ,test_labelling(Sl_,Pos,Neg,Rs_l)
-        ,test_program(Sl_,Ps,TPos,TNeg,Rs_p).
+        ,test_labelling(Sl,Pos,Neg,Rs_l)
+        ,test_program(Sl,Ps,TPos,TNeg,Rs_p).
 
 
 %!      debug_time(+Subject,+Goal) is det.

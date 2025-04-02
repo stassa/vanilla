@@ -178,13 +178,35 @@ test_sierpinski_triangle(N):-
 % length 9.
         Lang = sierpinski_triangle
         ,T = s/3
-        ,Sl = [sierpinski_triangle(30,0,8)
-	      ,sierpinski_triangle_with-vars(10,9,15)
+        ,Sl = [sierpinski_triangle(10,0,8)
+	      ,sierpinski_triangle_with_vars(5,9,15)
 	      ]
 	,Su = []
         ,TPos = sierpinski_triangle(all,0,14)
         ,TNeg = not_sierpinski_triangle(all,0,5)
         ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
+
+
+                /*******************************
+                *    FILTERING EXPERIMENTS     *
+                *******************************/
+
+% Experiments into separating unlabelled examples into positive and
+% negative with respect to labelling examples and learning a program
+% from the labelled examples, and the labelled-negative examples.
+
+test_hilbert_dragon_filtering:-
+        Lang = hilbert_dragon
+        ,T = s/3
+        ,Sl = dragon_curve(all,0,4)
+        ,Su = [hilbert_curve(all,0,3)
+              ,hilbert_curve_with_vars(all,11,11)
+              ]
+        ,TPosL = dragon_curve(all,5,10)
+        ,TNegL = not_dragon_curve(all,0,4)
+        ,TPosU = hilbert_curve(all,0,12)
+        ,TNegU = not_hilbert_curve(all,0,4)
+        ,setup_and_run_filter_experiment(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU).
 
 
                 /*******************************
@@ -251,6 +273,15 @@ set_configs(sierpinski_triangle):-
 							 ,[deterministic])
 	,poker_auxiliaries:set_poker_configuration_option(unfolding_depth_limit,[900]).
 
+set_configs(hilbert_dragon):-
+        poker_auxiliaries:set_poker_configuration_option(clause_limit,[8])
+        ,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
+        ,poker_auxiliaries:set_poker_configuration_option(max_invented,[6])
+        ,poker_auxiliaries:set_poker_configuration_option(unfolding_depth_limit,[100])
+        ,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
+        ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100])
+        ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+						  ,[random]).
 
                 /*******************************
                 *       EXPERIMENT DATA        *
@@ -344,6 +375,17 @@ setup_safe_example(sierpinski_triangle):-
 	     ,between(0,K,J)
 	     ,length(Os,J))
 	,assert(G).
+setup_safe_example(hilbert_dragon):-
+        !
+        ,cleanup_safe_example
+        ,G = (poker_configuration:safe_example(m(s,Is,Os,[])):-
+	     K = 8
+	     ,between(0,K,I)
+	     ,length(Is,I)
+	     ,between(0,K,J)
+	     ,length(Os,J))
+	,assert(G).
+
 
 background_knowledge(s/3,[a/2
 			 ,b/2
