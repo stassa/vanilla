@@ -378,68 +378,18 @@ cleanup_safe_example.
 %
 %       Assert a clause of safe_example/1 for a Language.
 %
-setup_safe_example(algae):-
+setup_safe_example(Lang):-
         !
-        ,cleanup_safe_example
-        ,G = (poker_configuration:safe_example(m(s,Is,Os,[])):-
-	     K = 8
-	     ,between(0,K,I)
-	     ,length(Is,I)
-	     ,between(0,K,J)
-	     ,length(Os,J))
-	,assert(G).
-setup_safe_example(dragon_curve):-
-        !
-        ,cleanup_safe_example
-        ,G = (poker_configuration:safe_example(m(s,Is,Os,[])):-
-	     K = 8
-	     ,between(0,K,I)
-	     ,length(Is,I)
-	     ,between(0,K,J)
-	     ,length(Os,J))
-	,assert(G).
-setup_safe_example(hilbert_curve):-
-        !
-        ,cleanup_safe_example
-        ,G = (poker_configuration:safe_example(m(s,Is,Os,[])):-
-	     K = 8
-	     ,between(0,K,I)
-	     ,length(Is,I)
-	     ,between(0,K,J)
-	     ,length(Os,J))
-	,assert(G).
-setup_safe_example(koch_curve):-
-        !
-        ,cleanup_safe_example
-        ,G = (poker_configuration:safe_example(m(s,Is,Os,[])):-
-	     K = 8
-	     ,between(0,K,I)
-	     ,length(Is,I)
-	     ,between(0,K,J)
-	     ,length(Os,J))
-	,assert(G).
-setup_safe_example(sierpinski_triangle):-
-        !
-        ,cleanup_safe_example
-        ,G = (poker_configuration:safe_example(m(s,Is,Os,[])):-
-	     K = 8
-	     ,between(0,K,I)
-	     ,length(Is,I)
-	     ,between(0,K,J)
-	     ,length(Os,J))
-	,assert(G).
-setup_safe_example(hilbert_dragon):-
-        !
-        ,cleanup_safe_example
-        ,G = (poker_configuration:safe_example(m(s,Is,Os,[])):-
-	     K = 8
-	     ,between(0,K,I)
-	     ,length(Is,I)
-	     ,between(0,K,J)
-	     ,length(Os,J))
-	,assert(G).
-setup_safe_example(koch_dragon):-
-        !
+        ,must_be(oneof([algae
+                       ,dragon_curve
+                       ,hilbert_curve
+                       ,koch_curve
+                       ,sierpinski_triangle
+                       ,hilbert_dragon
+                       ,koch_dragon]
+                      )
+                ,Lang
+                )
         ,cleanup_safe_example
         ,G = (poker_configuration:safe_example(m(s,Is,Os,[])):-
 	     K = 8
