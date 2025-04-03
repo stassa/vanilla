@@ -251,7 +251,7 @@ setup_and_run_filter_experiment(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU
 %       In particular, if the clauses of the learned prorgam are in a
 %       list Cs, test_draw/9 is called like this:
 %       ==
-%       test_draw(T,Cs,I,Ax,RA,LA,D,St)
+%       test_draw(T,Cs,I,Ax,RA,LA,D,St,W,H,F)
 %       ==
 %
 %       Cs is not passed in as an argument from the calling script, but
@@ -291,4 +291,13 @@ setup_run_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Os):-
 draw_results(_,false):-
         !.
 draw_results(Ps,[T,I,Ax,RA,LA,D,St]):-
-        test_draw(T,Ps,I,Ax,RA,LA,D,St).
+% Default width, height and filename.
+        test_draw(T,Ps,I,Ax,RA,LA,D,St,nil,nil,nil)
+        ,!.
+draw_results(Ps,[T,I,Ax,RA,LA,D,St,W,H]):-
+% Default filename.
+        test_draw(T,Ps,I,Ax,RA,LA,D,St,W,H,nil)
+        ,!.
+draw_results(Ps,[T,I,Ax,RA,LA,D,St,W,H,F]):-
+        test_draw(T,Ps,I,Ax,RA,LA,D,St,W,H,F)
+        ,!.

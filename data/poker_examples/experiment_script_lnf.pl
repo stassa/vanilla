@@ -9,6 +9,7 @@
                          ,test_koch_curve/1
                          ,test_sierpinski_triangle/1
                          ,test_hilbert_dragon_filtering/0
+                         ,test_koch_dragon_filtering/0
                          ,set_configs/1
                          ,cleanup_safe_example/0
                          ,setup_safe_example/1
@@ -211,10 +212,32 @@ test_hilbert_dragon_filtering:-
         ,TNegU = not_hilbert_curve(1500,0,4)
         ,PL = print_labelled(false)
         ,PU = print_unlabelled(false)
-        ,DL = draw_labelled(false)
-        %,DL = draw_labelled([T,15,[f],90,90,2,'center'])
+        %,DL = draw_labelled(false)
+        ,DL = draw_labelled([T,16,[f],90,90,2,-(-280,50),850,550,'dragon_curve_1.eps'])
         ,DU = draw_unlabelled(false)
-        %,DU = draw_unlabelled([T,7,[x],90,90,8,'bottom_left'])
+        %,DU = draw_unlabelled([T,7,[x],90,90,8,'top_left',850,550,'hilbert_curve.eps'])
+        ,Os = [PL,PU,DL,DU]
+        ,setup_run_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Os).
+
+test_koch_dragon_filtering:-
+% Trying to draw one L-system after the other raises an error.
+        Lang = koch_dragon
+        ,T = s/3
+        ,Sl = [koch_curve(all,0,3)
+	      ,koch_curve_with_vars(all,8,9)
+              ]
+        ,Su = dragon_curve(all,0,4)
+        ,TPosL = koch_curve(all,0,14)
+        ,TNegL = not_koch_curve(all,0,5)
+        ,TPosU = dragon_curve(1500,5,10)
+        ,TNegU = not_dragon_curve(1500,0,4)
+        ,PL = print_labelled(false)
+        ,PU = print_unlabelled(false)
+        %,DL = draw_labelled(false)
+        ,DL = draw_labelled([T,6,[f,-,-,f,-,-,f],60,60,1,-(-450,-250),780,880
+                            ,'koch_curve.eps'])
+        ,DU = draw_unlabelled(false)
+        %,DU = draw_unlabelled([T,16,[f],90,90,2,-(-280,50),850,550,'dragon_curve_2.eps'])
         ,Os = [PL,PU,DL,DU]
         ,setup_run_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Os).
 
@@ -229,7 +252,8 @@ test_hilbert_dragon_filtering:-
 %       Set configuration options for a target Language.
 %
 set_configs(algae):-
-	poker_auxiliaries:set_poker_configuration_option(clause_limit,[4])
+	!
+	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[4])
 	,poker_auxiliaries:set_poker_configuration_option(gestalt,[true])
 	,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
 	,poker_auxiliaries:set_poker_configuration_option(max_invented,[1])
@@ -239,7 +263,8 @@ set_configs(algae):-
 							 ,[random]).
 
 set_configs(dragon_curve):-
-	poker_auxiliaries:set_poker_configuration_option(clause_limit,[4])
+	!
+	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[4])
 	,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
 	,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
 	,poker_auxiliaries:set_poker_configuration_option(max_invented,[2])
@@ -250,7 +275,8 @@ set_configs(dragon_curve):-
 							 ,[random]).
 
 set_configs(hilbert_curve):-
-	poker_auxiliaries:set_poker_configuration_option(clause_limit,[8])
+	!
+	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[8])
 	,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
 	,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
 	,poker_auxiliaries:set_poker_configuration_option(max_invented,[6])
@@ -260,7 +286,8 @@ set_configs(hilbert_curve):-
 							 ,[random]).
 
 set_configs(koch_curve):-
-	poker_auxiliaries:set_poker_configuration_option(clause_limit,[6])
+	!
+	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[6])
 	,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
 	,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
 	,poker_auxiliaries:set_poker_configuration_option(max_invented,[4])
@@ -270,10 +297,11 @@ set_configs(koch_curve):-
 							 ,[random]).
 
 set_configs(sierpinski_triangle):-
+	!
 	%poker_auxiliaries:set_configuration_option(fetch_clauses,[[builtins,bk,metarules]])
 	%,poker_auxiliaries:set_configuration_option(table_meta_interpreter, [false])
 	%,poker_auxiliaries:set_configuration_option(untable_meta_interpreter, [true])
-	poker_auxiliaries:set_poker_configuration_option(clause_limit,[8])
+	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[8])
 	,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
 	,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
 	,poker_auxiliaries:set_poker_configuration_option(max_invented,[7])
@@ -284,7 +312,8 @@ set_configs(sierpinski_triangle):-
 	,poker_auxiliaries:set_poker_configuration_option(unfolding_depth_limit,[900]).
 
 set_configs(hilbert_dragon):-
-        poker_auxiliaries:set_poker_configuration_option(clause_limit,[8])
+        !
+	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[8])
         ,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
         ,poker_auxiliaries:set_poker_configuration_option(max_invented,[6])
         ,poker_auxiliaries:set_poker_configuration_option(unfolding_depth_limit,[100])
@@ -292,6 +321,20 @@ set_configs(hilbert_dragon):-
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100])
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
 						  ,[random]).
+
+set_configs(koch_dragon):-
+        !
+        ,poker_auxiliaries:set_poker_configuration_option(clause_limit,[6])
+	,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
+	,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
+	,poker_auxiliaries:set_poker_configuration_option(max_invented,[4])
+	,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+							 ,[random]).
+
+set_configs(Unknown):-
+        throw('Unknown language':Unknown).
 
                 /*******************************
                 *       EXPERIMENT DATA        *
@@ -386,6 +429,16 @@ setup_safe_example(sierpinski_triangle):-
 	     ,length(Os,J))
 	,assert(G).
 setup_safe_example(hilbert_dragon):-
+        !
+        ,cleanup_safe_example
+        ,G = (poker_configuration:safe_example(m(s,Is,Os,[])):-
+	     K = 8
+	     ,between(0,K,I)
+	     ,length(Is,I)
+	     ,between(0,K,J)
+	     ,length(Os,J))
+	,assert(G).
+setup_safe_example(koch_dragon):-
         !
         ,cleanup_safe_example
         ,G = (poker_configuration:safe_example(m(s,Is,Os,[])):-

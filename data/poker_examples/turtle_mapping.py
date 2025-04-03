@@ -1,9 +1,22 @@
-from turtle import *
 import turtle
 
 # insructions: an L-system string
 # langle: left angle, angle: right angle, distance: duh.
-def draw(instructions, langle, rangle, distance, start):
+# start: either a string or a tuple of (width, height) for the starting position
+# file: name of file to save eps of image
+# width, height: width and height of the screen drawing area.
+def draw(instructions, langle, rangle, distance, start, width=960, height=810, file='turtle.eps'):
+
+    screen = turtle.getscreen()
+    # Controls animation speed.
+    screen.tracer(1000,0)
+
+    # Increases drawing canvas size without increasing window size
+    # The effect is that scrollbars are automatically added to the window
+    # From turtle docs on screensize()
+    turtle.screensize(width, height)
+
+    turtle.hideturtle()
 
     turtle.penup()
 
@@ -11,18 +24,24 @@ def draw(instructions, langle, rangle, distance, start):
         pass
     elif start in ['bottom_centre','bottom_center']:
         turtle.goto(0,-turtle.window_height()/2)
+    elif start in ['center_left','centre_left']:
+        turtle.goto(-turtle.window_width()/2,0)
     elif start in ['bottom_left']:
         turtle.goto(-turtle.window_width()/2,-turtle.window_height()/2)
     elif start in ['bottom_right']:
         turtle.goto(turtle.window_width()/2,-turtle.window_height()/2)
+    elif start in ['top_left']:
+        turtle.goto(-turtle.window_width()/2,turtle.window_height()/2)
+    elif isinstance(start, tuple):
+        (w, h) = start
+        turtle.goto(w,h)
 
     turtle.pendown()
 
-    turtle.hideturtle()
-    turtle.left(langle)
-    turtle.tracer(1e3,0)
+    # Tilts the turtle by angle.
+    # Not really useful.
+    #turtle.left(langle)
     
-    wn = turtle.Screen()
     stack = []
 
     for cmd in instructions:
@@ -48,5 +67,9 @@ def draw(instructions, langle, rangle, distance, start):
             turtle.setposition(position)
             turtle.setheading(heading)
             turtle.pendown()    
+
+
     turtle.update()
+    screen.getcanvas().postscript(file=file,width=width,height=height)
+
     turtle.exitonclick()
