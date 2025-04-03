@@ -258,6 +258,22 @@ test_anbn_anbm_filtering:-
 
 
                 /*******************************
+                *  FILTERING MULTI-EXPERIMENT  *
+                *******************************/
+
+test_anbn_anbm_filtering(N):-
+        Lang = anbn_anbm
+        ,T = s/2
+        ,Sl = anbn(all,0,4)
+        ,Su = [anbm(all,0,4),anbn(all,5,8)]
+        ,TPosL = anbn(all,9,12)
+        ,TNegL = not_anbn(all,0,3)
+        ,TPosU = anbm(all,5,8)
+        ,TNegU = not_anbm(all,0,4)
+        ,setup_and_run_filter_experiments(Lang,T,N,Sl,Su,TPosL,TNegL,TPosU,TNegU).
+
+
+                /*******************************
                 *        CONFIGURATION         *
                 *******************************/
 

@@ -10,6 +10,8 @@
                          ,test_sierpinski_triangle/1
                          ,test_hilbert_dragon_filtering/0
                          ,test_koch_dragon_filtering/0
+                         ,test_hilbert_dragon_filtering/1
+                         ,test_koch_dragon_filtering/1
                          ,set_configs/1
                          ,cleanup_safe_example/0
                          ,setup_safe_example/1
@@ -240,6 +242,42 @@ test_koch_dragon_filtering:-
         %,DU = draw_unlabelled([T,16,[f],90,90,2,-(-280,50),850,550,'dragon_curve_2.eps'])
         ,Os = [PL,PU,DL,DU]
         ,setup_run_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Os).
+
+
+                /*******************************
+                * FILTERING MULTI_EXPERIMENTS  *
+                *******************************/
+
+% Like filtering experiments but with multiple repeates.
+% This kind of experiment does not print out the learned hypotheses nor
+% does it draw the corresponding L-systems, only prints out the
+% evaluation results.
+
+test_hilbert_dragon_filtering(N):-
+        Lang = hilbert_dragon
+        ,T = s/3
+        ,Sl = dragon_curve(20,0,4)
+        ,Su = [hilbert_curve(20,0,3)
+              ,hilbert_curve_with_vars(4,11,11)
+              ]
+        ,TPosL = dragon_curve(1500,5,10)
+        ,TNegL = not_dragon_curve(1500,0,4)
+        ,TPosU = hilbert_curve(1500,0,12)
+        ,TNegU = not_hilbert_curve(1500,0,4)
+        ,setup_and_run_filter_experiments(Lang,T,N,Sl,Su,TPosL,TNegL,TPosU,TNegU).
+
+test_koch_dragon_filtering(N):-
+        Lang = koch_dragon
+        ,T = s/3
+        ,Sl = [koch_curve(7,0,3)
+	      ,koch_curve_with_vars(10,8,9)
+              ]
+        ,Su = dragon_curve(20,0,4)
+        ,TPosL = koch_curve(all,0,14)
+        ,TNegL = not_koch_curve(all,0,5)
+        ,TPosU = dragon_curve(1500,5,10)
+        ,TNegU = not_dragon_curve(1500,0,4)
+        ,setup_and_run_filter_experiments(Lang,T,N,Sl,Su,TPosL,TNegL,TPosU,TNegU).
 
 
                 /*******************************

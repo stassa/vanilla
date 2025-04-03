@@ -3,6 +3,7 @@
                            ,setup_and_run_range_experiments/9
                            ,setup_and_run_filter_experiment/9
                            ,setup_run_filter_experiment_draw/9
+                           ,setup_and_run_filter_experiments/9
                            ]).
 
 :-use_module(data(poker_examples/test_harness)).
@@ -107,7 +108,7 @@ print_experiments_results([[LAccMs,LTPRMs,LTNRMs]
                           ,[PAccSEs,PTPRSEs,PTNRSEs]
                           ]):-
         format('Labelling means:            ~w TPR: ~w TNR: ~w~n',[LAccMs,LTPRMs,LTNRMs])
-        ,format('Labelling Starndard Errors: ~w TPR: ~w TNR: ~w~n'
+        ,format('Labelling Standard Errors: ~w TPR: ~w TNR: ~w~n'
                ,[LAccSEs,LTPRSEs,LTNRSEs])
         ,format('Hypothesis Means:           ~w TPR: ~w TNR: ~w~n',[PAccMs,PTPRMs,PTNRMs])
         ,format('Hypothesis Standard Erors:  ~w TPR: ~w TNR: ~w~n'
@@ -227,10 +228,38 @@ setup_and_run_filter_experiment(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU
         ,test_harness:experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u)
         ,writeln('Results for labelled:')
         ,Res_l = [PsL,PosL,NegL,LabL,ProgL]
-        ,experiment_output:print_results(PsL,PosL,NegL,LabL,ProgL,print_examples(Pl))
+        ,print_results(PsL,PosL,NegL,LabL,ProgL,print_examples(Pl))
         ,writeln('Results for unlabelled:')
         ,Res_u = [PsU,PosU,NegU,LabU,ProgU]
-        ,experiment_output:print_results(PsU,PosU,NegU,LabU,ProgU,print_examples(Pu)).
+        ,print_results(PsU,PosU,NegU,LabU,ProgU,print_examples(Pu)).
+
+
+
+%!      setup_and_run_filter_experiments(+Lang,+Tgt,+N,+Sl,+Su,+TPosL,+TNegL,+TPosU,+TNegU)
+%!      is det.
+%
+%       Configure Poker and run N filtering experiments.
+%
+%       Like setup_and_run_filter_experiment/9 but repeates experiments
+%       N times.
+%
+%       Arguments other than N are pased to experiments_filtering/10.
+%
+%       Unlike setup_and_run_filter_experiment/9, this predicate only
+%       prints out evaluation result means and standard errors for the
+%       labelled and unlabelled examples' programs. It does not print
+%       the learned hypotheses nor does it draw any L-systems like
+%       setup_run_filter_experiment_draw/9.
+%
+setup_and_run_filter_experiments(Lang,T,N,Sl,Su,TPosL,TNegL,TPosU,TNegU):-
+        experiment_file:set_configs(Lang)
+        ,experiment_file:setup_safe_example(Lang)
+        ,test_harness:experiments_filtering(T,N,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u)
+        ,writeln('Results for labelled:')
+        ,print_experiments_results(Res_l)
+        ,writeln('Results for unlabelled:')
+        ,print_experiments_results(Res_u).
+
 
 
 %!      setup_run_filter_experiment_draw(+Lang,+T,+Sl,+Su,+TPL,+TNgL,+TPU,+TNgU,+Os)
@@ -269,10 +298,10 @@ setup_run_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Os):-
         ,test_harness:experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u)
         ,writeln('Results for labelled:')
         ,Res_l = [PsL,PosL,NegL,LabL,ProgL]
-        ,experiment_output:print_results(PsL,PosL,NegL,LabL,ProgL,print_examples(Pl))
+        ,print_results(PsL,PosL,NegL,LabL,ProgL,print_examples(Pl))
         ,writeln('Results for unlabelled:')
         ,Res_u = [PsU,PosU,NegU,LabU,ProgU]
-        ,experiment_output:print_results(PsU,PosU,NegU,LabU,ProgU,print_examples(Pu))
+        ,print_results(PsU,PosU,NegU,LabU,ProgU,print_examples(Pu))
         ,draw_results(PsL,DsL)
         ,draw_results(PsU,DsU).
 

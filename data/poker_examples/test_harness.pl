@@ -1,4 +1,5 @@
-:-module(test_harness,[experiment_filtering/9
+:-module(test_harness,[experiments_filtering/10
+                      ,experiment_filtering/9
                       ,experiments_ranges/8
                       ,range_helper/2
                       ,experiments/7
@@ -25,6 +26,62 @@ labelled by Poker, or the programs it learns to label them.
 
 % To draw L-Systems with Python's turtle library, via Janus.
 :- py_add_lib_dir(data(poker_examples)).
+
+
+%!      experiments_filtering(+T,+N,+Ls,+Us,+LPos,+LNeg,+UPos,+UNeg,+LRes,+URes)
+%!      is det.
+%
+%       Run N experiments separating unlabelled examples of two targets.
+%
+%       Like experiment_filtering/9 but repeats an experiment N times.
+%
+experiments_filtering(T,N,Sl,Su,TPosL,TNegL,TPosU,TNegU,RsLab,RsUlb):-
+        findall([LRes_l,LRes_p]-[URes_l,URes_p]
+               ,(between(1,N,I)
+                ,debug(experiments,'Experiment ~w of ~w',[I,N])
+                ,experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u)
+                ,Res_l = [_PsL,_PosL,_NegL,LRes_l,LRes_p]
+                ,Res_u = [_PsU,_PosU,_NegU,URes_l,URes_p]
+                )
+               ,Rs)
+        ,pairs_keys_values(Rs,Rs_l,Rs_u)
+        ,filtering_results('Labelled',Rs_l,RsLab)
+        ,filtering_results('Unlabelled',Rs_u,RsUlb).
+
+
+%!      filtering_results(+What,+Results,-Expanded) is det.
+%
+%       Calculate means and standard errors of filtering Results.
+%
+%       Helper to untangle the complicated Results list and calculate
+%       means and standard errors.
+%
+%       What is one of: 'Labelled' or 'Unlabelled', used only for
+%       debugging.
+%
+%       Results is a list of lists of key-value pairs L-U, where L is a
+%       list of Accuracy, TPR and TNR results for a hypothesis learned
+%       from a set of laballed examples and U is the same for a
+%       hypothesis learned from a list of unlabelled examples.
+%
+%       Expanded is a list [LabellingMeans ,LabelingSEs, ProgramMeans,
+%       ProgramSEs] with the means and standard errors of the
+%       measurements in Results.
+%
+filtering_results(LU,Rs,[Ms_l,SEs_l,Ms_p,SEs_p]):-
+        % I know. Simplest thing though really.
+        findall(L-U
+               ,member([L,U],Rs)
+               ,Rs_)
+        ,pairs_keys_values(Rs_,Rs_l,Rs_p)
+        ,result_means(Rs_l,Ms_l)
+        ,result_means(Rs_p,Ms_p)
+        ,result_SEs(Rs_l,Ms_l,SEs_l)
+        ,result_SEs(Rs_p,Ms_p,SEs_p)
+        ,debug(experiments,'~w: Labelling means ~w, standard errors: ~w: '
+              ,[LU,Ms_l,SEs_l])
+        ,debug(experiments,'~w: Program means ~w, standard errors: ~w: '
+              ,[LU,Ms_p,SEs_p]).
 
 
 %!      experiment_filtering(+T,+Ls,+Us,+LPos,+LNeg,+UPos,+UNeg,+LRes,+URes)
