@@ -233,7 +233,7 @@ setup_and_run_filter_experiment(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU
         ,experiment_output:print_results(PsU,PosU,NegU,LabU,ProgU,print_examples(Pu)).
 
 
-%!      setup_run_filter_experiment_draw(r+Lang,+T,+Sl,+Su,+TPL,+TNgL,+TPU,+TNgU,+Os)
+%!      setup_run_filter_experiment_draw(+Lang,+T,+Sl,+Su,+TPL,+TNgL,+TPU,+TNgU,+Os)
 %!      is det.
 %
 %       Run a filtering experiment on L-Systems and draw the results.
