@@ -111,7 +111,7 @@ print_experiments_results([[LAccMs,LTPRMs,LTNRMs]
         ,format('Labelling Standard Errors: ~w TPR: ~w TNR: ~w~n'
                ,[LAccSEs,LTPRSEs,LTNRSEs])
         ,format('Hypothesis Means:           ~w TPR: ~w TNR: ~w~n',[PAccMs,PTPRMs,PTNRMs])
-        ,format('Hypothesis Standard Erors:  ~w TPR: ~w TNR: ~w~n'
+        ,format('Hypothesis Standard Errors:  ~w TPR: ~w TNR: ~w~n'
                ,[PAccSEs,PTPRSEs,PTNRSEs]).
 
 

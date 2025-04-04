@@ -78,9 +78,9 @@ filtering_results(LU,Rs,[Ms_l,SEs_l,Ms_p,SEs_p]):-
         ,result_means(Rs_p,Ms_p)
         ,result_SEs(Rs_l,Ms_l,SEs_l)
         ,result_SEs(Rs_p,Ms_p,SEs_p)
-        ,debug(experiments,'~w: Labelling means ~w, standard errors: ~w: '
+        ,debug(experiments,'~w: Labelling means: ~w, standard errors: ~w'
               ,[LU,Ms_l,SEs_l])
-        ,debug(experiments,'~w: Program means ~w, standard errors: ~w: '
+        ,debug(experiments,'~w: Program means: ~w:, standard errors: ~w'
               ,[LU,Ms_p,SEs_p]).
 
 
@@ -137,13 +137,15 @@ filtering_results(LU,Rs,[Ms_l,SEs_l,Ms_p,SEs_p]):-
 %
 experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u):-
         debug(experiment,'Learning from labelled examples.',[])
-        ,experiment(T,Sl,Su,TPosL,TNegL,Res_l)
+        ,experiment_data(T,_,_,BK,MS)
+        ,generate_initial(Sl,Ls)
+        ,generate_initial(Su,Us)
+        ,test_target(Sl,Sl_T)
+        ,experiment(Sl_T,Ls,Us,BK,MS,TPosL,TNegL,Res_l)
         ,debug(experiment,'Learning from examples labelled negative.',[])
         ,test_target(Su,Su_)
-        ,experiment_data(T,_,_,BK,MS)
         ,debug(experiment,'Filtering out internally generated example.',[])
         ,Res_l = [_Ps,_Pos,Neg,_Rs_l,_Rs_p]
-        ,generate_initial(Su,Us)
         ,maplist(list_to_ord_set,[Us,Neg],[Us_s,Neg_s])
         ,ord_intersect(Us_s,Neg_s,Ss)
         ,debug_length(experiment_filtered,'Left with ~w negative examples.',Ss)
@@ -416,9 +418,24 @@ spec_value(S,V):-
 %       language specification terms in Expanded is determined by the
 %       range in Init anyway.
 %
-expanded_range([],[]):-
+expanded_range(S,Es):-
+        \+ is_list(S)
+        ,!
+        ,expanded_range([S],Es).
+expanded_range([S|Ss],Es):-
+        expanded_range([S|Ss],Es_,[])
+        ,flatten(Es_,Es).
+
+
+%!      expanded_range(+Spec,+Acc,-Range) is det.
+%
+%       Expand a list of range definitions to a list of language terms.
+%
+%       Business end of expanded_range/2.
+%
+expanded_range([],Es,Es):-
         !.
-expanded_range(Spec,Es):-
+expanded_range([Spec|Ss],[Es|Acc],Bind):-
         Spec =.. [L,RIs,RMin,RMax]
         ,range_interval(RIs,Is)
         ,string_lengths(RIs,RMin,RMax,Mins,Maxs)
@@ -426,7 +443,8 @@ expanded_range(Spec,Es):-
                 ,(maplist(nth1(_I),[Is,Mins,Maxs],[In_i,Min_i,Max_i])
                  ,T =.. [L,In_i,Min_i,Max_i]
                  )
-                ,Es).
+                ,Es)
+        ,expanded_range(Ss,Acc,Bind).
 
 
 %!      range_interval(+Range,-Interval) is det.
@@ -560,8 +578,8 @@ experiments(T,N,Sl,Su,TPos,TNeg,[Ms_l,SEs_l,Ms_p,SEs_p]):-
         ,result_means(Rs_p,Ms_p)
         ,result_SEs(Rs_l,Ms_l,SEs_l)
         ,result_SEs(Rs_p,Ms_p,SEs_p)
-        ,debug(experiments,'Labelling means ~w, standard errors: ~w: ',[Ms_l,SEs_l])
-        ,debug(experiments,'Program means ~w, standard errors: ~w: ',[Ms_p,SEs_p]).
+        ,debug(experiments,'Labelling means: ~w, standard errors: ~w',[Ms_l,SEs_l])
+        ,debug(experiments,'Program means: ~w, standard errors: ~w',[Ms_p,SEs_p]).
 
 
 %!      result_SEs(+Results,+Means,-StandardErrors) is det.
@@ -722,7 +740,7 @@ sum(A,B,C):-
 %       * TNR is the True Negative Rate of the program.
 %
 experiment(T,Sl,Su,TPos,TNeg,Res):-
-        debug(experiment,'Genearting labelled examples...',[])
+        debug(experiment,'Generating labelled examples...',[])
         ,generate_initial(Sl,Ls)
         ,debug(experiment,'Generating unlabelled examples...',[])
         ,generate_initial(Su,Us)
@@ -1679,6 +1697,34 @@ koch_curve([f,+,f,-,-,f,+,f|Ss]) --> f, koch_curve(Ss).
 koch_curve([]) --> [].
 
 
+%!      not_koch_curve(?String) is semidet.
+%
+%       Not a Koch curve String.
+%
+not_koch_curve(Ss) -->
+        koch_string(Ss)
+        ,{  \+ phrase(koch_curve(Ss),_,[])
+            ,maplist(length,[Ss,Xs],[N,N])
+            ,phrase(koch_string(Xs),_)
+         }
+        ,Xs.
+
+koch_string([C]) --> koch_char(C).
+koch_string([C|Ss]) --> koch_char(C), koch_string(Ss).
+
+koch_char(+) --> plus.
+koch_char(-) --> minus.
+koch_char(f) --> f.
+
+
+%!      koch_curve_with_vars(?Is,?Os,?Rs) is nondet.
+%
+%       Generator for Koch Curve strings with variable symbols.
+%
+%       Koch Curve strings begin including variable symbols at length
+%       8. This predicate ensures that examples can be generated that
+%       include variables.
+%
 koch_curve_with_vars(Is,Os,[]):-
 % The first Koch Curve string that contains variable symbols has
 % length 8.
@@ -1712,6 +1758,10 @@ hilbert_curve([+,y,f,-,x,f,x,-,f,y,+|Ss]) --> x, hilbert_curve(Ss).
 hilbert_curve([-,x,f,+,y,f,y,+,f,x,-|Ss]) --> y, hilbert_curve(Ss).
 hilbert_curve([]) --> [].
 
+%!      not_hilbert_curve(?String) is semidet.
+%
+%       Not a Hilbert curve String.
+%
 not_hilbert_curve(Ss) -->
         hilbert_string(Ss)
         ,{  \+ phrase(hilbert_curve(Ss),_,[])
