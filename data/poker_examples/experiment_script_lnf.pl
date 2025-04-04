@@ -8,6 +8,9 @@
                          ,test_hilbert_curve/1
                          ,test_koch_curve/1
                          ,test_sierpinski_triangle/1
+                         ,test_dragon_curve_range/2
+                         ,test_hilbert_curve_range/2
+                         ,test_koch_curve_range/2
                          ,test_hilbert_dragon_filtering/0
                          ,test_koch_dragon_filtering/0
                          ,test_hilbert_dragon_filtering/1
@@ -68,6 +71,16 @@
 % Simple set of single-run experiments. Use for quick eyballing of
 % results while working out the right configs.
 
+%!      test_algae is det.
+%
+%       Run a single experiment learning a simple L-System grammar.
+%
+%       Given are labelled examples of the "algae" L-system and no
+%       unlabelled examples.
+%
+%       Prints the learned hypothesis and labelling of internally
+%       generated examples.
+%
 test_algae:-
         Lang = algae
         ,T = s/3
@@ -77,6 +90,16 @@ test_algae:-
         ,TNeg = not_algae(all,0,6)
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
+%!      test_dragon_curve is det.
+%
+%       Run a single experiment learning an L-System grammar.
+%
+%       Given are labelled examples of the Dragon Curve L-system and no
+%       unlabelled examples.
+%
+%       Prints the learned hypothesis and labelling of internally
+%       generated examples.
+%
 test_dragon_curve:-
         Lang = dragon_curve
         ,T = s/3
@@ -86,6 +109,16 @@ test_dragon_curve:-
         ,TNeg = not_dragon_curve(all,0,4)
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
+%!      test_hilbert_curve is det.
+%
+%       Run a single experiment learning an L-System grammar.
+%
+%       Given are labelled examples of the Hilbert Curve L-system and no
+%       unlabelled examples.
+%
+%       Prints the learned hypothesis and labelling of internally
+%       generated examples.
+%
 test_hilbert_curve:-
 % The first Hilbert Curve string that contains variable symbols has
 % length 11.
@@ -99,6 +132,16 @@ test_hilbert_curve:-
         ,TNeg = not_hilbert_curve(all,0,4)
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
+%!      test_hilbert_curve is det.
+%
+%       Run a single experiment learning an L-System grammar.
+%
+%       Given are labelled examples of the Koch Curve L-system and no
+%       unlabelled examples.
+%
+%       Prints the learned hypothesis and labelling of internally
+%       generated examples.
+%
 test_koch_curve:-
 % The first Koch Curve string that contains variable symbols has
 % length 8.
@@ -112,6 +155,16 @@ test_koch_curve:-
         ,TNeg = not_koch_curve(all,0,5)
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
+%!      test_hilbert_curve is det.
+%
+%       Run a single experiment learning an L-System grammar.
+%
+%       Given are labelled examples of the Sierpinski Triangle L-system
+%       and no unlabelled examples.
+%
+%       Prints the learned hypothesis and labelling of internally
+%       generated examples.
+%
 test_sierpinski_triangle:-
 % The first Koch Curve string that contains variable symbols has
 % length 9.
@@ -134,6 +187,19 @@ test_sierpinski_triangle:-
 % random samples of labelled, unlabelled examples and generated negative
 % examples.
 
+%!      test_algae(+N) is det.
+%
+%       Run N experiments learning a simple L-System grammar.
+%
+%       Given are labelled examples of the Sierpinski Triangle L-system
+%       and no unlabelled examples.
+%
+%       Experiments are repeated N times.
+%
+%       Prints the Accuracy, TPR, and TNR means and standard errors of
+%       the learned hypothesis and labelling of internally generated
+%       examples.
+%
 test_algae(N):-
         Lang = algae
         ,T = s/3
@@ -143,6 +209,19 @@ test_algae(N):-
         ,TNeg = not_algae(all,0,6)
         ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
+%!      test_dragon_curve(+N) is det.
+%
+%       Run N experiments learning an L-System grammar.
+%
+%       Given are labelled examples of the Dragon Curve L-system
+%       and no unlabelled examples.
+%
+%       Experiments are repeated N times.
+%
+%       Prints the Accuracy, TPR, and TNR means and standard errors of
+%       the learned hypothesis and labelling of internally generated
+%       examples.
+%
 test_dragon_curve(N):-
         Lang = dragon_curve
         ,T = s/3
@@ -152,6 +231,19 @@ test_dragon_curve(N):-
         ,TNeg = not_dragon_curve(all,0,4)
         ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
+%!      test_hilbert_curve(+N) is det.
+%
+%       Run N experiments learning an L-System grammar.
+%
+%       Given are labelled examples of the Hilbert Curve L-system
+%       and no unlabelled examples.
+%
+%       Experiments are repeated N times.
+%
+%       Prints the Accuracy, TPR, and TNR means and standard errors of
+%       the learned hypothesis and labelling of internally generated
+%       examples.
+%
 test_hilbert_curve(N):-
 % The first Hilbert Curve string that contains variable symbols has
 % length 11.
@@ -165,6 +257,19 @@ test_hilbert_curve(N):-
         ,TNeg = not_hilbert_curve(all,0,4)
         ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
+%!      test_koch_curve(+N) is det.
+%
+%       Run N experiments learning an L-System grammar.
+%
+%       Given are labelled examples of the Koch Curve L-system
+%       and no unlabelled examples.
+%
+%       Experiments are repeated N times.
+%
+%       Prints the Accuracy, TPR, and TNR means and standard errors of
+%       the learned hypothesis and labelling of internally generated
+%       examples.
+%
 test_koch_curve(N):-
 % The first Koch Curve string that contains variable symbols has
 % length 8.
@@ -178,6 +283,19 @@ test_koch_curve(N):-
         ,TNeg = not_koch_curve(all,0,5)
         ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
+%!      test_sierpinski_triangle(+N) is det.
+%
+%       Run N experiments learning an L-System grammar.
+%
+%       Given are labelled examples of the Sierpinski Triangle L-system
+%       and no unlabelled examples.
+%
+%       Experiments are repeated N times.
+%
+%       Prints the Accuracy, TPR, and TNR means and standard errors of
+%       the learned hypothesis and labelling of internally generated
+%       examples.
+%
 test_sierpinski_triangle(N):-
 % The first Koch Curve string that contains variable symbols has
 % length 9.
@@ -192,6 +310,111 @@ test_sierpinski_triangle(N):-
         ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
 
+
+                /*******************************
+                *      RANGE EXPERIMENTS       *
+                *******************************/
+
+% Experiments with repetitions, varying the number of labelled and
+% unlabelled and generated negative examples. Use to investigate the
+% relation between labelled, unlabelled, and generated examples.
+
+%!      test_dragon_curve_range(+N,+Stream) is det.
+%
+%       Run N experiments varying given and generated examples.
+%
+%       Given are labelled examples of the Dragon Curve L-System and
+%       unlabelled examples of the Dragon Curve and the Hilbert Curve
+%       L-System, all mixed up.
+%
+%       Prints the Accuracy, TPR, and TNR means and standard errors of
+%       the hypotheses and labellings learned in each experiment set.
+%       The number of experimnet sets is determined by the range of
+%       internally generated examples.
+%
+%       Each experiment in an experiment set is repeated N times.
+%
+%       Results are written to the given Stream. This can be
+%       "user_output" to print to terminal.
+%
+test_dragon_curve_range(N,S):-
+        Lang = dragon_curve
+        ,T = s/3
+        ,Gs = 0:100/25
+        ,Sl = dragon_curve(1:41/10,0,4) % all is 41
+        ,Su = [hilbert_curve(1:41/10,0,4) % all is 121
+              ,hilbert_curve_with_vars(1:41/10,11,12) % all is 56
+              ,dragon_curve(1:41/10,5,8) % all is 1236
+              ]
+        ,TPos = dragon_curve(all,5,10)
+        ,TNeg = not_dragon_curve(all,0,4)
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
+
+%!      test_hilbert_curve_range(+N,+Stream) is det.
+%
+%       Run N experiments varying given and generated examples.
+%
+%       Given are labelled examples of the Hilbert Curve L-System and
+%       unlabelled examples of the Hilbert Curve and the Dragon Curve
+%       L-System, all mixed up.
+%
+%       Prints the Accuracy, TPR, and TNR means and standard errors of
+%       the hypotheses and labellings learned in each experiment set.
+%       The number of experimnet sets is determined by the range of
+%       internally generated examples.
+%
+%       Each experiment in an experiment set is repeated N times.
+%
+%       Results are written to the given Stream. This can be
+%       "user_output" to print to terminal.
+%
+test_hilbert_curve_range(N,S):-
+        Lang = hilbert_curve
+        ,T = s/3
+        ,Gs = 0:100/25 % 5 experiment sets
+        ,Sl = [hilbert_curve(1:41/10,0,4) % all is 121
+              ,hilbert_curve_with_vars(1:41/10,11,12) % all is 56
+              ]
+        ,Su = [dragon_curve(1:41/10,0,4) % all is 41
+              ,hilbert_curve(1:41/10,5,7) % all is 3159
+              ]
+        ,TPos = hilbert_curve(1500,0,12)
+        ,TNeg = not_hilbert_curve(1500,0,4)
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
+
+%!      test_koch_curve_range(+N,+Stream) is det.
+%
+%       Run N experiments varying given and generated examples.
+%
+%       Given are labelled examples of the Koch Curve L-System and
+%       unlabelled examples of the Koch Curve and the Dragon Curve
+%       L-System, all mixed up.
+%
+%       Prints the Accuracy, TPR, and TNR means and standard errors of
+%       the hypotheses and labellings learned in each experiment set.
+%       The number of experimnet sets is determined by the range of
+%       internally generated examples.
+%
+%       Each experiment in an experiment set is repeated N times.
+%
+%       Results are written to the given Stream. This can be
+%       "user_output" to print to terminal.
+%
+test_koch_curve_range(N,S):-
+        Lang = koch_curve
+        ,T = s/3
+        ,Gs = 0:100/25 % 5 experiment sets
+        ,Sl = [koch_curve(1:41/10,0,5) % all is 63
+              ,koch_curve_with_vars(0:20/5,8,9) % all is 20
+	      ]
+        ,Su = [dragon_curve(1:41/10,0,4) % all is 41
+              ,koch_curve(1:41/10,4,7) % all is 773
+              ]
+        ,TPos = koch_curve(1500,10,14)
+        ,TNeg = not_koch_curve(1500,0,5)
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
+
+
                 /*******************************
                 *    FILTERING EXPERIMENTS     *
                 *******************************/
@@ -200,17 +423,33 @@ test_sierpinski_triangle(N):-
 % negative with respect to labelling examples and learning a program
 % from the labelled examples, and the labelled-negative examples.
 
+%!      test_hilbert_dragon_filtering is det.
+%
+%       Run a filtering experiment over two L-Systems.
+%
+%       Given are labelled examples of the Dragon Curve L-system and
+%       unlabelled examples of the Hilbert Curve L-System.
+%
+%       A hypothesis and labelling of the Dragon Curve L-System is
+%       learned, then the negative examples in the labelling are used to
+%       learn a hypothesis of the Hilbert Curve.
+%
+%       Results are the learned hypotheses and labellings for both
+%       L-Systems and the Accuracy, TPR and TNR means and standard
+%       errors of the hypotheses and labellings.
+%
 test_hilbert_dragon_filtering:-
 % Trying to draw one L-system after the other raises an error.
         Lang = hilbert_dragon
         ,T = s/3
-        ,Sl = dragon_curve(all,0,4)
-        ,Su = [hilbert_curve(all,0,3)
-              ,hilbert_curve_with_vars(all,11,11)
+        ,Sl = dragon_curve(all,0,4) % 41
+        ,Su = [hilbert_curve(all,0,3) % 40
+              ,hilbert_curve_with_vars(all,11,11) % 8
+              ,dragon_curve(50,5,7) % all is 500
               ]
-        ,TPosL = dragon_curve(1500,5,10)
+        ,TPosL = dragon_curve(1500,5,10)/hilbert_curve
         ,TNegL = not_dragon_curve(1500,0,4)
-        ,TPosU = hilbert_curve(1500,0,12)
+        ,TPosU = hilbert_curve(1500,0,12)/dragon_curve
         ,TNegU = not_hilbert_curve(1500,0,4)
         ,PL = print_labelled(false)
         ,PU = print_unlabelled(false)
@@ -221,6 +460,21 @@ test_hilbert_dragon_filtering:-
         ,Os = [PL,PU,DL,DU]
         ,setup_run_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Os).
 
+%!      test_koch_dragon_filtering is det.
+%
+%       Run a filtering experiment over two L-Systems.
+%
+%       Given are labelled examples of the Koch Curve L-system and
+%       unlabelled examples of the Dragon Curve L-System.
+%
+%       A hypothesis and labelling of the Koch Curve L-System is
+%       learned, then the negative examples in the labelling are used to
+%       learn a hypothesis of the Dragon Curve.
+%
+%       Results are the learned hypotheses and labellings for both
+%       L-Systems and the Accuracy, TPR and TNR means and standard
+%       errors of the hypotheses and labellings.
+%
 test_koch_dragon_filtering:-
 % Trying to draw one L-system after the other raises an error.
         Lang = koch_dragon
@@ -253,12 +507,29 @@ test_koch_dragon_filtering:-
 % does it draw the corresponding L-systems, only prints out the
 % evaluation results.
 
+%!      test_hilbert_dragon_filtering(+N) is det.
+%
+%       Run N filtering experiments over two L-Systems.
+%
+%       Given are labelled examples of the Dragon Curve L-system and
+%       unlabelled examples of the Hilbert Curve L-System.
+%
+%       A hypothesis and labelling of the Dragon Curve L-System is
+%       learned, then the negative examples in the labelling are used to
+%       learn a hypothesis of the Hilbert Curve.
+%
+%       The experiment is repeated N times.
+%
+%       Results are the Accuracy, TPR and TNR means and standard errors
+%       of the hypotheses and labellings learned for both L-Systems.
+%
 test_hilbert_dragon_filtering(N):-
         Lang = hilbert_dragon
         ,T = s/3
         ,Sl = dragon_curve(20,0,4)
         ,Su = [hilbert_curve(20,0,3)
               ,hilbert_curve_with_vars(4,11,11)
+              ,dragon_curve(50,5,7) % all is 500
               ]
         ,TPosL = dragon_curve(1500,5,10)
         ,TNegL = not_dragon_curve(1500,0,4)
@@ -266,6 +537,22 @@ test_hilbert_dragon_filtering(N):-
         ,TNegU = not_hilbert_curve(1500,0,4)
         ,setup_and_run_filter_experiments(Lang,T,N,Sl,Su,TPosL,TNegL,TPosU,TNegU).
 
+%!      test_koch_dragon_filtering(+N) is det.
+%
+%       Run N filtering experiments over two L-Systems.
+%
+%       Given are labelled examples of the Koch Curve L-system and
+%       unlabelled examples of the Dragon Curve L-System.
+%
+%       A hypothesis and labelling of the Koch Curve L-System is
+%       learned, then the negative examples in the labelling are used to
+%       learn a hypothesis of the Dragon Curve.
+%
+%       The experiment is repeated N times.
+%
+%       Results are the Accuracy, TPR and TNR means and standard errors
+%       of the hypotheses and labellings learned for both L-Systems.
+%
 test_koch_dragon_filtering(N):-
         Lang = koch_dragon
         ,T = s/3
@@ -356,7 +643,7 @@ set_configs(hilbert_dragon):-
         ,poker_auxiliaries:set_poker_configuration_option(max_invented,[6])
         ,poker_auxiliaries:set_poker_configuration_option(unfolding_depth_limit,[100])
         ,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
-        ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100])
+        ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[200])
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
 						  ,[random]).
 
