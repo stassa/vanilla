@@ -9,7 +9,9 @@
                           ,test_parens/1
                           ,test_palindrome/1
                           ,test_anbn_range/2
+                          ,test_anbn_anbm_range/2
                           ,test_anbn_anbm_filtering/0
+                          ,test_anbn_anbm_filtering/1
                           ,set_configs/1
                           ,cleanup_safe_example/0
                           ,setup_safe_example/1
@@ -217,7 +219,7 @@ test_palindrome(N):-
 % relation between labelled, unlabelled, and generated examples.
 
 
-%!      test_anbn(+N,+Stream) is det.
+%!      test_anbn_range(+N,+Stream) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
 %
@@ -234,14 +236,45 @@ test_anbn_range(N,S):-
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
 
 
+%!      test_anbn_anbm_range(+N,+Stream) is det.
+%
+%       Run N experiments varying inputs and print evaluation results.
+%
+%       Results are output to the given Stream.
+%
+%       This experiment includes labelled examples of anbn and
+%       unlabelled examples of anbm to explore the effect of unlabelled
+%       examples on learning.
+%
+test_anbn_anbm_range(N,S):-
+        Lang = anbn
+        ,T = s/2
+        ,Gs = 0:25/5
+        ,Sl = anbn(1:21/5,0,45)
+        ,Su = anbm(1:21/5,0,6)
+        ,TPos = anbn(all,46,80)
+        ,TNeg = not_anbn(all,0,12)
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
+
+
                 /*******************************
                 *    FILTERING EXPERIMENTS     *
                 *******************************/
 
 % Experiments into separating unlabelled examples into positive and
-% negative with respect to labelling examples and learning a program
+% negative with respect to labelled examples and learning a program
 % from the labelled examples, and the labelled-negative examples.
 
+%!      test_anbn_anbm_filtering is det.
+%
+%       Run one experiment separating examples of two grammars.
+%
+%       Labelled examples are anbn strings and unlabelled examples are a
+%       mix of anbn and anbm. Results evaluate the ability to learn anbn
+%       from the labelled examples and anbm from the unlabelled examples
+%       labelled negative with respect to anbn, which should be the anbm
+%       examples.
+%
 test_anbn_anbm_filtering:-
         Lang = anbn_anbm
         ,T = s/2
@@ -261,6 +294,15 @@ test_anbn_anbm_filtering:-
                 *  FILTERING MULTI-EXPERIMENT  *
                 *******************************/
 
+% Multi-step experiments into separating unlabelled examples into
+% positive and negative with respect to labelled examples and learning
+% a program first from the labelled examples, and then from the
+% labelling of the unlabelled examples.
+
+%!      test_anbn_anbm_filtering(+N) is det.
+%
+%       Run N experiments separating examples of two grammars.
+%
 test_anbn_anbm_filtering(N):-
         Lang = anbn_anbm
         ,T = s/2
