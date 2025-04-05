@@ -8,10 +8,10 @@
                          ,test_hilbert_curve/1
                          ,test_koch_curve/1
                          ,test_sierpinski_triangle/1
-                         ,test_dragon_curve_range/2
-                         ,test_hilbert_curve_range/2
-                         ,test_koch_curve_range/2
-                         ,test_koch_curve_to_hilbert_range/2
+                         ,test_dragon_to_hilbert_curve_range/2
+                         ,test_hilbert_to_dragon_curve_range/2
+                         ,test_koch_to_dragon_curve_range/2
+                         ,test_koch_to_hilbert_curve_range/2
                          ,test_hilbert_dragon_filtering/0
                          ,test_koch_dragon_filtering/0
                          ,test_hilbert_dragon_filtering/1
@@ -333,7 +333,7 @@ test_sierpinski_triangle(N):-
 % unlabelled and generated negative examples. Use to investigate the
 % relation between labelled, unlabelled, and generated examples.
 
-%!      test_dragon_curve_range(+N,+Stream) is det.
+%!      test_dragon_to_hilbert_curve_range(+N,+Stream) is det.
 %
 %       Run N experiments varying given and generated examples.
 %
@@ -351,7 +351,7 @@ test_sierpinski_triangle(N):-
 %       Results are written to the given Stream. This can be
 %       "user_output" to print to terminal.
 %
-test_dragon_curve_range(N,S):-
+test_dragon_to_hilbert_curve_range(N,S):-
         Lang = dragon_curve
         ,T = s/3
         ,Gs = 0:100/25
@@ -364,7 +364,7 @@ test_dragon_curve_range(N,S):-
         ,TNeg = not_dragon_curve(all,0,4)
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
 
-%!      test_hilbert_curve_range(+N,+Stream) is det.
+%!      test_hilbert_to_dragon_curve_range(+N,+Stream) is det.
 %
 %       Run N experiments varying given and generated examples.
 %
@@ -382,7 +382,7 @@ test_dragon_curve_range(N,S):-
 %       Results are written to the given Stream. This can be
 %       "user_output" to print to terminal.
 %
-test_hilbert_curve_range(N,S):-
+test_hilbert_to_dragon_curve_range(N,S):-
         Lang = hilbert_curve
         ,T = s/3
         ,Gs = 0:100/25 % 5 experiment sets
@@ -396,7 +396,7 @@ test_hilbert_curve_range(N,S):-
         ,TNeg = not_hilbert_curve(1500,0,4)
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
 
-%!      test_koch_curve_range(+N,+Stream) is det.
+%!      test_koch_to_dragon_curve_range(+N,+Stream) is det.
 %
 %       Run N experiments varying given and generated examples.
 %
@@ -414,7 +414,7 @@ test_hilbert_curve_range(N,S):-
 %       Results are written to the given Stream. This can be
 %       "user_output" to print to terminal.
 %
-test_koch_curve_range(N,S):-
+test_koch_to_dragon_curve_range(N,S):-
         Lang = koch_curve
         ,T = s/3
         ,Gs = 0:100/25 % 5 experiment sets
@@ -428,7 +428,7 @@ test_koch_curve_range(N,S):-
         ,TNeg = not_koch_curve(1500,0,5)
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
 
-%!      test_koch_curve_to_hilbert_range(+N,+Stream) is det.
+%!      test_koch_to_hilbert_curve_range(+N,+Stream) is det.
 %
 %       Run N experiments varying given and generated examples.
 %
@@ -446,7 +446,7 @@ test_koch_curve_range(N,S):-
 %       Results are written to the given Stream. This can be
 %       "user_output" to print to terminal.
 %
-test_koch_curve_to_hilbert_range(N,S):-
+test_koch_to_hilbert_curve_range(N,S):-
         Lang = koch_curve
         ,T = s/3
         ,Gs = 0:100/25 % 5 experiment sets
