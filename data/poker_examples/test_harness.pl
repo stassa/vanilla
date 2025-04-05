@@ -1728,7 +1728,7 @@ koch_char(f) --> f.
 koch_curve_with_vars(Is,Os,[]):-
 % The first Koch Curve string that contains variable symbols has
 % length 8.
-        generate_initial(koch_curve,all,8,9,Es)
+        generate_initial(koch_curve,all,8,10,Es)
         ,findall(s(Is,Os,[])
                 ,(member(s(Is,Os,[]),Es)
                  ,member(f,Is)

@@ -11,6 +11,7 @@
                          ,test_dragon_curve_range/2
                          ,test_hilbert_curve_range/2
                          ,test_koch_curve_range/2
+                         ,test_koch_curve_to_hilbert_range/2
                          ,test_hilbert_dragon_filtering/0
                          ,test_koch_dragon_filtering/0
                          ,test_hilbert_dragon_filtering/1
@@ -107,6 +108,19 @@ test_dragon_curve:-
         ,Su = []
         ,TPos = dragon_curve(all,5,10)
         ,TNeg = not_dragon_curve(all,0,4)
+        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+
+test_dragon_curve_ul:-
+        Lang = dragon_curve
+        ,T = s/3
+        ,Sl = dragon_curve(200,0,6)
+        ,Su = [hilbert_curve(all,0,3)
+              ,hilbert_curve_with_vars(all,11,11)
+              ,dragon_curve(200,0,7)
+              %,not_dragon_curve(all,0,3)
+              ]
+        ,TPos = dragon_curve(2000,7,10)
+        ,TNeg = not_dragon_curve(2000,4,5)
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
 %!      test_hilbert_curve is det.
@@ -405,9 +419,42 @@ test_koch_curve_range(N,S):-
         ,T = s/3
         ,Gs = 0:100/25 % 5 experiment sets
         ,Sl = [koch_curve(1:41/10,0,5) % all is 63
-              ,koch_curve_with_vars(0:20/5,8,9) % all is 20
+              ,koch_curve_with_vars(1:41/10,8,10) % all is 68
 	      ]
         ,Su = [dragon_curve(1:41/10,0,4) % all is 41
+              ,koch_curve(1:41/10,4,7) % all is 773
+              ]
+        ,TPos = koch_curve(1500,10,14)
+        ,TNeg = not_koch_curve(1500,0,5)
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
+
+%!      test_koch_curve_to_hilbert_range(+N,+Stream) is det.
+%
+%       Run N experiments varying given and generated examples.
+%
+%       Given are labelled examples of the Koch Curve L-System and
+%       unlabelled examples of the Koch Curve and the Hilbert Curve
+%       L-System, all mixed up.
+%
+%       Prints the Accuracy, TPR, and TNR means and standard errors of
+%       the hypotheses and labellings learned in each experiment set.
+%       The number of experimnet sets is determined by the range of
+%       internally generated examples.
+%
+%       Each experiment in an experiment set is repeated N times.
+%
+%       Results are written to the given Stream. This can be
+%       "user_output" to print to terminal.
+%
+test_koch_curve_to_hilbert_range(N,S):-
+        Lang = koch_curve
+        ,T = s/3
+        ,Gs = 0:100/25 % 5 experiment sets
+        ,Sl = [koch_curve(1:41/10,0,5) % all is 63
+              ,koch_curve_with_vars(1:41/10,8,10) % all is 68
+	      ]
+        ,Su = [hilbert_curve(1:41/10,0,4) % all is 121
+              ,hilbert_curve_with_vars(1:41/10,11,12) % all is 56
               ,koch_curve(1:41/10,4,7) % all is 773
               ]
         ,TPos = koch_curve(1500,10,14)
