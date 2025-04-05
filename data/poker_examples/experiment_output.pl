@@ -4,6 +4,7 @@
                            ,setup_and_run_filter_experiment/9
                            ,setup_run_filter_experiment_draw/9
                            ,setup_and_run_filter_experiments/9
+                           ,run_experiment_protocol/3
                            ]).
 
 :-use_module(data(poker_examples/test_harness)).
@@ -330,3 +331,42 @@ draw_results(Ps,[T,I,Ax,RA,LA,D,St,W,H]):-
 draw_results(Ps,[T,I,Ax,RA,LA,D,St,W,H,F]):-
         test_draw(T,Ps,I,Ax,RA,LA,D,St,W,H,F)
         ,!.
+
+
+
+%!      run_experiment_protocol(+Target,+Experiment,+Protocol) is det.
+%
+%       Run an experiment and output a record of the generated output.
+%
+%       Target is the name of a learning target in the current
+%       experiment file.
+%
+%       Experiment is an experiment script head literal. The script will
+%       be called in the body of this predicate after starting a record
+%       of the seession with protocol/1. When the script finishes
+%       running this predicate will also list configuration options and
+%       other relevant information and then stop recording the session
+%       with noprotocol/0.
+%
+%       Protocol is the name of the file where the session output will
+%       be saved.
+%
+run_experiment_protocol(T,G,F):-
+        Set = protocol(F)
+        ,C = (format('Running experiment script ~w~n:',[G])
+             ,listing(G)
+             ,call(G)
+             ,current_prolog_flag(stack_limit, X)
+             ,format('Global stack limit ~D~n',[X])
+             ,current_prolog_flag(table_space, V)
+             ,format('Table space ~D~n',[V])
+             ,auxiliaries:list_config
+             ,poker_auxiliaries:list_poker_config
+             ,listing(lnf:[target/1,invented/1,preterminal/1])
+             ,listing(experiment_file:safe_example/1)
+             ,poker_auxiliaries:list_mil_problem(T)
+             ,experiment_file:background_knowledge(T,B)
+             ,listing(experiment_file:B)
+             )
+        ,Cln = noprotocol
+        ,setup_call_cleanup(Set,C,Cln).
