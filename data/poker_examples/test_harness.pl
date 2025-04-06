@@ -303,10 +303,11 @@ nth1_labelled_unlabelled(I,Ls,Us,Ls_i,Us_i):-
 %
 %       Unpack a quantity value from a Specification term.
 %
-%       Specification is a language generation specification term.
+%       Specification is a language generation specification term, or a
+%       list thereof.
 %
-%       Value is the first argument of Specification, denoting a
-%       quantity of examples to be generated.
+%       Value is the first argument of the term in Specification, or the
+%       sume thereof, denoting a quantity of examples to be generated.
 %
 %       Helper to simplify unpacking experiment set, iteration, examples
 %       numbers etc values for outputting at the end of a set
@@ -315,7 +316,16 @@ nth1_labelled_unlabelled(I,Ls,Us,Ls_i,Us_i):-
 spec_value([],0):-
         !.
 spec_value(S,V):-
-        S =.. [_,V|_].
+        \+ is_list(S)
+        ,!
+        ,spec_value([S],V).
+spec_value(Ss,V):-
+        findall(Vi
+               ,(member(S,Ss)
+                ,S =.. [_,Vi|_]
+                )
+               ,Vs)
+        ,sumlist(Vs,V).
 
 
 %!      expanded_range(+Spec,-Expanded) is det.
@@ -326,9 +336,9 @@ spec_value(S,V):-
 %       experiments to language terms S(M,J,K) as expected by
 %       experiments/7.
 %
-%       Spec is a range specification term of the form
-%       Language(Init,Min,Max). Language, Init, Min and Max are as
-%       follows.
+%       Spec is a single range specification term of the form
+%       Language(Init,Min,Max), or a list of such terms. Language, Init,
+%       Min and Max are as follows.
 %
 %       Language is the symbol, but not arity, of a target language
 %       defined as a DCG in this file.
@@ -393,6 +403,25 @@ spec_value(S,V):-
 %       true.
 %       ==
 %
+%       If Spec is a list of range specification terms Expanded is a
+%       list-of-lists, where each sub-list is of length equal to the
+%       list of Spec and contains language specification terms that are
+%       passed together to experiments/7 and combined to generate data.
+%
+%       This is really best explained with an example:
+%       ==
+%       ?- _Spec = [koch_curve(1:41/10,0,5),koch_curve_with_vars(1:41/10,8,10)]
+%       ,test_harness:expanded_range(_Spec,_Rs)
+%       ,maplist(writeln,_Rs).
+%
+%       [koch_curve(1,0,5),koch_curve_with_vars(1,8,10)]
+%       [koch_curve(11,0,5),koch_curve_with_vars(11,8,10)]
+%       [koch_curve(21,0,5),koch_curve_with_vars(21,8,10)]
+%       [koch_curve(31,0,5),koch_curve_with_vars(31,8,10)]
+%       [koch_curve(41,0,5),koch_curve_with_vars(41,8,10)]
+%       true.
+%       ==
+%
 %       When specifying Min and Max as ranges, the predicate
 %       range_helper/2 can be used to calculate the number of
 %       language specification terms that will be generated for the
@@ -418,13 +447,20 @@ spec_value(S,V):-
 %       language specification terms in Expanded is determined by the
 %       range in Init anyway.
 %
+expanded_range([],[]):-
+% Is there any point trying to expand an empty range?
+% Answer: neupe.
+        !.
 expanded_range(S,Es):-
         \+ is_list(S)
         ,!
         ,expanded_range([S],Es).
-expanded_range([S|Ss],Es):-
-        expanded_range([S|Ss],Es_,[])
-        ,flatten(Es_,Es).
+expanded_range(Ss,Es):-
+        expanded_range(Ss,Es_,[])
+        ,flatten(Es_,Es_f)
+        ,maplist(length,[Es_f,Ss],[N,M])
+        ,M_ is N / M
+        ,every_nth1(N,M_,Es_f,Es).
 
 
 %!      expanded_range(+Spec,+Acc,-Range) is det.
@@ -463,6 +499,46 @@ range_interval(I:I/K,Ss):-
                 ,Ss).
 range_interval(I:J/K,Ss):-
         interval(I,J,K,Ss).
+
+
+%!      every_nth1(+M,+N,+Es,-Ns) is det.
+%
+%       Select every M'th of N elements in Es.
+%
+%       Example:
+%       ==
+%       ?- N = 2, _Ls = [a,b,c,d,e,f], length(_Ls,M), test_harness:every_nth1(M,N,_Ls,Ns).
+%       N = 2,
+%       M = 6,
+%       Ns = [[a,c,e],[b,d,f]].
+%
+%       ?- N = 3, _Ls = [a,b,c,d,e,f], length(_Ls,M), test_harness:every_nth1(M,N,_Ls,Ns).
+%       N = 3,
+%       M = 6,
+%       Ns = [[a,d],[b,e],[c,f]].
+%       ==
+%
+%       @tbd This is probably veeery inefficient but it also probably
+%       doesn't matter. In case it does, the efficient implementation
+%       treates Es as an N x M array in row-major order and iterates
+%       over it with the usual formula for indexing over row-marjor
+%       order arrays. I just can't be arsed right now.
+%
+%       @tbd Also I don't like the order of arguments. N should be
+%       first. It's first in the code but only as the name of a
+%       variable. That's confusing. Correct this.
+%
+every_nth1(N,M,Es,Ns):-
+        findall(Ns_
+               ,(between(1,M,I)
+                ,interval(I,N,M,Is)
+                ,findall(Es_j
+                        ,(member(J,Is)
+                         ,nth1(J,Es,Es_j)
+                         )
+                        ,Ns_)
+                )
+               ,Ns).
 
 
 %!      string_lengths(+Init,+Min,+Max,-Mins,-Maxs) is det.

@@ -251,7 +251,9 @@ test_anbn_anbm_range(N,S):-
         ,T = s/2
         ,Gs = 0:25/5
         ,Sl = anbn(1:21/5,0,45)
-        ,Su = anbm(1:21/5,0,6)
+        ,Su = [anbm(1:21/5,0,6)
+              ,anbn(1:21/5,46,86)
+              ]
         ,TPos = anbn(all,46,80)
         ,TNeg = not_anbn(all,0,12)
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
