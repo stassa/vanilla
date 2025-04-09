@@ -8,6 +8,7 @@
                            ]).
 
 :-use_module(data(poker_examples/test_harness)).
+:-use_module(data(poker_examples/l_systems)).
 
 :- poker_configuration:experiment_file(P,_M)
   ,use_module(P).
