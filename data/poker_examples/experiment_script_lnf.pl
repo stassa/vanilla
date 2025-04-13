@@ -184,12 +184,12 @@ test_sierpinski_triangle:-
 % length 9.
         Lang = sierpinski_triangle
         ,T = s/3
-        ,Sl = [sierpinski_triangle(30,0,8)
-	      ,sierpinski_triangle_with-vars(10,9,15)
+        ,Sl = [sierpinski_triangle(40,0,8)
+	      ,sierpinski_triangle_with_vars(all,9,15)
 	      ]
 	,Su = []
-        ,TPos = sierpinski_triangle(all,0,14)
-        ,TNeg = not_sierpinski_triangle(all,0,5)
+        ,TPos = sierpinski_triangle(1000,0,14)
+        ,TNeg = not_sierpinski_triangle(1000,0,5)
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
 
@@ -315,12 +315,12 @@ test_sierpinski_triangle(N):-
 % length 9.
         Lang = sierpinski_triangle
         ,T = s/3
-        ,Sl = [sierpinski_triangle(10,0,8)
-	      ,sierpinski_triangle_with_vars(5,9,15)
+        ,Sl = [sierpinski_triangle(30,0,8)
+	      ,sierpinski_triangle_with_vars(all,9,10)
 	      ]
 	,Su = []
-        ,TPos = sierpinski_triangle(all,0,14)
-        ,TNeg = not_sierpinski_triangle(all,0,5)
+        ,TPos = sierpinski_triangle(1000,0,14)
+        ,TNeg = not_sierpinski_triangle(1000,0,5)
         ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
 
@@ -629,7 +629,7 @@ set_configs(algae):-
 	,poker_auxiliaries:set_poker_configuration_option(gestalt,[true])
 	,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
 	,poker_auxiliaries:set_poker_configuration_option(max_invented,[1])
-	,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[learned])
+	,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
 	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100])
 	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
 							 ,[random]).
@@ -670,18 +670,19 @@ set_configs(koch_curve):-
 
 set_configs(sierpinski_triangle):-
 	!
-	%poker_auxiliaries:set_configuration_option(fetch_clauses,[[builtins,bk,metarules]])
-	%,poker_auxiliaries:set_configuration_option(table_meta_interpreter, [false])
-	%,poker_auxiliaries:set_configuration_option(untable_meta_interpreter, [true])
-	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[8])
+	%,poker_auxiliaries:set_configuration_option(fetch_clauses,[all])
+	%,poker_auxiliaries:set_configuration_option(table_meta_interpreter, [true])
+	,poker_auxiliaries:set_configuration_option(fetch_clauses,[[builtins,bk,metarules]])
+	,poker_auxiliaries:set_configuration_option(table_meta_interpreter, [false])
+	,poker_auxiliaries:set_configuration_option(untable_meta_interpreter, [true])
+	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[6])
 	,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
 	,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
-	,poker_auxiliaries:set_poker_configuration_option(max_invented,[7])
+	,poker_auxiliaries:set_poker_configuration_option(max_invented,[5])
 	,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
-	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[200])
 	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
-							 ,[deterministic])
-	,poker_auxiliaries:set_poker_configuration_option(unfolding_depth_limit,[900]).
+							 ,[random]).
 
 set_configs(hilbert_dragon):-
         !
