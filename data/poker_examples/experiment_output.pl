@@ -109,11 +109,11 @@ print_experiments_results([[LAccMs,LTPRMs,LTNRMs]
                           ,[PAccMs,PTPRMs,PTNRMs]
                           ,[PAccSEs,PTPRSEs,PTNRSEs]
                           ]):-
-        format('Labelling means:            ~w TPR: ~w TNR: ~w~n',[LAccMs,LTPRMs,LTNRMs])
+         format('Labelling means:           ~w TPR: ~w TNR: ~w~n',[LAccMs,LTPRMs,LTNRMs])
         ,format('Labelling Standard Errors: ~w TPR: ~w TNR: ~w~n'
                ,[LAccSEs,LTPRSEs,LTNRSEs])
         ,format('Hypothesis Means:           ~w TPR: ~w TNR: ~w~n',[PAccMs,PTPRMs,PTNRMs])
-        ,format('Hypothesis Standard Errors:  ~w TPR: ~w TNR: ~w~n'
+        ,format('Hypothesis Standard Errors: ~w TPR: ~w TNR: ~w~n'
                ,[PAccSEs,PTPRSEs,PTNRSEs]).
 
 
