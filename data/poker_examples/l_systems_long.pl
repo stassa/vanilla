@@ -1,0 +1,741 @@
+:-module(l_systems_long,[hilbert_curve_with_vars/3
+                        ,koch_curve_with_vars/3
+                        ,sierpinski_triangle_with_vars/3
+                        ]).
+
+/** <module> Long L-System strings.
+
+Some (many) L-Systems productions replace variables with very long
+strings of symbols, like for example the Hilbert Curve, which replaces
+each of the x and y variables with strings of at 11 symbols. When
+generating strings from DCGs of those L-Systems, variable symbols may
+only start to appear in strings of a certain length.
+
+To avoid generating a very large number of strings before a string with
+variables is encountered we can restrict the generation to strings of
+that certain length (and also ensure that the generated strings contain
+variable symbols) but it is tedious and costly to do that every time.
+This module stores pre-generated strings of the length that contains
+variables for L-systems where it makes sense to do that.
+
+*/
+
+
+
+%!      hilbert_curve_with_vars(?Is,?Os,?Rs) is nondet.
+%
+%       Hilbert Curve strings with variable symbols.
+%
+%       Hilbert Curve strings begin including variable symbols at length
+%       11. This predicate ensures that examples can be generated that
+%       include variables.
+%
+/*
+% Generator; replaced by atoms below for efficiency.
+hilbert_curve_with_vars(Is,Os,[]):-
+% The first Hilbert Curve string that contains variable symbols has
+% length 11.
+        test_harness:generate_initial(hilbert_curve,all,11,14,Es)
+        ,findall(s(Is,Os,[])
+                ,(member(s(Is,Os,[]),Es)
+                 ,( member(x,Is)
+                  ; member(y,Is)
+                  )
+                 )
+                ,Vs)
+        ,member(s(Is,Os,[]),Vs).
+*/
+hilbert_curve_with_vars([+,+,+,+,y,f,-,x,f,x,-,f,y,+],[+,+,+,x],[]).
+hilbert_curve_with_vars([+,+,+,-,x,f,+,y,f,y,+,f,x,-],[+,+,+,y],[]).
+hilbert_curve_with_vars([+,+,+,y,f,-,x,f,x,-,f,y,+],[+,+,x],[]).
+hilbert_curve_with_vars([+,+,+,y,f,-,x,f,x,-,f,y,+,+],[+,+,x,+],[]).
+hilbert_curve_with_vars([+,+,+,y,f,-,x,f,x,-,f,y,+,-],[+,+,x,-],[]).
+hilbert_curve_with_vars([+,+,+,y,f,-,x,f,x,-,f,y,+,f],[+,+,x,f],[]).
+hilbert_curve_with_vars([+,+,-,+,y,f,-,x,f,x,-,f,y,+],[+,+,-,x],[]).
+hilbert_curve_with_vars([+,+,-,-,x,f,+,y,f,y,+,f,x,-],[+,+,-,y],[]).
+hilbert_curve_with_vars([+,+,-,x,f,+,y,f,y,+,f,x,-],[+,+,y],[]).
+hilbert_curve_with_vars([+,+,-,x,f,+,y,f,y,+,f,x,-,+],[+,+,y,+],[]).
+hilbert_curve_with_vars([+,+,-,x,f,+,y,f,y,+,f,x,-,-],[+,+,y,-],[]).
+hilbert_curve_with_vars([+,+,-,x,f,+,y,f,y,+,f,x,-,f],[+,+,y,f],[]).
+hilbert_curve_with_vars([+,+,f,+,y,f,-,x,f,x,-,f,y,+],[+,+,f,x],[]).
+hilbert_curve_with_vars([+,+,f,-,x,f,+,y,f,y,+,f,x,-],[+,+,f,y],[]).
+hilbert_curve_with_vars([+,+,y,f,-,x,f,x,-,f,y,+],[+,x],[]).
+hilbert_curve_with_vars([+,+,y,f,-,x,f,x,-,f,y,+,+],[+,x,+],[]).
+hilbert_curve_with_vars([+,+,y,f,-,x,f,x,-,f,y,+,+,+],[+,x,+,+],[]).
+hilbert_curve_with_vars([+,+,y,f,-,x,f,x,-,f,y,+,+,-],[+,x,+,-],[]).
+hilbert_curve_with_vars([+,+,y,f,-,x,f,x,-,f,y,+,+,f],[+,x,+,f],[]).
+hilbert_curve_with_vars([+,+,y,f,-,x,f,x,-,f,y,+,-],[+,x,-],[]).
+hilbert_curve_with_vars([+,+,y,f,-,x,f,x,-,f,y,+,-,+],[+,x,-,+],[]).
+hilbert_curve_with_vars([+,+,y,f,-,x,f,x,-,f,y,+,-,-],[+,x,-,-],[]).
+hilbert_curve_with_vars([+,+,y,f,-,x,f,x,-,f,y,+,-,f],[+,x,-,f],[]).
+hilbert_curve_with_vars([+,+,y,f,-,x,f,x,-,f,y,+,f],[+,x,f],[]).
+hilbert_curve_with_vars([+,+,y,f,-,x,f,x,-,f,y,+,f,+],[+,x,f,+],[]).
+hilbert_curve_with_vars([+,+,y,f,-,x,f,x,-,f,y,+,f,-],[+,x,f,-],[]).
+hilbert_curve_with_vars([+,+,y,f,-,x,f,x,-,f,y,+,f,f],[+,x,f,f],[]).
+hilbert_curve_with_vars([+,-,+,+,y,f,-,x,f,x,-,f,y,+],[+,-,+,x],[]).
+hilbert_curve_with_vars([+,-,+,-,x,f,+,y,f,y,+,f,x,-],[+,-,+,y],[]).
+hilbert_curve_with_vars([+,-,+,y,f,-,x,f,x,-,f,y,+],[+,-,x],[]).
+hilbert_curve_with_vars([+,-,+,y,f,-,x,f,x,-,f,y,+,+],[+,-,x,+],[]).
+hilbert_curve_with_vars([+,-,+,y,f,-,x,f,x,-,f,y,+,-],[+,-,x,-],[]).
+hilbert_curve_with_vars([+,-,+,y,f,-,x,f,x,-,f,y,+,f],[+,-,x,f],[]).
+hilbert_curve_with_vars([+,-,-,+,y,f,-,x,f,x,-,f,y,+],[+,-,-,x],[]).
+hilbert_curve_with_vars([+,-,-,-,x,f,+,y,f,y,+,f,x,-],[+,-,-,y],[]).
+hilbert_curve_with_vars([+,-,-,x,f,+,y,f,y,+,f,x,-],[+,-,y],[]).
+hilbert_curve_with_vars([+,-,-,x,f,+,y,f,y,+,f,x,-,+],[+,-,y,+],[]).
+hilbert_curve_with_vars([+,-,-,x,f,+,y,f,y,+,f,x,-,-],[+,-,y,-],[]).
+hilbert_curve_with_vars([+,-,-,x,f,+,y,f,y,+,f,x,-,f],[+,-,y,f],[]).
+hilbert_curve_with_vars([+,-,f,+,y,f,-,x,f,x,-,f,y,+],[+,-,f,x],[]).
+hilbert_curve_with_vars([+,-,f,-,x,f,+,y,f,y,+,f,x,-],[+,-,f,y],[]).
+hilbert_curve_with_vars([+,-,x,f,+,y,f,y,+,f,x,-],[+,y],[]).
+hilbert_curve_with_vars([+,-,x,f,+,y,f,y,+,f,x,-,+],[+,y,+],[]).
+hilbert_curve_with_vars([+,-,x,f,+,y,f,y,+,f,x,-,+,+],[+,y,+,+],[]).
+hilbert_curve_with_vars([+,-,x,f,+,y,f,y,+,f,x,-,+,-],[+,y,+,-],[]).
+hilbert_curve_with_vars([+,-,x,f,+,y,f,y,+,f,x,-,+,f],[+,y,+,f],[]).
+hilbert_curve_with_vars([+,-,x,f,+,y,f,y,+,f,x,-,-],[+,y,-],[]).
+hilbert_curve_with_vars([+,-,x,f,+,y,f,y,+,f,x,-,-,+],[+,y,-,+],[]).
+hilbert_curve_with_vars([+,-,x,f,+,y,f,y,+,f,x,-,-,-],[+,y,-,-],[]).
+hilbert_curve_with_vars([+,-,x,f,+,y,f,y,+,f,x,-,-,f],[+,y,-,f],[]).
+hilbert_curve_with_vars([+,-,x,f,+,y,f,y,+,f,x,-,f],[+,y,f],[]).
+hilbert_curve_with_vars([+,-,x,f,+,y,f,y,+,f,x,-,f,+],[+,y,f,+],[]).
+hilbert_curve_with_vars([+,-,x,f,+,y,f,y,+,f,x,-,f,-],[+,y,f,-],[]).
+hilbert_curve_with_vars([+,-,x,f,+,y,f,y,+,f,x,-,f,f],[+,y,f,f],[]).
+hilbert_curve_with_vars([+,f,+,+,y,f,-,x,f,x,-,f,y,+],[+,f,+,x],[]).
+hilbert_curve_with_vars([+,f,+,-,x,f,+,y,f,y,+,f,x,-],[+,f,+,y],[]).
+hilbert_curve_with_vars([+,f,+,y,f,-,x,f,x,-,f,y,+],[+,f,x],[]).
+hilbert_curve_with_vars([+,f,+,y,f,-,x,f,x,-,f,y,+,+],[+,f,x,+],[]).
+hilbert_curve_with_vars([+,f,+,y,f,-,x,f,x,-,f,y,+,-],[+,f,x,-],[]).
+hilbert_curve_with_vars([+,f,+,y,f,-,x,f,x,-,f,y,+,f],[+,f,x,f],[]).
+hilbert_curve_with_vars([+,f,-,+,y,f,-,x,f,x,-,f,y,+],[+,f,-,x],[]).
+hilbert_curve_with_vars([+,f,-,-,x,f,+,y,f,y,+,f,x,-],[+,f,-,y],[]).
+hilbert_curve_with_vars([+,f,-,x,f,+,y,f,y,+,f,x,-],[+,f,y],[]).
+hilbert_curve_with_vars([+,f,-,x,f,+,y,f,y,+,f,x,-,+],[+,f,y,+],[]).
+hilbert_curve_with_vars([+,f,-,x,f,+,y,f,y,+,f,x,-,-],[+,f,y,-],[]).
+hilbert_curve_with_vars([+,f,-,x,f,+,y,f,y,+,f,x,-,f],[+,f,y,f],[]).
+hilbert_curve_with_vars([+,f,f,+,y,f,-,x,f,x,-,f,y,+],[+,f,f,x],[]).
+hilbert_curve_with_vars([+,f,f,-,x,f,+,y,f,y,+,f,x,-],[+,f,f,y],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+],[x],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,+],[x,+],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,+,+],[x,+,+],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,+,+,+],[x,+,+,+],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,+,+,-],[x,+,+,-],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,+,+,f],[x,+,+,f],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,+,-],[x,+,-],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,+,-,+],[x,+,-,+],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,+,-,-],[x,+,-,-],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,+,-,f],[x,+,-,f],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,+,f],[x,+,f],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,+,f,+],[x,+,f,+],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,+,f,-],[x,+,f,-],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,+,f,f],[x,+,f,f],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,-],[x,-],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,-,+],[x,-,+],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,-,+,+],[x,-,+,+],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,-,+,-],[x,-,+,-],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,-,+,f],[x,-,+,f],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,-,-],[x,-,-],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,-,-,+],[x,-,-,+],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,-,-,-],[x,-,-,-],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,-,-,f],[x,-,-,f],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,-,f],[x,-,f],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,-,f,+],[x,-,f,+],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,-,f,-],[x,-,f,-],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,-,f,f],[x,-,f,f],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,f],[x,f],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,f,+],[x,f,+],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,f,+,+],[x,f,+,+],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,f,+,-],[x,f,+,-],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,f,+,f],[x,f,+,f],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,f,-],[x,f,-],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,f,-,+],[x,f,-,+],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,f,-,-],[x,f,-,-],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,f,-,f],[x,f,-,f],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,f,f],[x,f,f],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,f,f,+],[x,f,f,+],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,f,f,-],[x,f,f,-],[]).
+hilbert_curve_with_vars([+,y,f,-,x,f,x,-,f,y,+,f,f,f],[x,f,f,f],[]).
+hilbert_curve_with_vars([-,+,+,+,y,f,-,x,f,x,-,f,y,+],[-,+,+,x],[]).
+hilbert_curve_with_vars([-,+,+,-,x,f,+,y,f,y,+,f,x,-],[-,+,+,y],[]).
+hilbert_curve_with_vars([-,+,+,y,f,-,x,f,x,-,f,y,+],[-,+,x],[]).
+hilbert_curve_with_vars([-,+,+,y,f,-,x,f,x,-,f,y,+,+],[-,+,x,+],[]).
+hilbert_curve_with_vars([-,+,+,y,f,-,x,f,x,-,f,y,+,-],[-,+,x,-],[]).
+hilbert_curve_with_vars([-,+,+,y,f,-,x,f,x,-,f,y,+,f],[-,+,x,f],[]).
+hilbert_curve_with_vars([-,+,-,+,y,f,-,x,f,x,-,f,y,+],[-,+,-,x],[]).
+hilbert_curve_with_vars([-,+,-,-,x,f,+,y,f,y,+,f,x,-],[-,+,-,y],[]).
+hilbert_curve_with_vars([-,+,-,x,f,+,y,f,y,+,f,x,-],[-,+,y],[]).
+hilbert_curve_with_vars([-,+,-,x,f,+,y,f,y,+,f,x,-,+],[-,+,y,+],[]).
+hilbert_curve_with_vars([-,+,-,x,f,+,y,f,y,+,f,x,-,-],[-,+,y,-],[]).
+hilbert_curve_with_vars([-,+,-,x,f,+,y,f,y,+,f,x,-,f],[-,+,y,f],[]).
+hilbert_curve_with_vars([-,+,f,+,y,f,-,x,f,x,-,f,y,+],[-,+,f,x],[]).
+hilbert_curve_with_vars([-,+,f,-,x,f,+,y,f,y,+,f,x,-],[-,+,f,y],[]).
+hilbert_curve_with_vars([-,+,y,f,-,x,f,x,-,f,y,+],[-,x],[]).
+hilbert_curve_with_vars([-,+,y,f,-,x,f,x,-,f,y,+,+],[-,x,+],[]).
+hilbert_curve_with_vars([-,+,y,f,-,x,f,x,-,f,y,+,+,+],[-,x,+,+],[]).
+hilbert_curve_with_vars([-,+,y,f,-,x,f,x,-,f,y,+,+,-],[-,x,+,-],[]).
+hilbert_curve_with_vars([-,+,y,f,-,x,f,x,-,f,y,+,+,f],[-,x,+,f],[]).
+hilbert_curve_with_vars([-,+,y,f,-,x,f,x,-,f,y,+,-],[-,x,-],[]).
+hilbert_curve_with_vars([-,+,y,f,-,x,f,x,-,f,y,+,-,+],[-,x,-,+],[]).
+hilbert_curve_with_vars([-,+,y,f,-,x,f,x,-,f,y,+,-,-],[-,x,-,-],[]).
+hilbert_curve_with_vars([-,+,y,f,-,x,f,x,-,f,y,+,-,f],[-,x,-,f],[]).
+hilbert_curve_with_vars([-,+,y,f,-,x,f,x,-,f,y,+,f],[-,x,f],[]).
+hilbert_curve_with_vars([-,+,y,f,-,x,f,x,-,f,y,+,f,+],[-,x,f,+],[]).
+hilbert_curve_with_vars([-,+,y,f,-,x,f,x,-,f,y,+,f,-],[-,x,f,-],[]).
+hilbert_curve_with_vars([-,+,y,f,-,x,f,x,-,f,y,+,f,f],[-,x,f,f],[]).
+hilbert_curve_with_vars([-,-,+,+,y,f,-,x,f,x,-,f,y,+],[-,-,+,x],[]).
+hilbert_curve_with_vars([-,-,+,-,x,f,+,y,f,y,+,f,x,-],[-,-,+,y],[]).
+hilbert_curve_with_vars([-,-,+,y,f,-,x,f,x,-,f,y,+],[-,-,x],[]).
+hilbert_curve_with_vars([-,-,+,y,f,-,x,f,x,-,f,y,+,+],[-,-,x,+],[]).
+hilbert_curve_with_vars([-,-,+,y,f,-,x,f,x,-,f,y,+,-],[-,-,x,-],[]).
+hilbert_curve_with_vars([-,-,+,y,f,-,x,f,x,-,f,y,+,f],[-,-,x,f],[]).
+hilbert_curve_with_vars([-,-,-,+,y,f,-,x,f,x,-,f,y,+],[-,-,-,x],[]).
+hilbert_curve_with_vars([-,-,-,-,x,f,+,y,f,y,+,f,x,-],[-,-,-,y],[]).
+hilbert_curve_with_vars([-,-,-,x,f,+,y,f,y,+,f,x,-],[-,-,y],[]).
+hilbert_curve_with_vars([-,-,-,x,f,+,y,f,y,+,f,x,-,+],[-,-,y,+],[]).
+hilbert_curve_with_vars([-,-,-,x,f,+,y,f,y,+,f,x,-,-],[-,-,y,-],[]).
+hilbert_curve_with_vars([-,-,-,x,f,+,y,f,y,+,f,x,-,f],[-,-,y,f],[]).
+hilbert_curve_with_vars([-,-,f,+,y,f,-,x,f,x,-,f,y,+],[-,-,f,x],[]).
+hilbert_curve_with_vars([-,-,f,-,x,f,+,y,f,y,+,f,x,-],[-,-,f,y],[]).
+hilbert_curve_with_vars([-,-,x,f,+,y,f,y,+,f,x,-],[-,y],[]).
+hilbert_curve_with_vars([-,-,x,f,+,y,f,y,+,f,x,-,+],[-,y,+],[]).
+hilbert_curve_with_vars([-,-,x,f,+,y,f,y,+,f,x,-,+,+],[-,y,+,+],[]).
+hilbert_curve_with_vars([-,-,x,f,+,y,f,y,+,f,x,-,+,-],[-,y,+,-],[]).
+hilbert_curve_with_vars([-,-,x,f,+,y,f,y,+,f,x,-,+,f],[-,y,+,f],[]).
+hilbert_curve_with_vars([-,-,x,f,+,y,f,y,+,f,x,-,-],[-,y,-],[]).
+hilbert_curve_with_vars([-,-,x,f,+,y,f,y,+,f,x,-,-,+],[-,y,-,+],[]).
+hilbert_curve_with_vars([-,-,x,f,+,y,f,y,+,f,x,-,-,-],[-,y,-,-],[]).
+hilbert_curve_with_vars([-,-,x,f,+,y,f,y,+,f,x,-,-,f],[-,y,-,f],[]).
+hilbert_curve_with_vars([-,-,x,f,+,y,f,y,+,f,x,-,f],[-,y,f],[]).
+hilbert_curve_with_vars([-,-,x,f,+,y,f,y,+,f,x,-,f,+],[-,y,f,+],[]).
+hilbert_curve_with_vars([-,-,x,f,+,y,f,y,+,f,x,-,f,-],[-,y,f,-],[]).
+hilbert_curve_with_vars([-,-,x,f,+,y,f,y,+,f,x,-,f,f],[-,y,f,f],[]).
+hilbert_curve_with_vars([-,f,+,+,y,f,-,x,f,x,-,f,y,+],[-,f,+,x],[]).
+hilbert_curve_with_vars([-,f,+,-,x,f,+,y,f,y,+,f,x,-],[-,f,+,y],[]).
+hilbert_curve_with_vars([-,f,+,y,f,-,x,f,x,-,f,y,+],[-,f,x],[]).
+hilbert_curve_with_vars([-,f,+,y,f,-,x,f,x,-,f,y,+,+],[-,f,x,+],[]).
+hilbert_curve_with_vars([-,f,+,y,f,-,x,f,x,-,f,y,+,-],[-,f,x,-],[]).
+hilbert_curve_with_vars([-,f,+,y,f,-,x,f,x,-,f,y,+,f],[-,f,x,f],[]).
+hilbert_curve_with_vars([-,f,-,+,y,f,-,x,f,x,-,f,y,+],[-,f,-,x],[]).
+hilbert_curve_with_vars([-,f,-,-,x,f,+,y,f,y,+,f,x,-],[-,f,-,y],[]).
+hilbert_curve_with_vars([-,f,-,x,f,+,y,f,y,+,f,x,-],[-,f,y],[]).
+hilbert_curve_with_vars([-,f,-,x,f,+,y,f,y,+,f,x,-,+],[-,f,y,+],[]).
+hilbert_curve_with_vars([-,f,-,x,f,+,y,f,y,+,f,x,-,-],[-,f,y,-],[]).
+hilbert_curve_with_vars([-,f,-,x,f,+,y,f,y,+,f,x,-,f],[-,f,y,f],[]).
+hilbert_curve_with_vars([-,f,f,+,y,f,-,x,f,x,-,f,y,+],[-,f,f,x],[]).
+hilbert_curve_with_vars([-,f,f,-,x,f,+,y,f,y,+,f,x,-],[-,f,f,y],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-],[y],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,+],[y,+],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,+,+],[y,+,+],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,+,+,+],[y,+,+,+],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,+,+,-],[y,+,+,-],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,+,+,f],[y,+,+,f],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,+,-],[y,+,-],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,+,-,+],[y,+,-,+],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,+,-,-],[y,+,-,-],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,+,-,f],[y,+,-,f],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,+,f],[y,+,f],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,+,f,+],[y,+,f,+],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,+,f,-],[y,+,f,-],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,+,f,f],[y,+,f,f],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,-],[y,-],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,-,+],[y,-,+],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,-,+,+],[y,-,+,+],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,-,+,-],[y,-,+,-],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,-,+,f],[y,-,+,f],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,-,-],[y,-,-],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,-,-,+],[y,-,-,+],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,-,-,-],[y,-,-,-],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,-,-,f],[y,-,-,f],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,-,f],[y,-,f],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,-,f,+],[y,-,f,+],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,-,f,-],[y,-,f,-],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,-,f,f],[y,-,f,f],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,f],[y,f],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,f,+],[y,f,+],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,f,+,+],[y,f,+,+],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,f,+,-],[y,f,+,-],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,f,+,f],[y,f,+,f],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,f,-],[y,f,-],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,f,-,+],[y,f,-,+],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,f,-,-],[y,f,-,-],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,f,-,f],[y,f,-,f],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,f,f],[y,f,f],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,f,f,+],[y,f,f,+],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,f,f,-],[y,f,f,-],[]).
+hilbert_curve_with_vars([-,x,f,+,y,f,y,+,f,x,-,f,f,f],[y,f,f,f],[]).
+hilbert_curve_with_vars([f,+,+,+,y,f,-,x,f,x,-,f,y,+],[f,+,+,x],[]).
+hilbert_curve_with_vars([f,+,+,-,x,f,+,y,f,y,+,f,x,-],[f,+,+,y],[]).
+hilbert_curve_with_vars([f,+,+,y,f,-,x,f,x,-,f,y,+],[f,+,x],[]).
+hilbert_curve_with_vars([f,+,+,y,f,-,x,f,x,-,f,y,+,+],[f,+,x,+],[]).
+hilbert_curve_with_vars([f,+,+,y,f,-,x,f,x,-,f,y,+,-],[f,+,x,-],[]).
+hilbert_curve_with_vars([f,+,+,y,f,-,x,f,x,-,f,y,+,f],[f,+,x,f],[]).
+hilbert_curve_with_vars([f,+,-,+,y,f,-,x,f,x,-,f,y,+],[f,+,-,x],[]).
+hilbert_curve_with_vars([f,+,-,-,x,f,+,y,f,y,+,f,x,-],[f,+,-,y],[]).
+hilbert_curve_with_vars([f,+,-,x,f,+,y,f,y,+,f,x,-],[f,+,y],[]).
+hilbert_curve_with_vars([f,+,-,x,f,+,y,f,y,+,f,x,-,+],[f,+,y,+],[]).
+hilbert_curve_with_vars([f,+,-,x,f,+,y,f,y,+,f,x,-,-],[f,+,y,-],[]).
+hilbert_curve_with_vars([f,+,-,x,f,+,y,f,y,+,f,x,-,f],[f,+,y,f],[]).
+hilbert_curve_with_vars([f,+,f,+,y,f,-,x,f,x,-,f,y,+],[f,+,f,x],[]).
+hilbert_curve_with_vars([f,+,f,-,x,f,+,y,f,y,+,f,x,-],[f,+,f,y],[]).
+hilbert_curve_with_vars([f,+,y,f,-,x,f,x,-,f,y,+],[f,x],[]).
+hilbert_curve_with_vars([f,+,y,f,-,x,f,x,-,f,y,+,+],[f,x,+],[]).
+hilbert_curve_with_vars([f,+,y,f,-,x,f,x,-,f,y,+,+,+],[f,x,+,+],[]).
+hilbert_curve_with_vars([f,+,y,f,-,x,f,x,-,f,y,+,+,-],[f,x,+,-],[]).
+hilbert_curve_with_vars([f,+,y,f,-,x,f,x,-,f,y,+,+,f],[f,x,+,f],[]).
+hilbert_curve_with_vars([f,+,y,f,-,x,f,x,-,f,y,+,-],[f,x,-],[]).
+hilbert_curve_with_vars([f,+,y,f,-,x,f,x,-,f,y,+,-,+],[f,x,-,+],[]).
+hilbert_curve_with_vars([f,+,y,f,-,x,f,x,-,f,y,+,-,-],[f,x,-,-],[]).
+hilbert_curve_with_vars([f,+,y,f,-,x,f,x,-,f,y,+,-,f],[f,x,-,f],[]).
+hilbert_curve_with_vars([f,+,y,f,-,x,f,x,-,f,y,+,f],[f,x,f],[]).
+hilbert_curve_with_vars([f,+,y,f,-,x,f,x,-,f,y,+,f,+],[f,x,f,+],[]).
+hilbert_curve_with_vars([f,+,y,f,-,x,f,x,-,f,y,+,f,-],[f,x,f,-],[]).
+hilbert_curve_with_vars([f,+,y,f,-,x,f,x,-,f,y,+,f,f],[f,x,f,f],[]).
+hilbert_curve_with_vars([f,-,+,+,y,f,-,x,f,x,-,f,y,+],[f,-,+,x],[]).
+hilbert_curve_with_vars([f,-,+,-,x,f,+,y,f,y,+,f,x,-],[f,-,+,y],[]).
+hilbert_curve_with_vars([f,-,+,y,f,-,x,f,x,-,f,y,+],[f,-,x],[]).
+hilbert_curve_with_vars([f,-,+,y,f,-,x,f,x,-,f,y,+,+],[f,-,x,+],[]).
+hilbert_curve_with_vars([f,-,+,y,f,-,x,f,x,-,f,y,+,-],[f,-,x,-],[]).
+hilbert_curve_with_vars([f,-,+,y,f,-,x,f,x,-,f,y,+,f],[f,-,x,f],[]).
+hilbert_curve_with_vars([f,-,-,+,y,f,-,x,f,x,-,f,y,+],[f,-,-,x],[]).
+hilbert_curve_with_vars([f,-,-,-,x,f,+,y,f,y,+,f,x,-],[f,-,-,y],[]).
+hilbert_curve_with_vars([f,-,-,x,f,+,y,f,y,+,f,x,-],[f,-,y],[]).
+hilbert_curve_with_vars([f,-,-,x,f,+,y,f,y,+,f,x,-,+],[f,-,y,+],[]).
+hilbert_curve_with_vars([f,-,-,x,f,+,y,f,y,+,f,x,-,-],[f,-,y,-],[]).
+hilbert_curve_with_vars([f,-,-,x,f,+,y,f,y,+,f,x,-,f],[f,-,y,f],[]).
+hilbert_curve_with_vars([f,-,f,+,y,f,-,x,f,x,-,f,y,+],[f,-,f,x],[]).
+hilbert_curve_with_vars([f,-,f,-,x,f,+,y,f,y,+,f,x,-],[f,-,f,y],[]).
+hilbert_curve_with_vars([f,-,x,f,+,y,f,y,+,f,x,-],[f,y],[]).
+hilbert_curve_with_vars([f,-,x,f,+,y,f,y,+,f,x,-,+],[f,y,+],[]).
+hilbert_curve_with_vars([f,-,x,f,+,y,f,y,+,f,x,-,+,+],[f,y,+,+],[]).
+hilbert_curve_with_vars([f,-,x,f,+,y,f,y,+,f,x,-,+,-],[f,y,+,-],[]).
+hilbert_curve_with_vars([f,-,x,f,+,y,f,y,+,f,x,-,+,f],[f,y,+,f],[]).
+hilbert_curve_with_vars([f,-,x,f,+,y,f,y,+,f,x,-,-],[f,y,-],[]).
+hilbert_curve_with_vars([f,-,x,f,+,y,f,y,+,f,x,-,-,+],[f,y,-,+],[]).
+hilbert_curve_with_vars([f,-,x,f,+,y,f,y,+,f,x,-,-,-],[f,y,-,-],[]).
+hilbert_curve_with_vars([f,-,x,f,+,y,f,y,+,f,x,-,-,f],[f,y,-,f],[]).
+hilbert_curve_with_vars([f,-,x,f,+,y,f,y,+,f,x,-,f],[f,y,f],[]).
+hilbert_curve_with_vars([f,-,x,f,+,y,f,y,+,f,x,-,f,+],[f,y,f,+],[]).
+hilbert_curve_with_vars([f,-,x,f,+,y,f,y,+,f,x,-,f,-],[f,y,f,-],[]).
+hilbert_curve_with_vars([f,-,x,f,+,y,f,y,+,f,x,-,f,f],[f,y,f,f],[]).
+hilbert_curve_with_vars([f,f,+,+,y,f,-,x,f,x,-,f,y,+],[f,f,+,x],[]).
+hilbert_curve_with_vars([f,f,+,-,x,f,+,y,f,y,+,f,x,-],[f,f,+,y],[]).
+hilbert_curve_with_vars([f,f,+,y,f,-,x,f,x,-,f,y,+],[f,f,x],[]).
+hilbert_curve_with_vars([f,f,+,y,f,-,x,f,x,-,f,y,+,+],[f,f,x,+],[]).
+hilbert_curve_with_vars([f,f,+,y,f,-,x,f,x,-,f,y,+,-],[f,f,x,-],[]).
+hilbert_curve_with_vars([f,f,+,y,f,-,x,f,x,-,f,y,+,f],[f,f,x,f],[]).
+hilbert_curve_with_vars([f,f,-,+,y,f,-,x,f,x,-,f,y,+],[f,f,-,x],[]).
+hilbert_curve_with_vars([f,f,-,-,x,f,+,y,f,y,+,f,x,-],[f,f,-,y],[]).
+hilbert_curve_with_vars([f,f,-,x,f,+,y,f,y,+,f,x,-],[f,f,y],[]).
+hilbert_curve_with_vars([f,f,-,x,f,+,y,f,y,+,f,x,-,+],[f,f,y,+],[]).
+hilbert_curve_with_vars([f,f,-,x,f,+,y,f,y,+,f,x,-,-],[f,f,y,-],[]).
+hilbert_curve_with_vars([f,f,-,x,f,+,y,f,y,+,f,x,-,f],[f,f,y,f],[]).
+hilbert_curve_with_vars([f,f,f,+,y,f,-,x,f,x,-,f,y,+],[f,f,f,x],[]).
+hilbert_curve_with_vars([f,f,f,-,x,f,+,y,f,y,+,f,x,-],[f,f,f,y],[]).
+
+
+%!      koch_curve_with_vars(?Is,?Os,?Rs) is nondet.
+%
+%       Generator for Koch Curve strings with variable symbols.
+%
+%       Koch Curve strings begin including variable symbols at length
+%       8. This predicate ensures that examples can be generated that
+%       include variables.
+%
+/*
+% Generator, used to generate atoms below.
+koch_curve_with_vars(Is,Os,[]):-
+% The first Koch Curve string that contains variable symbols has
+% length 8.
+        test_harness:generate_initial(koch_curve,all,8,12,Es)
+        ,findall(s(Is,Os,[])
+                ,(member(s(Is,Os,[]),Es)
+                 ,member(f,Is)
+                 )
+                ,Vs)
+        ,member(s(Is,Os,[]),Vs).
+*/
+koch_curve_with_vars([+,+,+,+,f,+,f,-,-,f,+,f],[+,+,+,+,f],[]).
+koch_curve_with_vars([+,+,+,-,f,+,f,-,-,f,+,f],[+,+,+,-,f],[]).
+koch_curve_with_vars([+,+,+,f,+,f,-,-,f,+,f],[+,+,+,f],[]).
+koch_curve_with_vars([+,+,+,f,+,f,-,-,f,+,f,+],[+,+,+,f,+],[]).
+koch_curve_with_vars([+,+,+,f,+,f,-,-,f,+,f,-],[+,+,+,f,-],[]).
+koch_curve_with_vars([+,+,-,+,f,+,f,-,-,f,+,f],[+,+,-,+,f],[]).
+koch_curve_with_vars([+,+,-,-,f,+,f,-,-,f,+,f],[+,+,-,-,f],[]).
+koch_curve_with_vars([+,+,-,f,+,f,-,-,f,+,f],[+,+,-,f],[]).
+koch_curve_with_vars([+,+,-,f,+,f,-,-,f,+,f,+],[+,+,-,f,+],[]).
+koch_curve_with_vars([+,+,-,f,+,f,-,-,f,+,f,-],[+,+,-,f,-],[]).
+koch_curve_with_vars([+,+,f,+,f,-,-,f,+,f],[+,+,f],[]).
+koch_curve_with_vars([+,+,f,+,f,-,-,f,+,f,+],[+,+,f,+],[]).
+koch_curve_with_vars([+,+,f,+,f,-,-,f,+,f,+,+],[+,+,f,+,+],[]).
+koch_curve_with_vars([+,+,f,+,f,-,-,f,+,f,+,-],[+,+,f,+,-],[]).
+koch_curve_with_vars([+,+,f,+,f,-,-,f,+,f,-],[+,+,f,-],[]).
+koch_curve_with_vars([+,+,f,+,f,-,-,f,+,f,-,+],[+,+,f,-,+],[]).
+koch_curve_with_vars([+,+,f,+,f,-,-,f,+,f,-,-],[+,+,f,-,-],[]).
+koch_curve_with_vars([+,-,+,+,f,+,f,-,-,f,+,f],[+,-,+,+,f],[]).
+koch_curve_with_vars([+,-,+,-,f,+,f,-,-,f,+,f],[+,-,+,-,f],[]).
+koch_curve_with_vars([+,-,+,f,+,f,-,-,f,+,f],[+,-,+,f],[]).
+koch_curve_with_vars([+,-,+,f,+,f,-,-,f,+,f,+],[+,-,+,f,+],[]).
+koch_curve_with_vars([+,-,+,f,+,f,-,-,f,+,f,-],[+,-,+,f,-],[]).
+koch_curve_with_vars([+,-,-,+,f,+,f,-,-,f,+,f],[+,-,-,+,f],[]).
+koch_curve_with_vars([+,-,-,-,f,+,f,-,-,f,+,f],[+,-,-,-,f],[]).
+koch_curve_with_vars([+,-,-,f,+,f,-,-,f,+,f],[+,-,-,f],[]).
+koch_curve_with_vars([+,-,-,f,+,f,-,-,f,+,f,+],[+,-,-,f,+],[]).
+koch_curve_with_vars([+,-,-,f,+,f,-,-,f,+,f,-],[+,-,-,f,-],[]).
+koch_curve_with_vars([+,-,f,+,f,-,-,f,+,f],[+,-,f],[]).
+koch_curve_with_vars([+,-,f,+,f,-,-,f,+,f,+],[+,-,f,+],[]).
+koch_curve_with_vars([+,-,f,+,f,-,-,f,+,f,+,+],[+,-,f,+,+],[]).
+koch_curve_with_vars([+,-,f,+,f,-,-,f,+,f,+,-],[+,-,f,+,-],[]).
+koch_curve_with_vars([+,-,f,+,f,-,-,f,+,f,-],[+,-,f,-],[]).
+koch_curve_with_vars([+,-,f,+,f,-,-,f,+,f,-,+],[+,-,f,-,+],[]).
+koch_curve_with_vars([+,-,f,+,f,-,-,f,+,f,-,-],[+,-,f,-,-],[]).
+koch_curve_with_vars([+,f,+,f,-,-,f,+,f],[+,f],[]).
+koch_curve_with_vars([+,f,+,f,-,-,f,+,f,+],[+,f,+],[]).
+koch_curve_with_vars([+,f,+,f,-,-,f,+,f,+,+],[+,f,+,+],[]).
+koch_curve_with_vars([+,f,+,f,-,-,f,+,f,+,+,+],[+,f,+,+,+],[]).
+koch_curve_with_vars([+,f,+,f,-,-,f,+,f,+,+,-],[+,f,+,+,-],[]).
+koch_curve_with_vars([+,f,+,f,-,-,f,+,f,+,-],[+,f,+,-],[]).
+koch_curve_with_vars([+,f,+,f,-,-,f,+,f,+,-,+],[+,f,+,-,+],[]).
+koch_curve_with_vars([+,f,+,f,-,-,f,+,f,+,-,-],[+,f,+,-,-],[]).
+koch_curve_with_vars([+,f,+,f,-,-,f,+,f,-],[+,f,-],[]).
+koch_curve_with_vars([+,f,+,f,-,-,f,+,f,-,+],[+,f,-,+],[]).
+koch_curve_with_vars([+,f,+,f,-,-,f,+,f,-,+,+],[+,f,-,+,+],[]).
+koch_curve_with_vars([+,f,+,f,-,-,f,+,f,-,+,-],[+,f,-,+,-],[]).
+koch_curve_with_vars([+,f,+,f,-,-,f,+,f,-,-],[+,f,-,-],[]).
+koch_curve_with_vars([+,f,+,f,-,-,f,+,f,-,-,+],[+,f,-,-,+],[]).
+koch_curve_with_vars([+,f,+,f,-,-,f,+,f,-,-,-],[+,f,-,-,-],[]).
+koch_curve_with_vars([-,+,+,+,f,+,f,-,-,f,+,f],[-,+,+,+,f],[]).
+koch_curve_with_vars([-,+,+,-,f,+,f,-,-,f,+,f],[-,+,+,-,f],[]).
+koch_curve_with_vars([-,+,+,f,+,f,-,-,f,+,f],[-,+,+,f],[]).
+koch_curve_with_vars([-,+,+,f,+,f,-,-,f,+,f,+],[-,+,+,f,+],[]).
+koch_curve_with_vars([-,+,+,f,+,f,-,-,f,+,f,-],[-,+,+,f,-],[]).
+koch_curve_with_vars([-,+,-,+,f,+,f,-,-,f,+,f],[-,+,-,+,f],[]).
+koch_curve_with_vars([-,+,-,-,f,+,f,-,-,f,+,f],[-,+,-,-,f],[]).
+koch_curve_with_vars([-,+,-,f,+,f,-,-,f,+,f],[-,+,-,f],[]).
+koch_curve_with_vars([-,+,-,f,+,f,-,-,f,+,f,+],[-,+,-,f,+],[]).
+koch_curve_with_vars([-,+,-,f,+,f,-,-,f,+,f,-],[-,+,-,f,-],[]).
+koch_curve_with_vars([-,+,f,+,f,-,-,f,+,f],[-,+,f],[]).
+koch_curve_with_vars([-,+,f,+,f,-,-,f,+,f,+],[-,+,f,+],[]).
+koch_curve_with_vars([-,+,f,+,f,-,-,f,+,f,+,+],[-,+,f,+,+],[]).
+koch_curve_with_vars([-,+,f,+,f,-,-,f,+,f,+,-],[-,+,f,+,-],[]).
+koch_curve_with_vars([-,+,f,+,f,-,-,f,+,f,-],[-,+,f,-],[]).
+koch_curve_with_vars([-,+,f,+,f,-,-,f,+,f,-,+],[-,+,f,-,+],[]).
+koch_curve_with_vars([-,+,f,+,f,-,-,f,+,f,-,-],[-,+,f,-,-],[]).
+koch_curve_with_vars([-,-,+,+,f,+,f,-,-,f,+,f],[-,-,+,+,f],[]).
+koch_curve_with_vars([-,-,+,-,f,+,f,-,-,f,+,f],[-,-,+,-,f],[]).
+koch_curve_with_vars([-,-,+,f,+,f,-,-,f,+,f],[-,-,+,f],[]).
+koch_curve_with_vars([-,-,+,f,+,f,-,-,f,+,f,+],[-,-,+,f,+],[]).
+koch_curve_with_vars([-,-,+,f,+,f,-,-,f,+,f,-],[-,-,+,f,-],[]).
+koch_curve_with_vars([-,-,-,+,f,+,f,-,-,f,+,f],[-,-,-,+,f],[]).
+koch_curve_with_vars([-,-,-,-,f,+,f,-,-,f,+,f],[-,-,-,-,f],[]).
+koch_curve_with_vars([-,-,-,f,+,f,-,-,f,+,f],[-,-,-,f],[]).
+koch_curve_with_vars([-,-,-,f,+,f,-,-,f,+,f,+],[-,-,-,f,+],[]).
+koch_curve_with_vars([-,-,-,f,+,f,-,-,f,+,f,-],[-,-,-,f,-],[]).
+koch_curve_with_vars([-,-,f,+,f,-,-,f,+,f],[-,-,f],[]).
+koch_curve_with_vars([-,-,f,+,f,-,-,f,+,f,+],[-,-,f,+],[]).
+koch_curve_with_vars([-,-,f,+,f,-,-,f,+,f,+,+],[-,-,f,+,+],[]).
+koch_curve_with_vars([-,-,f,+,f,-,-,f,+,f,+,-],[-,-,f,+,-],[]).
+koch_curve_with_vars([-,-,f,+,f,-,-,f,+,f,-],[-,-,f,-],[]).
+koch_curve_with_vars([-,-,f,+,f,-,-,f,+,f,-,+],[-,-,f,-,+],[]).
+koch_curve_with_vars([-,-,f,+,f,-,-,f,+,f,-,-],[-,-,f,-,-],[]).
+koch_curve_with_vars([-,f,+,f,-,-,f,+,f],[-,f],[]).
+koch_curve_with_vars([-,f,+,f,-,-,f,+,f,+],[-,f,+],[]).
+koch_curve_with_vars([-,f,+,f,-,-,f,+,f,+,+],[-,f,+,+],[]).
+koch_curve_with_vars([-,f,+,f,-,-,f,+,f,+,+,+],[-,f,+,+,+],[]).
+koch_curve_with_vars([-,f,+,f,-,-,f,+,f,+,+,-],[-,f,+,+,-],[]).
+koch_curve_with_vars([-,f,+,f,-,-,f,+,f,+,-],[-,f,+,-],[]).
+koch_curve_with_vars([-,f,+,f,-,-,f,+,f,+,-,+],[-,f,+,-,+],[]).
+koch_curve_with_vars([-,f,+,f,-,-,f,+,f,+,-,-],[-,f,+,-,-],[]).
+koch_curve_with_vars([-,f,+,f,-,-,f,+,f,-],[-,f,-],[]).
+koch_curve_with_vars([-,f,+,f,-,-,f,+,f,-,+],[-,f,-,+],[]).
+koch_curve_with_vars([-,f,+,f,-,-,f,+,f,-,+,+],[-,f,-,+,+],[]).
+koch_curve_with_vars([-,f,+,f,-,-,f,+,f,-,+,-],[-,f,-,+,-],[]).
+koch_curve_with_vars([-,f,+,f,-,-,f,+,f,-,-],[-,f,-,-],[]).
+koch_curve_with_vars([-,f,+,f,-,-,f,+,f,-,-,+],[-,f,-,-,+],[]).
+koch_curve_with_vars([-,f,+,f,-,-,f,+,f,-,-,-],[-,f,-,-,-],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f],[f],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,+],[f,+],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,+,+],[f,+,+],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,+,+,+],[f,+,+,+],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,+,+,+,+],[f,+,+,+,+],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,+,+,+,-],[f,+,+,+,-],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,+,+,-],[f,+,+,-],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,+,+,-,+],[f,+,+,-,+],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,+,+,-,-],[f,+,+,-,-],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,+,-],[f,+,-],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,+,-,+],[f,+,-,+],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,+,-,+,+],[f,+,-,+,+],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,+,-,+,-],[f,+,-,+,-],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,+,-,-],[f,+,-,-],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,+,-,-,+],[f,+,-,-,+],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,+,-,-,-],[f,+,-,-,-],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,-],[f,-],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,-,+],[f,-,+],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,-,+,+],[f,-,+,+],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,-,+,+,+],[f,-,+,+,+],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,-,+,+,-],[f,-,+,+,-],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,-,+,-],[f,-,+,-],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,-,+,-,+],[f,-,+,-,+],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,-,+,-,-],[f,-,+,-,-],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,-,-],[f,-,-],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,-,-,+],[f,-,-,+],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,-,-,+,+],[f,-,-,+,+],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,-,-,+,-],[f,-,-,+,-],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,-,-,-],[f,-,-,-],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,-,-,-,+],[f,-,-,-,+],[]).
+koch_curve_with_vars([f,+,f,-,-,f,+,f,-,-,-,-],[f,-,-,-,-],[]).
+
+
+
+%!      sierpinski_triangle_with_vars(?Is,?Os,?Rs) is nondet.
+%
+%       Generator for Sierpinski Triangle strings with variable symbols.
+%
+%       Sierpinski Triangle strings begin including variable symbols at
+%       length 9. This predicate ensures that examples can be generated
+%       that include variables.
+%
+/*
+sierpinski_triangle_with_vars(Is,Os,[]):-
+        sierpinski_triangle_with_gs(300,Is,Os,[])
+        ;
+        sierpinski_triangle_with_fs(250,Is,Os,[]).
+
+%!      sierpinski_triangle_with_gs(+Limit,+Is,+Os,+Rs) is nondet.
+%
+%       Generator for Sierpinski Triangle string with variable g.
+%
+sierpinski_triangle_with_gs(L,Is,Os,[]):-
+% The first Sierpinski Triangle string that contains variable symbols has
+% length 9.
+        test_harness:generate_initial(sierpinski_triangle,all,9,15,Es)
+        ,findall(s(Is,Os,[])
+                ,(member(s(Is,Os,[]),Es)
+                 ,member(g,Is)
+                 )
+                ,Vs)
+        ,G = member(s(Is,Os,[]),Vs)
+        ,limit(L,G).
+
+%!      sierpinski_triangle_with_fs(+Limit,+Is,+Os,+Rs) is nondet.
+%
+%       Generator for Sierpinski Triangle string with variable f.
+%
+sierpinski_triangle_with_fs(L,Is,Os,[]):-
+% The first Sierpinski Triangle string that contains variable symbols has
+% length 9.
+        test_harness:generate_initial(sierpinski_triangle,all,9,15,Es)
+        ,findall(s(Is,Os,[])
+                ,(member(s(Is,Os,[]),Es)
+                 ,member(f,Is)
+                 )
+                ,Vs)
+        ,G = member(s(Is,Os,[]),Vs)
+        ,limit(L,G).
+*/
+%/*
+sierpinski_triangle_with_vars([+,+,+,+,+,+,+,g,g],[+,+,+,+,+,+,+,g],[]).
+sierpinski_triangle_with_vars([+,+,+,+,+,+,-,g,g],[+,+,+,+,+,+,-,g],[]).
+sierpinski_triangle_with_vars([+,+,+,+,+,+,g,g,+],[+,+,+,+,+,+,g,+],[]).
+sierpinski_triangle_with_vars([+,+,+,+,+,+,g,g,-],[+,+,+,+,+,+,g,-],[]).
+sierpinski_triangle_with_vars([+,+,+,+,+,-,+,g,g],[+,+,+,+,+,-,+,g],[]).
+sierpinski_triangle_with_vars([+,+,+,+,+,-,-,g,g],[+,+,+,+,+,-,-,g],[]).
+sierpinski_triangle_with_vars([+,+,+,+,+,-,g,g,+],[+,+,+,+,+,-,g,+],[]).
+sierpinski_triangle_with_vars([+,+,+,+,+,-,g,g,-],[+,+,+,+,+,-,g,-],[]).
+sierpinski_triangle_with_vars([+,+,+,+,+,g,g,+,+],[+,+,+,+,+,g,+,+],[]).
+sierpinski_triangle_with_vars([+,+,+,+,+,g,g,+,-],[+,+,+,+,+,g,+,-],[]).
+sierpinski_triangle_with_vars([+,+,+,+,+,g,g,-,+],[+,+,+,+,+,g,-,+],[]).
+sierpinski_triangle_with_vars([+,+,+,+,+,g,g,-,-],[+,+,+,+,+,g,-,-],[]).
+sierpinski_triangle_with_vars([+,+,+,+,+,g,g,g,g],[+,+,+,+,+,g,g],[]).
+sierpinski_triangle_with_vars([+,+,+,+,-,+,+,g,g],[+,+,+,+,-,+,+,g],[]).
+sierpinski_triangle_with_vars([+,+,+,+,-,+,-,g,g],[+,+,+,+,-,+,-,g],[]).
+sierpinski_triangle_with_vars([+,+,+,+,-,+,g,g,+],[+,+,+,+,-,+,g,+],[]).
+sierpinski_triangle_with_vars([+,+,+,+,-,+,g,g,-],[+,+,+,+,-,+,g,-],[]).
+sierpinski_triangle_with_vars([+,+,+,+,-,-,+,g,g],[+,+,+,+,-,-,+,g],[]).
+sierpinski_triangle_with_vars([+,+,+,+,-,-,-,g,g],[+,+,+,+,-,-,-,g],[]).
+sierpinski_triangle_with_vars([+,+,+,+,-,-,g,g,+],[+,+,+,+,-,-,g,+],[]).
+sierpinski_triangle_with_vars([+,+,+,+,-,-,g,g,-],[+,+,+,+,-,-,g,-],[]).
+sierpinski_triangle_with_vars([+,+,+,+,-,g,g,+,+],[+,+,+,+,-,g,+,+],[]).
+sierpinski_triangle_with_vars([+,+,+,+,-,g,g,+,-],[+,+,+,+,-,g,+,-],[]).
+sierpinski_triangle_with_vars([+,+,+,+,-,g,g,-,+],[+,+,+,+,-,g,-,+],[]).
+sierpinski_triangle_with_vars([+,+,+,+,-,g,g,-,-],[+,+,+,+,-,g,-,-],[]).
+sierpinski_triangle_with_vars([+,+,+,+,-,g,g,g,g],[+,+,+,+,-,g,g],[]).
+sierpinski_triangle_with_vars([+,+,+,+,f,-,g,+,f,+,g,-,f],[+,+,+,+,f],[]).
+sierpinski_triangle_with_vars([+,+,+,+,g,g,+,+,+],[+,+,+,+,g,+,+,+],[]).
+sierpinski_triangle_with_vars([+,+,+,+,g,g,+,+,-],[+,+,+,+,g,+,+,-],[]).
+sierpinski_triangle_with_vars([+,+,+,+,g,g,+,-,+],[+,+,+,+,g,+,-,+],[]).
+sierpinski_triangle_with_vars([+,+,+,+,g,g,+,-,-],[+,+,+,+,g,+,-,-],[]).
+sierpinski_triangle_with_vars([+,+,+,+,g,g,+,g,g],[+,+,+,+,g,+,g],[]).
+sierpinski_triangle_with_vars([+,+,+,+,g,g,-,+,+],[+,+,+,+,g,-,+,+],[]).
+sierpinski_triangle_with_vars([+,+,+,+,g,g,-,+,-],[+,+,+,+,g,-,+,-],[]).
+sierpinski_triangle_with_vars([+,+,+,+,g,g,-,-,+],[+,+,+,+,g,-,-,+],[]).
+sierpinski_triangle_with_vars([+,+,+,+,g,g,-,-,-],[+,+,+,+,g,-,-,-],[]).
+sierpinski_triangle_with_vars([+,+,+,+,g,g,-,g,g],[+,+,+,+,g,-,g],[]).
+sierpinski_triangle_with_vars([+,+,+,+,g,g,g,g,+],[+,+,+,+,g,g,+],[]).
+sierpinski_triangle_with_vars([+,+,+,+,g,g,g,g,-],[+,+,+,+,g,g,-],[]).
+sierpinski_triangle_with_vars([+,+,+,-,+,+,+,g,g],[+,+,+,-,+,+,+,g],[]).
+sierpinski_triangle_with_vars([+,+,+,-,+,+,-,g,g],[+,+,+,-,+,+,-,g],[]).
+sierpinski_triangle_with_vars([+,+,+,-,+,+,g,g,+],[+,+,+,-,+,+,g,+],[]).
+sierpinski_triangle_with_vars([+,+,+,-,+,+,g,g,-],[+,+,+,-,+,+,g,-],[]).
+sierpinski_triangle_with_vars([+,+,+,-,+,-,+,g,g],[+,+,+,-,+,-,+,g],[]).
+sierpinski_triangle_with_vars([+,+,+,-,+,-,-,g,g],[+,+,+,-,+,-,-,g],[]).
+sierpinski_triangle_with_vars([+,+,+,-,+,-,g,g,+],[+,+,+,-,+,-,g,+],[]).
+sierpinski_triangle_with_vars([+,+,+,-,+,-,g,g,-],[+,+,+,-,+,-,g,-],[]).
+sierpinski_triangle_with_vars([+,+,+,-,+,g,g,+,+],[+,+,+,-,+,g,+,+],[]).
+sierpinski_triangle_with_vars([+,+,+,-,+,g,g,+,-],[+,+,+,-,+,g,+,-],[]).
+sierpinski_triangle_with_vars([+,+,+,-,+,g,g,-,+],[+,+,+,-,+,g,-,+],[]).
+sierpinski_triangle_with_vars([+,+,+,-,+,g,g,-,-],[+,+,+,-,+,g,-,-],[]).
+sierpinski_triangle_with_vars([+,+,+,-,+,g,g,g,g],[+,+,+,-,+,g,g],[]).
+sierpinski_triangle_with_vars([+,+,+,-,-,+,+,g,g],[+,+,+,-,-,+,+,g],[]).
+sierpinski_triangle_with_vars([+,+,+,-,-,+,-,g,g],[+,+,+,-,-,+,-,g],[]).
+sierpinski_triangle_with_vars([+,+,+,-,-,+,g,g,+],[+,+,+,-,-,+,g,+],[]).
+sierpinski_triangle_with_vars([+,+,+,-,-,+,g,g,-],[+,+,+,-,-,+,g,-],[]).
+sierpinski_triangle_with_vars([+,+,+,-,-,-,+,g,g],[+,+,+,-,-,-,+,g],[]).
+sierpinski_triangle_with_vars([+,+,+,-,-,-,-,g,g],[+,+,+,-,-,-,-,g],[]).
+sierpinski_triangle_with_vars([+,+,+,-,-,-,g,g,+],[+,+,+,-,-,-,g,+],[]).
+sierpinski_triangle_with_vars([+,+,+,-,-,-,g,g,-],[+,+,+,-,-,-,g,-],[]).
+sierpinski_triangle_with_vars([+,+,+,-,-,g,g,+,+],[+,+,+,-,-,g,+,+],[]).
+sierpinski_triangle_with_vars([+,+,+,-,-,g,g,+,-],[+,+,+,-,-,g,+,-],[]).
+sierpinski_triangle_with_vars([+,+,+,-,-,g,g,-,+],[+,+,+,-,-,g,-,+],[]).
+sierpinski_triangle_with_vars([+,+,+,-,-,g,g,-,-],[+,+,+,-,-,g,-,-],[]).
+sierpinski_triangle_with_vars([+,+,+,-,-,g,g,g,g],[+,+,+,-,-,g,g],[]).
+sierpinski_triangle_with_vars([+,+,+,-,f,-,g,+,f,+,g,-,f],[+,+,+,-,f],[]).
+sierpinski_triangle_with_vars([+,+,+,-,g,g,+,+,+],[+,+,+,-,g,+,+,+],[]).
+sierpinski_triangle_with_vars([+,+,+,-,g,g,+,+,-],[+,+,+,-,g,+,+,-],[]).
+sierpinski_triangle_with_vars([+,+,+,-,g,g,+,-,+],[+,+,+,-,g,+,-,+],[]).
+sierpinski_triangle_with_vars([+,+,+,-,g,g,+,-,-],[+,+,+,-,g,+,-,-],[]).
+sierpinski_triangle_with_vars([+,+,+,-,g,g,+,g,g],[+,+,+,-,g,+,g],[]).
+sierpinski_triangle_with_vars([+,+,+,-,g,g,-,+,+],[+,+,+,-,g,-,+,+],[]).
+sierpinski_triangle_with_vars([+,+,+,-,g,g,-,+,-],[+,+,+,-,g,-,+,-],[]).
+sierpinski_triangle_with_vars([+,+,+,-,g,g,-,-,+],[+,+,+,-,g,-,-,+],[]).
+sierpinski_triangle_with_vars([+,+,+,-,g,g,-,-,-],[+,+,+,-,g,-,-,-],[]).
+sierpinski_triangle_with_vars([+,+,+,-,g,g,-,g,g],[+,+,+,-,g,-,g],[]).
+sierpinski_triangle_with_vars([+,+,+,-,g,g,g,g,+],[+,+,+,-,g,g,+],[]).
+sierpinski_triangle_with_vars([+,+,+,-,g,g,g,g,-],[+,+,+,-,g,g,-],[]).
+sierpinski_triangle_with_vars([+,+,+,f,-,g,+,f,+,g,-,f],[+,+,+,f],[]).
+sierpinski_triangle_with_vars([+,+,+,f,-,g,+,f,+,g,-,f,+],[+,+,+,f,+],[]).
+sierpinski_triangle_with_vars([+,+,+,f,-,g,+,f,+,g,-,f,-],[+,+,+,f,-],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,+,+,+,+],[+,+,+,g,+,+,+,+],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,+,+,+,-],[+,+,+,g,+,+,+,-],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,+,+,-,+],[+,+,+,g,+,+,-,+],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,+,+,-,-],[+,+,+,g,+,+,-,-],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,+,+,g,g],[+,+,+,g,+,+,g],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,+,-,+,+],[+,+,+,g,+,-,+,+],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,+,-,+,-],[+,+,+,g,+,-,+,-],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,+,-,-,+],[+,+,+,g,+,-,-,+],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,+,-,-,-],[+,+,+,g,+,-,-,-],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,+,-,g,g],[+,+,+,g,+,-,g],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,+,g,g,+],[+,+,+,g,+,g,+],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,+,g,g,-],[+,+,+,g,+,g,-],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,-,+,+,+],[+,+,+,g,-,+,+,+],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,-,+,+,-],[+,+,+,g,-,+,+,-],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,-,+,-,+],[+,+,+,g,-,+,-,+],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,-,+,-,-],[+,+,+,g,-,+,-,-],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,-,+,g,g],[+,+,+,g,-,+,g],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,-,-,+,+],[+,+,+,g,-,-,+,+],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,-,-,+,-],[+,+,+,g,-,-,+,-],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,-,-,-,+],[+,+,+,g,-,-,-,+],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,-,-,-,-],[+,+,+,g,-,-,-,-],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,-,-,g,g],[+,+,+,g,-,-,g],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,-,g,g,+],[+,+,+,g,-,g,+],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,-,g,g,-],[+,+,+,g,-,g,-],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,g,g,+,+],[+,+,+,g,g,+,+],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,g,g,+,-],[+,+,+,g,g,+,-],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,g,g,-,+],[+,+,+,g,g,-,+],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,g,g,-,-],[+,+,+,g,g,-,-],[]).
+sierpinski_triangle_with_vars([+,+,+,g,g,g,g,g,g],[+,+,+,g,g,g],[]).
+sierpinski_triangle_with_vars([+,+,-,+,+,+,+,g,g],[+,+,-,+,+,+,+,g],[]).
+sierpinski_triangle_with_vars([+,+,-,+,+,+,-,g,g],[+,+,-,+,+,+,-,g],[]).
+sierpinski_triangle_with_vars([+,+,-,+,+,+,g,g,+],[+,+,-,+,+,+,g,+],[]).
+sierpinski_triangle_with_vars([+,+,-,+,+,+,g,g,-],[+,+,-,+,+,+,g,-],[]).
+sierpinski_triangle_with_vars([+,+,-,+,+,-,+,g,g],[+,+,-,+,+,-,+,g],[]).
+sierpinski_triangle_with_vars([+,+,-,+,+,-,-,g,g],[+,+,-,+,+,-,-,g],[]).
+sierpinski_triangle_with_vars([+,+,-,+,+,-,g,g,+],[+,+,-,+,+,-,g,+],[]).
+sierpinski_triangle_with_vars([+,+,-,+,+,-,g,g,-],[+,+,-,+,+,-,g,-],[]).
+sierpinski_triangle_with_vars([+,+,-,+,+,g,g,+,+],[+,+,-,+,+,g,+,+],[]).
+sierpinski_triangle_with_vars([+,+,-,+,+,g,g,+,-],[+,+,-,+,+,g,+,-],[]).
+sierpinski_triangle_with_vars([+,+,-,+,+,g,g,-,+],[+,+,-,+,+,g,-,+],[]).
+sierpinski_triangle_with_vars([+,+,-,+,+,g,g,-,-],[+,+,-,+,+,g,-,-],[]).
+sierpinski_triangle_with_vars([+,+,-,+,+,g,g,g,g],[+,+,-,+,+,g,g],[]).
+sierpinski_triangle_with_vars([+,+,-,+,-,+,+,g,g],[+,+,-,+,-,+,+,g],[]).
+sierpinski_triangle_with_vars([+,+,-,+,-,+,-,g,g],[+,+,-,+,-,+,-,g],[]).
+sierpinski_triangle_with_vars([+,+,-,+,-,+,g,g,+],[+,+,-,+,-,+,g,+],[]).
+sierpinski_triangle_with_vars([+,+,-,+,-,+,g,g,-],[+,+,-,+,-,+,g,-],[]).
+sierpinski_triangle_with_vars([+,+,-,+,-,-,+,g,g],[+,+,-,+,-,-,+,g],[]).
+sierpinski_triangle_with_vars([+,+,-,+,f,-,g,+,f,+,g,-,f],[+,+,-,+,f],[]).
+sierpinski_triangle_with_vars([+,+,-,-,f,-,g,+,f,+,g,-,f],[+,+,-,-,f],[]).
+sierpinski_triangle_with_vars([+,+,-,f,-,g,+,f,+,g,-,f],[+,+,-,f],[]).
+sierpinski_triangle_with_vars([+,+,-,f,-,g,+,f,+,g,-,f,+],[+,+,-,f,+],[]).
+sierpinski_triangle_with_vars([+,+,-,f,-,g,+,f,+,g,-,f,-],[+,+,-,f,-],[]).
+sierpinski_triangle_with_vars([+,+,f,-,g,+,f,+,g,-,f],[+,+,f],[]).
+sierpinski_triangle_with_vars([+,+,f,-,g,+,f,+,g,-,f,+],[+,+,f,+],[]).
+sierpinski_triangle_with_vars([+,+,f,-,g,+,f,+,g,-,f,+,+],[+,+,f,+,+],[]).
+sierpinski_triangle_with_vars([+,+,f,-,g,+,f,+,g,-,f,+,-],[+,+,f,+,-],[]).
+sierpinski_triangle_with_vars([+,+,f,-,g,+,f,+,g,-,f,-],[+,+,f,-],[]).
+sierpinski_triangle_with_vars([+,+,f,-,g,+,f,+,g,-,f,-,+],[+,+,f,-,+],[]).
+sierpinski_triangle_with_vars([+,+,f,-,g,+,f,+,g,-,f,-,-],[+,+,f,-,-],[]).
+sierpinski_triangle_with_vars([+,+,f,-,g,+,f,+,g,-,f,g,g],[+,+,f,g],[]).
+sierpinski_triangle_with_vars([+,+,g,g,f,-,g,+,f,+,g,-,f],[+,+,g,f],[]).
+sierpinski_triangle_with_vars([+,-,+,+,f,-,g,+,f,+,g,-,f],[+,-,+,+,f],[]).
+sierpinski_triangle_with_vars([+,-,+,-,f,-,g,+,f,+,g,-,f],[+,-,+,-,f],[]).
+sierpinski_triangle_with_vars([+,-,+,f,-,g,+,f,+,g,-,f],[+,-,+,f],[]).
+sierpinski_triangle_with_vars([+,-,+,f,-,g,+,f,+,g,-,f,+],[+,-,+,f,+],[]).
+sierpinski_triangle_with_vars([+,-,+,f,-,g,+,f,+,g,-,f,-],[+,-,+,f,-],[]).
+sierpinski_triangle_with_vars([+,-,-,+,f,-,g,+,f,+,g,-,f],[+,-,-,+,f],[]).
+sierpinski_triangle_with_vars([+,-,-,-,f,-,g,+,f,+,g,-,f],[+,-,-,-,f],[]).
+sierpinski_triangle_with_vars([+,-,-,f,-,g,+,f,+,g,-,f],[+,-,-,f],[]).
+sierpinski_triangle_with_vars([+,-,-,f,-,g,+,f,+,g,-,f,+],[+,-,-,f,+],[]).
+sierpinski_triangle_with_vars([+,-,f,-,g,+,f,+,g,-,f],[+,-,f],[]).
+sierpinski_triangle_with_vars([+,-,f,-,g,+,f,+,g,-,f,+],[+,-,f,+],[]).
+sierpinski_triangle_with_vars([+,-,f,-,g,+,f,+,g,-,f,-],[+,-,f,-],[]).
+sierpinski_triangle_with_vars([+,f,-,g,+,f,+,g,-,f],[+,f],[]).
+sierpinski_triangle_with_vars([+,f,-,g,+,f,+,g,-,f,+],[+,f,+],[]).
+sierpinski_triangle_with_vars([+,f,-,g,+,f,+,g,-,f,+,+],[+,f,+,+],[]).
+sierpinski_triangle_with_vars([+,f,-,g,+,f,+,g,-,f,+,-],[+,f,+,-],[]).
+sierpinski_triangle_with_vars([+,f,-,g,+,f,+,g,-,f,-],[+,f,-],[]).
+sierpinski_triangle_with_vars([+,f,-,g,+,f,+,g,-,f,-,+],[+,f,-,+],[]).
+sierpinski_triangle_with_vars([+,f,-,g,+,f,+,g,-,f,-,-],[+,f,-,-],[]).
+sierpinski_triangle_with_vars([+,f,-,g,+,f,+,g,-,f,g,g],[+,f,g],[]).
+sierpinski_triangle_with_vars([+,g,g,f,-,g,+,f,+,g,-,f],[+,g,f],[]).
+sierpinski_triangle_with_vars([-,+,+,f,-,g,+,f,+,g,-,f],[-,+,+,f],[]).
+sierpinski_triangle_with_vars([-,+,-,f,-,g,+,f,+,g,-,f],[-,+,-,f],[]).
+sierpinski_triangle_with_vars([-,+,f,-,g,+,f,+,g,-,f],[-,+,f],[]).
+sierpinski_triangle_with_vars([-,+,f,-,g,+,f,+,g,-,f,+],[-,+,f,+],[]).
+sierpinski_triangle_with_vars([-,+,f,-,g,+,f,+,g,-,f,-],[-,+,f,-],[]).
+sierpinski_triangle_with_vars([-,-,+,f,-,g,+,f,+,g,-,f],[-,-,+,f],[]).
+sierpinski_triangle_with_vars([-,-,-,f,-,g,+,f,+,g,-,f],[-,-,-,f],[]).
+sierpinski_triangle_with_vars([-,-,f,-,g,+,f,+,g,-,f],[-,-,f],[]).
+sierpinski_triangle_with_vars([-,-,f,-,g,+,f,+,g,-,f,+],[-,-,f,+],[]).
+sierpinski_triangle_with_vars([-,-,f,-,g,+,f,+,g,-,f,-],[-,-,f,-],[]).
+sierpinski_triangle_with_vars([-,f,-,g,+,f,+,g,-,f],[-,f],[]).
+sierpinski_triangle_with_vars([-,f,-,g,+,f,+,g,-,f,+],[-,f,+],[]).
+sierpinski_triangle_with_vars([-,f,-,g,+,f,+,g,-,f,+,+],[-,f,+,+],[]).
+sierpinski_triangle_with_vars([-,f,-,g,+,f,+,g,-,f,+,-],[-,f,+,-],[]).
+sierpinski_triangle_with_vars([-,f,-,g,+,f,+,g,-,f,-],[-,f,-],[]).
+sierpinski_triangle_with_vars([-,f,-,g,+,f,+,g,-,f,-,+],[-,f,-,+],[]).
+sierpinski_triangle_with_vars([-,f,-,g,+,f,+,g,-,f,-,-],[-,f,-,-],[]).
+sierpinski_triangle_with_vars([-,f,-,g,+,f,+,g,-,f,g,g],[-,f,g],[]).
+sierpinski_triangle_with_vars([-,g,g,f,-,g,+,f,+,g,-,f],[-,g,f],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f],[f],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f,+],[f,+],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f,+,+],[f,+,+],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f,+,+,+],[f,+,+,+],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f,+,+,-],[f,+,+,-],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f,+,-],[f,+,-],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f,+,-,+],[f,+,-,+],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f,+,-,-],[f,+,-,-],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f,+,g,g],[f,+,g],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f,-],[f,-],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f,-,+],[f,-,+],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f,-,+,+],[f,-,+,+],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f,-,+,-],[f,-,+,-],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f,-,-],[f,-,-],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f,-,-,+],[f,-,-,+],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f,-,-,-],[f,-,-,-],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f,-,g,g],[f,-,g],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f,g,g],[f,g],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f,g,g,+],[f,g,+],[]).
+sierpinski_triangle_with_vars([f,-,g,+,f,+,g,-,f,g,g,-],[f,g,-],[]).
+sierpinski_triangle_with_vars([g,g,+,f,-,g,+,f,+,g,-,f],[g,+,f],[]).
+sierpinski_triangle_with_vars([g,g,-,f,-,g,+,f,+,g,-,f],[g,-,f],[]).
+sierpinski_triangle_with_vars([g,g,f,-,g,+,f,+,g,-,f],[g,f],[]).
+sierpinski_triangle_with_vars([g,g,f,-,g,+,f,+,g,-,f,+],[g,f,+],[]).
+sierpinski_triangle_with_vars([g,g,f,-,g,+,f,+,g,-,f,-],[g,f,-],[]).
+%*/

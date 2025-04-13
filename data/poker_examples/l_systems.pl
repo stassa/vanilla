@@ -5,6 +5,7 @@
                    ,koch_curve/3
                    ,not_koch_curve/3
                    ,hilbert_curve/3
+                   ,hilbert_curve_with_vars/3
                    ,not_hilbert_curve/3
                    ,sierpinski_triangle/3
                    ,not_sierpinski_triangle/3
@@ -16,6 +17,7 @@
 
 :-use_module(lib(poker/poker_auxiliaries)).
 :-use_module(src(auxiliaries)).
+:-reexport(data(poker_examples/l_systems_long)).
 
 /** <module> L-System grammars
 
@@ -275,28 +277,6 @@ koch_char(-) --> minus.
 koch_char(f) --> f.
 
 
-%!      koch_curve_with_vars(?Is,?Os,?Rs) is nondet.
-%
-%       Generator for Koch Curve strings with variable symbols.
-%
-%       Koch Curve strings begin including variable symbols at length
-%       8. This predicate ensures that examples can be generated that
-%       include variables.
-%
-/*
-koch_curve_with_vars(Is,Os,[]):-
-% The first Koch Curve string that contains variable symbols has
-% length 8.
-        generate_initial(koch_curve,all,8,10,Es)
-        ,findall(s(Is,Os,[])
-                ,(member(s(Is,Os,[]),Es)
-                 ,member(f,Is)
-                 )
-                ,Vs)
-        ,member(s(Is,Os,[]),Vs).
-*/
-
-
 %!      hilbert_curve(?String) is semidet.
 %
 %       Calculate a Hilbert Curve String.
@@ -339,29 +319,6 @@ hilbert_char(x) --> x.
 hilbert_char(y) --> y.
 
 
-%!      hilbert_curve_with_vars(?Is,?Os,?Rs) is nondet.
-%
-%       Generator for Hilbert Curve strings with variable symbols.
-%
-%       Hilbert Curve strings begin including variable symbols at length
-%       11. This predicate ensures that examples can be generated that
-%       include variables.
-%
-/*
-hilbert_curve_with_vars(Is,Os,[]):-
-% The first Hilbert Curve string that contains variable symbols has
-% length 11.
-        generate_initial(hilbert_curve,all,11,14,Es)
-        ,findall(s(Is,Os,[])
-                ,(member(s(Is,Os,[]),Es)
-                 ,( member(x,Is)
-                  ; member(y,Is)
-                  )
-                 )
-                ,Vs)
-        ,member(s(Is,Os,[]),Vs).
-*/
-
 
 %!      sierpinski_triangle(?String) is semidet.
 %
@@ -401,29 +358,6 @@ sierpinski_char(-) --> minus.
 sierpinski_char(f) --> f.
 sierpinski_char(g) --> g.
 
-
-%!      sierpinski_triangle_with_vars(?Is,?Os,?Rs) is nondet.
-%
-%       Generator for Sierpinski Triangle strings with variable symbols.
-%
-%       Sierpinski Triangle strings begin including variable symbols at
-%       length 9. This predicate ensures that examples can be generated
-%       that include variables.
-%
-/*
-sierpinski_triangle_with_vars(Is,Os,[]):-
-% The first Hilbert Curve string that contains variable symbols has
-% length 9.
-        generate_initial(sierpinski_triangle,all,9,15,Es)
-        ,findall(s(Is,Os,[])
-                ,(member(s(Is,Os,[]),Es)
-                 ,(   member(f,Is)
-                  ;   member(g,Is)
-                  )
-                 )
-                ,Vs)
-        ,member(s(Is,Os,[]),Vs).
-*/
 
 
 %!      sierpinski_arrowhead(?String) is semidet.
@@ -645,4 +579,3 @@ l_system(S,M,Is,N,Os):-
                 /*******************************
                 *  I JUST LIKE CTRL+C-CTRL+H   *
                 *******************************/
-
