@@ -1,14 +1,14 @@
-:-module(exp_script_wcgnf, [test_parity/0
-                           ,test_anbn/0
-                           ,test_anbm/0
-                           ,test_parens/0
-                           ,test_palindrome/0
-                           ,test_parity/1
-                           ,test_anbn/1
-                           ,test_anbm/1
-                           ,test_parens/1
-                           ,test_palindrome/1
-                           ,test_anbn_range/2
+:-module(exp_script_wcgnf, [parity/0
+                           ,anbn/0
+                           ,anbm/0
+                           ,parens/0
+                           ,palindrome/0
+                           ,parity/1
+                           ,anbn/1
+                           ,anbm/1
+                           ,parens/1
+                           ,palindrome/1
+                           ,anbn_range/2
                            ,set_configs/1
                            ,cleanup_safe_example/0
                            ,setup_safe_example/1
@@ -62,7 +62,7 @@
 % Simple set of single-run experiments. Use for quick eyballing of
 % results while working out the right configs.
 
-test_parity:-
+parity:-
         Lang = even
         ,T = q0/2
         ,Sl = even(all,0,4)
@@ -74,7 +74,7 @@ test_parity:-
         ,setup_safe_example(Lang)
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
 
-test_anbn:-
+anbn:-
         Lang = anbn
         ,T = s/2
         ,Sl = anbn(all,0,6)
@@ -86,7 +86,7 @@ test_anbn:-
         ,setup_safe_example(Lang)
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
 
-test_anbm:-
+anbm:-
         Lang = anbm
         ,T = s/2
         ,Sl = anbm(all,0,4)
@@ -97,7 +97,7 @@ test_anbm:-
         ,setup_safe_example(Lang)
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
 
-test_parens:-
+parens:-
         Lang = parens
 	,T = p/2
 	,Sl = parens(all,0,6)
@@ -109,7 +109,7 @@ test_parens:-
 	,setup_safe_example(Lang)
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
-test_palindrome:-
+palindrome:-
 	Lang = palindrome
 	,T = q0/2
 	,Sl = palindrome(all,0,4)
@@ -130,11 +130,11 @@ test_palindrome:-
 % random samples of labelled, unlabelled examples and generated negative
 % examples.
 
-%!      test_parity(+N) is det.
+%!      parity(+N) is det.
 %
 %       Run N experiments and print the aggregate evaluation results.
 %
-test_parity(N):-
+parity(N):-
         Lang = even
         ,T = q0/2
         ,Sl = even(all,0,4)
@@ -143,11 +143,11 @@ test_parity(N):-
         ,TNeg = odd(all,0,4)
         ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
-%!      test_anbn(+N) is det.
+%!      anbn(+N) is det.
 %
 %       Run N experiments and print the aggregate evaluation results.
 %
-test_anbn(N):-
+anbn(N):-
         Lang = anbn
         ,T = s/2
         ,Sl = anbn(all,0,6)
@@ -156,11 +156,11 @@ test_anbn(N):-
         ,TNeg = not_anbn(all,0,3)
         ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
-%!      test_anbm(+N) is det.
+%!      anbm(+N) is det.
 %
 %       Run N experiments and print the aggregate evaluation results.
 %
-test_anbm(N):-
+anbm(N):-
         Lang = anbm
         ,T = s/2
         ,Sl = anbm(all,0,4)
@@ -169,11 +169,11 @@ test_anbm(N):-
         ,TNeg = not_anbm(all,0,4)
         ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
-%!      test_parens(+N) is det.
+%!      parens(+N) is det.
 %
 %       Run N experiments and print the aggregate evaluation results.
 %
-test_parens(N):-
+parens(N):-
         Lang = parens
 	,T = p/2
 	,Sl = parens(all,0,6)
@@ -182,11 +182,11 @@ test_parens(N):-
 	,TNeg = unbalanced_parens(all,0,15)
         ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
-%!      test_palindrome(+N) is det.
+%!      palindrome(+N) is det.
 %
 %       Run N experiments and print the aggregate evaluation results.
 %
-test_palindrome(N):-
+palindrome(N):-
 	Lang = palindrome
 	,T = q0/2
 	,Sl = palindrome(8,0,4)
@@ -205,13 +205,13 @@ test_palindrome(N):-
 % relation between labelled, unlabelled, and generated examples.
 
 
-%!      test_anbn(+N,+Stream) is det.
+%!      anbn(+N,+Stream) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
 %
 %       Results are output to the given output Stream.
 %
-test_anbn_range(N,S):-
+anbn_range(N,S):-
         Lang = anbn
         ,T = s/2
         ,Gs = 0:25/5
@@ -232,7 +232,10 @@ test_anbn_range(N,S):-
 %       Set configuration options for a target Language.
 %
 set_configs(even):-
-        poker_auxiliaries:set_poker_configuration_option(clause_limit,[5])
+        poker_auxiliaries:set_configuration_option(fetch_clauses,[[builtins,bk,metarules]])
+        ,poker_auxiliaries:set_configuration_option(table_meta_interpreter, [false])
+        ,poker_auxiliaries:set_configuration_option(untable_meta_interpreter, [true])
+        ,poker_auxiliaries:set_poker_configuration_option(clause_limit,[5])
         ,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
         ,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
         ,poker_auxiliaries:set_poker_configuration_option(max_invented,[1])

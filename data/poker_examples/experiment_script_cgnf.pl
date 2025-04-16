@@ -1,17 +1,17 @@
-:-module(exp_script_cgnf, [test_parity/0
-                          ,test_anbn/0
-                          ,test_anbm/0
-                          ,test_parens/0
-                          ,test_palindrome/0
-                          ,test_parity/1
-                          ,test_anbn/1
-                          ,test_anbm/1
-                          ,test_parens/1
-                          ,test_palindrome/1
-                          ,test_anbn_range/2
-                          ,test_anbn_anbm_range/2
-                          ,test_anbn_anbm_filtering/0
-                          ,test_anbn_anbm_filtering/1
+:-module(exp_script_cgnf, [parity/0
+                          ,anbn/0
+                          ,anbm/0
+                          ,parens/0
+                          ,palindrome/0
+                          ,parity/1
+                          ,anbn/1
+                          ,anbm/1
+                          ,parens/1
+                          ,palindrome/1
+                          ,anbn_range/2
+                          ,anbn_anbm_range/2
+                          ,anbn_anbm_filtering/0
+                          ,anbn_anbm_filtering/1
                           ,set_configs/1
                           ,cleanup_safe_example/0
                           ,setup_safe_example/1
@@ -68,11 +68,11 @@
 % results while working out the right configs.
 
 
-%!      test_parity is det.
+%!      parity is det.
 %
 %       Run a single experiment and print the program and labelling.
 %
-test_parity:-
+parity:-
         Lang = even
         ,T = q0/2
         ,Sl = even(all,0,4)
@@ -81,11 +81,11 @@ test_parity:-
         ,TNeg = odd(all,0,4)
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
 
-%!      test_anbn is det.
+%!      anbn is det.
 %
 %       Run a single experiment and print the program and labelling.
 %
-test_anbn:-
+anbn:-
         Lang = anbn
         ,T = s/2
         ,Sl = anbn(all,0,6)
@@ -94,11 +94,11 @@ test_anbn:-
         ,TNeg = not_anbn(all,0,3)
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
 
-%!      test_anbm is det.
+%!      anbm is det.
 %
 %       Run a single experiment and print the program and labelling.
 %
-test_anbm:-
+anbm:-
         Lang = anbm
         ,T = s/2
         ,Sl = anbm(all,0,4)
@@ -108,11 +108,11 @@ test_anbm:-
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
 
 
-%!      test_parens is det.
+%!      parens is det.
 %
 %       Run a single experiment and print the program and labelling.
 %
-test_parens:-
+parens:-
         Lang = parens
 	,T = p/2
 	,Sl = parens(all,0,6)
@@ -121,11 +121,11 @@ test_parens:-
 	,TNeg = unbalanced_parens(all,0,15)
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
-%!      test_palindrome is det.
+%!      palindrome is det.
 %
 %       Run a single experiment and print the program and labelling.
 %
-test_palindrome:-
+palindrome:-
 	Lang = palindrome
 	,T = q0/2
 	,Sl = palindrome(8,0,4)
@@ -144,11 +144,11 @@ test_palindrome:-
 % examples.
 
 
-%!      test_parity(+N) is det.
+%!      parity(+N) is det.
 %
 %       Run N experiments and print the aggregate evaluation results.
 %
-test_parity(N):-
+parity(N):-
         Lang = even
         ,T = q0/2
         ,Sl = even(all,0,4)
@@ -157,11 +157,11 @@ test_parity(N):-
         ,TNeg = odd(all,0,4)
         ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
-%!      test_anbn(+N) is det.
+%!      anbn(+N) is det.
 %
 %       Run N experiments and print the aggregate evaluation results.
 %
-test_anbn(N):-
+anbn(N):-
         Lang = anbn
         ,T = s/2
         ,Sl = anbn(all,0,6)
@@ -170,11 +170,11 @@ test_anbn(N):-
         ,TNeg = not_anbn(all,0,3)
         ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
-%!      test_anbm(+N) is det.
+%!      anbm(+N) is det.
 %
 %       Run N experiments and print the aggregate evaluation results.
 %
-test_anbm(N):-
+anbm(N):-
         Lang = anbm
         ,T = s/2
         ,Sl = anbm(all,0,4)
@@ -183,11 +183,11 @@ test_anbm(N):-
         ,TNeg = not_anbm(all,0,4)
         ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
-%!      test_parens(+N) is det.
+%!      parens(+N) is det.
 %
 %       Run N experiments and print the aggregate evaluation results.
 %
-test_parens(N):-
+parens(N):-
         Lang = parens
 	,T = p/2
 	,Sl = parens(all,0,6)
@@ -196,11 +196,11 @@ test_parens(N):-
 	,TNeg = unbalanced_parens(all,0,15)
         ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
-%!      test_palindrome(+N) is det.
+%!      palindrome(+N) is det.
 %
 %       Run N experiments and print the aggregate evaluation results.
 %
-test_palindrome(N):-
+palindrome(N):-
 	Lang = palindrome
 	,T = q0/2
 	,Sl = palindrome(8,0,4)
@@ -219,13 +219,13 @@ test_palindrome(N):-
 % relation between labelled, unlabelled, and generated examples.
 
 
-%!      test_anbn_range(+N,+Stream) is det.
+%!      anbn_range(+N,+Stream) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
 %
 %       Results are output to the given output Stream.
 %
-test_anbn_range(N,S):-
+anbn_range(N,S):-
         Lang = anbn
         ,T = s/2
         ,Gs = 0:25/5
@@ -236,7 +236,7 @@ test_anbn_range(N,S):-
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
 
 
-%!      test_anbn_anbm_range(+N,+Stream) is det.
+%!      anbn_anbm_range(+N,+Stream) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
 %
@@ -246,7 +246,7 @@ test_anbn_range(N,S):-
 %       unlabelled examples of anbm to explore the effect of unlabelled
 %       examples on learning.
 %
-test_anbn_anbm_range(N,S):-
+anbn_anbm_range(N,S):-
         Lang = anbn
         ,T = s/2
         ,Gs = 0:25/5
@@ -267,7 +267,7 @@ test_anbn_anbm_range(N,S):-
 % negative with respect to labelled examples and learning a program
 % from the labelled examples, and the labelled-negative examples.
 
-%!      test_anbn_anbm_filtering is det.
+%!      anbn_anbm_filtering is det.
 %
 %       Run one experiment separating examples of two grammars.
 %
@@ -277,7 +277,7 @@ test_anbn_anbm_range(N,S):-
 %       labelled negative with respect to anbn, which should be the anbm
 %       examples.
 %
-test_anbn_anbm_filtering:-
+anbn_anbm_filtering:-
         Lang = anbn_anbm
         ,T = s/2
         ,Sl = anbn(all,0,4)
@@ -301,11 +301,11 @@ test_anbn_anbm_filtering:-
 % a program first from the labelled examples, and then from the
 % labelling of the unlabelled examples.
 
-%!      test_anbn_anbm_filtering(+N) is det.
+%!      anbn_anbm_filtering(+N) is det.
 %
 %       Run N experiments separating examples of two grammars.
 %
-test_anbn_anbm_filtering(N):-
+anbn_anbm_filtering(N):-
         Lang = anbn_anbm
         ,T = s/2
         ,Sl = anbn(all,0,4)
