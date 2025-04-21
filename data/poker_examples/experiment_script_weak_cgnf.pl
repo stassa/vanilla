@@ -9,6 +9,9 @@
                            ,parens/1
                            ,palindrome/1
                            ,anbn_range/2
+                           ,anbm_range/2
+                           ,parens_range/2
+                           ,palindrome_range/2
                            ,set_configs/1
                            ,cleanup_safe_example/0
                            ,setup_safe_example/1
@@ -205,7 +208,7 @@ palindrome(N):-
 % relation between labelled, unlabelled, and generated examples.
 
 
-%!      anbn(+N,+Stream) is det.
+%!      anbn_range(+N,+Stream) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
 %
@@ -215,10 +218,61 @@ anbn_range(N,S):-
         Lang = anbn
         ,T = s/2
         ,Gs = 0:25/5
-        ,Sl = anbn(1:16/5,0,45)
+        ,Sl = anbn(1:26/5,0,52) % all is 26
         ,Su = []
         ,TPos = anbn(all,46,80)
         ,TNeg = not_anbn(all,0,12)
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
+
+
+%!      anbm_range(+N,+Stream) is det.
+%
+%       Run N experiments varying inputs and print evaluation results.
+%
+%       Results are output to the given output Stream.
+%
+anbm_range(N,S):-
+        Lang = anbm
+        ,T = s/2
+        ,Gs = 0:25/5
+        ,Sl = anbm(1:81/20,0,7) % all is 88
+        ,Su = []
+        ,TPos = anbm(all,7,18)
+        ,TNeg = not_anbm(all,0,13)
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
+
+
+%!      parens_range(+N,+Stream) is det.
+%
+%       Run N experiments varying inputs and print evaluation results.
+%
+%       Results are output to the given output Stream.
+%
+parens_range(N,S):-
+        Lang = parens
+        ,T = p/2
+        ,Gs = 0:100/20
+        ,Sl = parens(1:61/10,0,10) % all is 54
+        ,Su = []
+        ,TPos = parens(all,11,21)
+        ,TNeg = unbalanced_parens(all,0,15)
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
+
+
+%!      palindrome_range(+N,+Stream) is det.
+%
+%       Run N experiments varying inputs and print evaluation results.
+%
+%       Results are output to the given output Stream.
+%
+palindrome_range(N,S):-
+        Lang = palindrome
+        ,T = q0/2
+        ,Gs = 0:250/50
+        ,Sl = palindrome(1:21/4,0,5) % all is 54
+        ,Su = []
+        ,TPos = palindrome(all,6,16)
+        ,TNeg = not_palindrome(all,0,10)
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
 
 

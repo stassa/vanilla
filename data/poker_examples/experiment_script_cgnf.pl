@@ -10,6 +10,7 @@
                           ,palindrome/1
                           ,anbn_range/2
                           ,anbn_anbm_range/2
+                          ,anbm_anbn_range/2
                           ,anbn_anbm_filtering/0
                           ,anbn_anbm_filtering/1
                           ,set_configs/1
@@ -225,6 +226,10 @@ palindrome(N):-
 %
 %       Results are output to the given output Stream.
 %
+%       This experiment includes only labelled examples of a^nb^n (where
+%       n > 0) and is intended to explore teh effect of automatically
+%       generated examples on learning performance.
+%
 anbn_range(N,S):-
         Lang = anbn
         ,T = s/2
@@ -242,12 +247,13 @@ anbn_range(N,S):-
 %
 %       Results are output to the given Stream.
 %
-%       This experiment includes labelled examples of anbn and
-%       unlabelled examples of anbm to explore the effect of unlabelled
-%       examples on learning.
+%       This experiment includes labelled examples of a^nb^n (where n >
+%       0) and unlabelled examples of both a^nb^n and a^nb^m (where n >=
+%       m >= 0) to explore the effect of unlabelled examples on
+%       learning performance.
 %
 anbn_anbm_range(N,S):-
-        Lang = anbn
+        Lang = anbn_anbm
         ,T = s/2
         ,Gs = 0:25/5
         ,Sl = anbn(1:21/5,0,45)
@@ -256,6 +262,30 @@ anbn_anbm_range(N,S):-
               ]
         ,TPos = anbn(all,46,80)
         ,TNeg = not_anbn(all,0,12)
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
+
+
+%!      anbm_anbn_range(+N,+Stream) is det.
+%
+%       Run N experiments varying inputs and print evaluation results.
+%
+%       Results are output to the given Stream.
+%
+%       This experiment includes labelled examples of a^nb^m (where n >=
+%       m >= 0) and unlabelled examples of both a^nb^m and a^nb^n (where
+%       n > 0) to explore the effect of unlabelled examples on learning
+%       performance.
+%
+anbm_anbn_range(N,S):-
+        Lang = anbn_anbm
+        ,T = s/2
+        ,Gs = 0:25/5
+        ,Sl = anbm(1:21/5,0,6)
+        ,Su = [anbm(1:21/5,6,12)
+              ,anbn(1:21/5,0,45)
+              ]
+        ,TPos = anbm(all,7,15)
+        ,TNeg = not_anbm(all,0,10)
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
 
 
@@ -286,6 +316,38 @@ anbn_anbm_filtering:-
         ,TNegL = not_anbn(all,0,3)
         ,TPosU = anbm(all,5,8)
         ,TNegU = not_anbm(all,0,4)
+        ,Pp = print_labelled(false)
+        ,Pn = print_unlabelled(false)
+        ,Ps = [Pp,Pn]
+        ,setup_and_run_filter_experiment(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Ps).
+
+
+%!      anbm_anbn_filtering is det.
+%
+%       Run one experiment separating examples of two grammars.
+%
+%       Labelled examples are anbn strings and unlabelled examples are a
+%       mix of anbn and anbm. Results evaluate the ability to learn anbn
+%       from the labelled examples and anbm from the unlabelled examples
+%       labelled negative with respect to anbn, which should be the anbm
+%       examples.
+%
+%       @tbd This doesn't work because anbm takes all of anbn's examples
+%       and there's nothing left to learn with, after filtering anbm
+%       examples in the set of unlabellled examples: all the unlabelled
+%       examples of anbm are also examples of anbn.
+%
+anbm_anbn_filtering:-
+        Lang = anbn_anbm
+        ,T = s/2
+        ,Sl = anbm(all,0,4)
+        ,Su = [anbn(all,0,12)
+              ,anbm(all,5,8)
+              ]
+        ,TPosL = anbm(all,5,8)
+        ,TNegL = not_anbm(all,0,4)
+        ,TPosU = anbn(all,9,12)
+        ,TNegU = not_anbn(all,0,3)
         ,Pp = print_labelled(false)
         ,Pn = print_unlabelled(false)
         ,Ps = [Pp,Pn]
