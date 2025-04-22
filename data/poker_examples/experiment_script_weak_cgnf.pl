@@ -428,8 +428,8 @@ background_knowledge(s/2,[a/2,b/2,empty/2]).
 background_knowledge(p/2,[lp/2,rp/2,empty/2]).
 background_knowledge(q0/2,[zero/2,one/2,empty/2]).
 
-metarules(s/2,[identity,chain,tri_chain]).
-metarules(p/2,[identity,chain,tri_chain]).
+metarules(s/2,[identity,chain]).
+metarules(p/2,[identity,chain]).
 metarules(q0/2,[identity,chain,tri_chain]).
 
 % Dummy, replaced by input to experiment predicate.
