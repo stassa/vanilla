@@ -218,7 +218,7 @@ anbn_range(N,S):-
         Lang = anbn
         ,T = s/2
         ,Gs = 0:25/5
-        ,Sl = anbn(1:26/5,0,52) % all is 26
+        ,Sl = anbn(1:21/5,0,45) % all is 22
         ,Su = []
         ,TPos = anbn(all,46,80)
         ,TNeg = not_anbn(all,0,12)
@@ -235,7 +235,7 @@ anbm_range(N,S):-
         Lang = anbm
         ,T = s/2
         ,Gs = 0:25/5
-        ,Sl = anbm(1:81/20,0,9) % all is 88
+        ,Sl = anbm(1:61/10,0,9) % all is 88
         ,Su = []
         ,TPos = anbm(all,9,18)
         ,TNeg = not_anbm(all,0,13)
