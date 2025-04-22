@@ -235,9 +235,9 @@ anbm_range(N,S):-
         Lang = anbm
         ,T = s/2
         ,Gs = 0:25/5
-        ,Sl = anbm(1:81/20,0,7) % all is 88
+        ,Sl = anbm(1:81/20,0,9) % all is 88
         ,Su = []
-        ,TPos = anbm(all,7,18)
+        ,TPos = anbm(all,9,18)
         ,TNeg = not_anbm(all,0,13)
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
 
