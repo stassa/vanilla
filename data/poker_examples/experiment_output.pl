@@ -48,6 +48,7 @@
 %
 setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,P):-
         experiment_file:set_configs(Lang)
+        ,experiment_file:cleanup_safe_example
         ,experiment_file:setup_safe_example(Lang)
         ,test_harness:experiment(T,Sl,Su,TPos,TNeg
                                 ,[Ps,Pos,Neg,Labelling,Program])
@@ -92,6 +93,7 @@ print_results(Ps,Pos,Neg,[LAcc,LTPR,LTNR],[PAcc,PTPR,PTNR],print_examples(P)):-
 %
 setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg):-
         experiment_file:set_configs(Lang)
+        ,experiment_file:cleanup_safe_example
         ,experiment_file:setup_safe_example(Lang)
         ,test_harness:experiments(T,N,Sl,Su,TPos,TNeg,Results)
         ,print_experiments_results(Results).
@@ -132,6 +134,7 @@ print_experiments_results([[LAccMs,LTPRMs,LTNRMs]
 %
 setup_and_run_range_experiments(Strm,Lang,T,N,Gs,Sl,Su,TPos,TNeg):-
         experiment_file:set_configs(Lang)
+        ,experiment_file:cleanup_safe_example
         ,experiment_file:setup_safe_example(Lang)
         ,test_harness:experiments_ranges(T,N,Gs,Sl,Su,TPos,TNeg,Results)
         ,print_range_experiment_results(Strm,Results).
@@ -226,6 +229,7 @@ setup_and_run_filter_experiment(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU
                                 ,print_unlabelled(Pu)
                                 ]):-
         experiment_file:set_configs(Lang)
+        ,experiment_file:cleanup_safe_example
         ,experiment_file:setup_safe_example(Lang)
         ,test_harness:experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u)
         ,writeln('Results for labelled:')
@@ -255,6 +259,7 @@ setup_and_run_filter_experiment(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU
 %
 setup_and_run_filter_experiments(Lang,T,N,Sl,Su,TPosL,TNegL,TPosU,TNegU):-
         experiment_file:set_configs(Lang)
+        ,experiment_file:cleanup_safe_example
         ,experiment_file:setup_safe_example(Lang)
         ,test_harness:experiments_filtering(T,N,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u)
         ,writeln('Results for labelled:')
@@ -296,6 +301,7 @@ setup_run_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Os):-
              ,draw_unlabelled(DsU)
              ]
         ,experiment_file:set_configs(Lang)
+        ,experiment_file:cleanup_safe_example
         ,experiment_file:setup_safe_example(Lang)
         ,test_harness:experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u)
         ,writeln('Results for labelled:')
