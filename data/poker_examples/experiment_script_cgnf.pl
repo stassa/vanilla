@@ -9,6 +9,7 @@
                           ,parens/1
                           ,palindrome/1
                           ,anbn_range/2
+                          ,anbn_range/3
                           ,anbn_anbm_range/2
                           ,anbm_anbn_range/2
                           ,anbn_anbm_filtering/0
@@ -241,6 +242,28 @@ anbn_range(N,S):-
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
 
 
+%!      anbn_range(+N,+Stream) is det.
+%
+%       Run N experiments varying inputs and print evaluation results.
+%
+%       As anbn_range/2 but also plots the results. Needs a graphical
+%       environment.
+%
+anbn_range(N,S,P):-
+        Lang = anbn
+        ,T = s/2
+        ,Gs = 0:50/10
+        ,Sl = anbn(1:16/5,0,45)
+        ,Su = []
+        ,TPos = anbn(all,46,80)
+        ,TNeg = not_anbn(all,0,12)
+        ,(   P == true
+         ->  Pl = plot('a^nb^n',@(false),@(false))
+         ;   Pl = false
+         )
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
+
 %!      anbn_anbm_range(+N,+Stream) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
@@ -262,7 +285,7 @@ anbn_anbm_range(N,S):-
               ]
         ,TPos = anbn(all,46,80)
         ,TNeg = not_anbn(all,0,12)
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,false).
 
 
 %!      anbm_anbn_range(+N,+Stream) is det.
@@ -286,7 +309,7 @@ anbm_anbn_range(N,S):-
               ]
         ,TPos = anbm(all,7,15)
         ,TNeg = not_anbm(all,0,10)
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,false).
 
 
                 /*******************************

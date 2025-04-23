@@ -1,6 +1,7 @@
 :-module(experiment_output,[setup_and_run_experiment/7
                            ,setup_and_run_experiments/7
                            ,setup_and_run_range_experiments/9
+                           ,setup_and_run_range_experiments/10
                            ,setup_and_run_filter_experiment/9
                            ,setup_run_filter_experiment_draw/9
                            ,setup_and_run_filter_experiments/9
@@ -149,25 +150,35 @@ setup_and_run_range_experiments(Strm,Lang,T,N,Gs,Sl,Su,TPos,TNeg):-
 %       Results are printed out as the rows of a CSV.
 %
 print_range_experiment_results(Stm,Res):-
-        csv_write_stream(user_output,[row('Iteration'
-                                          ,'Generated'
-                                          ,'Labelled'
-                                          ,'Unlabelled'
-                                          ,'LabAccM'
-                                          ,'LabTPRM'
-                                          ,'LabTNRM'
-                                          ,'LabAccSE'
-                                          ,'LabTPRSE'
-                                          ,'LabTNRSE'
-                                          ,'ProgAccM'
-                                          ,'ProgTPRM'
-                                          ,'ProgTNRM'
-                                          ,'ProgAccSE'
-                                          ,'ProgTPRSE'
+        Set = (   Stm == user_output
+              ->  S = Stm
+              ;   open(Stm,write,S)
+              )
+        ,Cal = (csv_write_stream(S,[row('Iteration'
+                                         ,'Generated'
+                                         ,'Labelled'
+                                         ,'Unlabelled'
+                                         ,'LabAccM'
+                                         ,'LabTPRM'
+                                         ,'LabTNRM'
+                                         ,'LabAccSE'
+                                         ,'LabTPRSE'
+                                         ,'LabTNRSE'
+                                         ,'ProgAccM'
+                                         ,'ProgTPRM'
+                                         ,'ProgTNRM'
+                                         ,'ProgAccSE'
+                                         ,'ProgTPRSE'
                                           ,'ProgTNRSE')],[])
-        ,forall(member(I/G/L/U-Rs_i,Res)
-              ,print_range_result(Stm,I,G,L,U,Rs_i)
-              ).
+               ,forall(member(I/G/L/U-Rs_i,Res)
+                      ,print_range_result(S,I,G,L,U,Rs_i)
+                      )
+               )
+        ,Cln = (   Stm == user_output
+               ->  true
+               ;   close(S)
+               )
+        ,setup_call_cleanup(Set,Cal,Cln).
 
 
 %!      print_range_result(+Stream,+I,+G,+L,+U,+Results) is det.
@@ -195,6 +206,39 @@ print_range_result(Stm,I,G,L,U,[[LAccM,LTPRM,LTNRM]
                               )
                           ]
                          ,[]).
+
+
+
+%!      setup_and_run_range_experiments(+Strm,+Lang,+Tgt,+N,+Gs,+Lab,+Unl,+TPos,+TNeg,+Plot)
+%!      is det.
+%
+%       Setup Poker and run an experiment varying inputs over a range.
+%
+%       Like setup_and_run_range_experiments/9 but can also plot
+%       results.
+%
+setup_and_run_range_experiments(Strm,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl):-
+        experiment_file:set_configs(Lang)
+        ,experiment_file:cleanup_safe_example
+        ,experiment_file:setup_safe_example(Lang)
+        ,test_harness:experiments_ranges(T,N,Gs,Sl,Su,TPos,TNeg,Results)
+        ,print_range_experiment_results(Strm,Results)
+        ,(   Pl == false
+         ->  true
+         ;   Pl = plot(Exp,D,U)
+            ,plot_range_experiment_results(Exp,Strm,D,U)
+         ).
+
+
+%!      plot_range_experiment_results(+Experiment,+File,+Debug,+Unlabelled)
+%!      is det.
+%
+%       Plot experiments results with Matplotplib.
+%
+%       Thin shell calling Python plotting module.
+%
+plot_range_experiment_results(Exp,Fn,D,U):-
+        py_call(plot_experiment_results:plot_data(Exp,Fn,debug=D,has_unlabelled=U)).
 
 
 
@@ -369,7 +413,7 @@ run_experiment_protocol(T,G,F):-
              ,format('Table space ~D~n',[V])
              ,auxiliaries:list_config
              ,poker_auxiliaries:list_poker_config
-             ,listing(lnf:[target/1,invented/1,preterminal/1])
+             ,listing(user:[target/1,invented/1,preterminal/1])
              ,listing(experiment_file:safe_example/1)
              ,poker_auxiliaries:list_mil_problem(T)
              ,experiment_file:background_knowledge(T,B)

@@ -8,14 +8,14 @@
 #
 # experiment_file(data('poker_examples/experiment_script_weak_cgnf.pl'),exp_script_wcgnf).
 #
-swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,anbn_range(10,user_output),'output/test_protocol_anbn_range.log'))." -t halt &
+swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/2,anbn_range(10,user_output,false),'output/test_protocol_anbn_range.log'))." -t halt &
 # Sleep two seconds to give logging the chance to create a new log file.
 sleep 2
-swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,anbm_range(10,user_output),'output/test_protocol_anbm_range.log'))." -t halt &
+swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/2,anbm_range(10,user_output,false),'output/test_protocol_anbm_range.log'))." -t halt &
 sleep 2
-swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,parens_range(10,user_output),'output/test_protocol_parens_range.log'))." -t halt &
+swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/2,parens_range(10,user_output,false),'output/test_protocol_parens_range.log'))." -t halt &
 sleep 2
-swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,palindrome_range(10,user_output),'output/test_protocol_palindrome_range.log'))." -t halt &
+swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/2,palindrome_range(10,user_output,false),'output/test_protocol_palindrome_range.log'))." -t halt &
 sleep 2
 
 ## L-System moderate uncertainty regime experiments
