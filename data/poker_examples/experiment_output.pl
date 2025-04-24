@@ -120,6 +120,7 @@ print_experiments_results([[LAccMs,LTPRMs,LTNRMs]
                ,[PAccSEs,PTPRSEs,PTNRSEs]).
 
 
+
 %!      setup_and_run_range_experiments(+Stream,+Lang,+Tgt,+N,+Gs,+Lab,+Unl,+TPos,+TNeg)
 %!      is det.
 %
@@ -149,36 +150,66 @@ setup_and_run_range_experiments(Strm,Lang,T,N,Gs,Sl,Su,TPos,TNeg):-
 %
 %       Results are printed out as the rows of a CSV.
 %
+%       Stream can be the user output stream, user_output. If Stream is
+%       not user_output, results CSV rows are echoed to user_output
+%       anyway. This is so that a complete record of an experiment can
+%       be kept with run_experiment_protocol/3 (which only records what
+%       is printed in the user_output stream).
+%
+print_range_experiment_results(user_output,Res):-
+        !
+        ,write_csv_header(user_output)
+        ,write_csv_rows(user_output,Res).
 print_range_experiment_results(Stm,Res):-
-        Set = (   Stm == user_output
-              ->  S = Stm
-              ;   open(Stm,write,S)
-              )
-        ,Cal = (csv_write_stream(S,[row('Iteration'
-                                         ,'Generated'
-                                         ,'Labelled'
-                                         ,'Unlabelled'
-                                         ,'LabAccM'
-                                         ,'LabTPRM'
-                                         ,'LabTNRM'
-                                         ,'LabAccSE'
-                                         ,'LabTPRSE'
-                                         ,'LabTNRSE'
-                                         ,'ProgAccM'
-                                         ,'ProgTPRM'
-                                         ,'ProgTNRM'
-                                         ,'ProgAccSE'
-                                         ,'ProgTPRSE'
-                                          ,'ProgTNRSE')],[])
+        Set = open(Stm,write,S)
+        ,Cal = (write_csv_header(S)
                ,forall(member(I/G/L/U-Rs_i,Res)
                       ,print_range_result(S,I,G,L,U,Rs_i)
                       )
                )
-        ,Cln = (   Stm == user_output
-               ->  true
-               ;   close(S)
-               )
-        ,setup_call_cleanup(Set,Cal,Cln).
+        ,Cln = close(S)
+        ,setup_call_cleanup(Set,Cal,Cln)
+        ,!
+        % Mirror output to user_output
+        ,print_range_experiment_results(user_output,Res).
+
+
+%!      write_csv_header(+Stream) is det
+%
+%       Write out a CSV header row for a range experiment's results.
+%
+write_csv_header(S):-
+        csv_write_stream(S,[row('Iteration'
+                               ,'Generated'
+                               ,'Labelled'
+                               ,'Unlabelled'
+                               ,'LabAccM'
+                               ,'LabTPRM'
+                               ,'LabTNRM'
+                               ,'LabAccSE'
+                               ,'LabTPRSE'
+                               ,'LabTNRSE'
+                               ,'ProgAccM'
+                               ,'ProgTPRM'
+                               ,'ProgTNRM'
+                               ,'ProgAccSE'
+                               ,'ProgTPRSE'
+                               ,'ProgTNRSE')],[]).
+
+
+%!      write_csv_rows(+Stream,+Results) is det.
+%
+%       Write out rows of a range experiment's results CSV.
+%
+%       Stream is the stream where the CSV rows are to be written.
+%
+%       Results is a list of results returned by experiments_ranges/8.
+%       See that predicate for more details.
+%
+write_csv_rows(S,Res):-
+        forall(member(I/G/L/U-Rs_i,Res)
+              ,print_range_result(S,I,G,L,U,Rs_i)
+              ).
 
 
 %!      print_range_result(+Stream,+I,+G,+L,+U,+Results) is det.
@@ -406,6 +437,7 @@ run_experiment_protocol(T,G,F):-
         Set = protocol(F)
         ,C = (format('Running experiment script ~w~n:',[G])
              ,listing(G)
+             ,time_stamp('Starting time: ')
              ,call(G)
              ,current_prolog_flag(stack_limit, X)
              ,format('Global stack limit ~D~n',[X])
@@ -418,6 +450,24 @@ run_experiment_protocol(T,G,F):-
              ,poker_auxiliaries:list_mil_problem(T)
              ,experiment_file:background_knowledge(T,B)
              ,listing(experiment_file:B)
+             ,time_stamp('End time: ')
              )
         ,Cln = noprotocol
         ,setup_call_cleanup(Set,C,Cln).
+
+
+%!      time_stamp(+Message) is det.
+%
+%       Print a time stamp with a message.
+%
+%       Example:
+%       ==
+%       ?- experiment_output:time_stamp('Time is: ').
+%       Time is: Thu, 24 Apr 2025 20:00:33
+%       true.
+%       ==
+%
+time_stamp(M):-
+        get_time(S)
+        ,format_time(atom(TS),'%a, %d %b %Y %T',S)
+        ,format('~w~w~n',[M,TS]).
