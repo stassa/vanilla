@@ -8,10 +8,10 @@
                          ,hilbert_curve/1
                          ,koch_curve/1
                          ,sierpinski_triangle/1
-                         ,dragon_to_hilbert_curve_range/2
-                         ,hilbert_to_dragon_curve_range/2
-                         ,koch_to_dragon_curve_range/2
-                         ,koch_to_hilbert_curve_range/2
+                         ,dragon_to_hilbert_curve_range/3
+                         ,hilbert_to_dragon_curve_range/3
+                         ,koch_to_dragon_curve_range/3
+                         ,koch_to_hilbert_curve_range/3
                          ,hilbert_dragon_filtering/0
                          ,koch_dragon_filtering/0
                          ,hilbert_dragon_filtering/1
@@ -350,7 +350,7 @@ sierpinski_triangle(N):-
 % unlabelled and generated negative examples. Use to investigate the
 % relation between labelled, unlabelled, and generated examples.
 
-%!      dragon_to_hilbert_curve_range(+N,+Stream) is det.
+%!      dragon_to_hilbert_curve_range(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying given and generated examples.
 %
@@ -368,20 +368,30 @@ sierpinski_triangle(N):-
 %       Results are written to the given Stream. This can be
 %       "user_output" to print to terminal.
 %
-dragon_to_hilbert_curve_range(N,S):-
+%       Plot is a boolean (true or false) that determines whether to
+%       plot experiments results from the given Stream or not. If Plot
+%       is "true" then Stream must be the path to a CSV file (not
+%       user_output) elser errors will be raised.
+%
+dragon_to_hilbert_curve_range(N,S,P):-
         Lang = dragon_curve
         ,T = s/3
-        ,Gs = 0:100/25
-        ,Sl = dragon_curve(1:41/10,0,4) % all is 41
+        ,Gs = 0:1500/250
+        ,Sl = dragon_curve(41:41/10,0,4) % all is 41
         ,Su = [hilbert_curve(1:41/10,0,4) % all is 121
               ,hilbert_curve_with_vars(1:41/10,11,13) % all is 68
               ,dragon_curve(1:41/10,5,8) % all is 1236
               ]
-        ,TPos = dragon_curve(all,5,10)
+        ,TPos = dragon_curve(all,5,10)/hilbert_curve
         ,TNeg = not_dragon_curve(all,0,4)
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
+        ,(   P == true
+         ->  Pl = plot('Dragon to Hilbert Curve',@(false),@(true))
+         ;   Pl = false
+         )
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
-%!      hilbert_to_dragon_curve_range(+N,+Stream) is det.
+
+%!      hilbert_to_dragon_curve_range(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying given and generated examples.
 %
@@ -399,21 +409,31 @@ dragon_to_hilbert_curve_range(N,S):-
 %       Results are written to the given Stream. This can be
 %       "user_output" to print to terminal.
 %
-hilbert_to_dragon_curve_range(N,S):-
+%       Plot is a boolean (true or false) that determines whether to
+%       plot experiments results from the given Stream or not. If Plot
+%       is "true" then Stream must be the path to a CSV file (not
+%       user_output) elser errors will be raised.
+%
+hilbert_to_dragon_curve_range(N,S,P):-
         Lang = hilbert_curve
         ,T = s/3
-        ,Gs = 0:100/25 % 5 experiment sets
-        ,Sl = [hilbert_curve(1:41/10,0,4) % all is 121
-              ,hilbert_curve_with_vars(1:41/10,11,13) % all is 68
+        ,Gs = 0:1500/250 % 5 experiment sets
+        ,Sl = [hilbert_curve(20:10/10,0,4) % all is 121
+              ,hilbert_curve_with_vars(21:21/10,11,13) % all is 68
               ]
         ,Su = [dragon_curve(1:41/10,0,4) % all is 41
               ,hilbert_curve(1:41/10,5,7) % all is 3159
               ]
         ,TPos = hilbert_curve(1500,0,12)
         ,TNeg = not_hilbert_curve(1500,0,4)
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
+        ,(   P == true
+         ->  Pl = plot('Hilbert to Dragon Curve',@(false),@(true))
+         ;   Pl = false
+         )
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
-%!      koch_to_dragon_curve_range(+N,+Stream) is det.
+
+%!      koch_to_dragon_curve_range(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying given and generated examples.
 %
@@ -431,21 +451,31 @@ hilbert_to_dragon_curve_range(N,S):-
 %       Results are written to the given Stream. This can be
 %       "user_output" to print to terminal.
 %
-koch_to_dragon_curve_range(N,S):-
+%       Plot is a boolean (true or false) that determines whether to
+%       plot experiments results from the given Stream or not. If Plot
+%       is "true" then Stream must be the path to a CSV file (not
+%       user_output) elser errors will be raised.
+%
+koch_to_dragon_curve_range(N,S,P):-
         Lang = koch_curve
         ,T = s/3
-        ,Gs = 0:100/25 % 5 experiment sets
-        ,Sl = [koch_curve(1:41/10,0,5) % all is 63
-              ,koch_curve_with_vars(1:41/10,8,11) % all is 49
+        ,Gs = 0:1500/250 % 5 experiment sets
+        ,Sl = [koch_curve(20:20/10,0,5) % all is 63
+              ,koch_curve_with_vars(21:21/10,8,11) % all is 49
 	      ]
         ,Su = [dragon_curve(1:41/10,0,4) % all is 41
               ,koch_curve(1:41/10,4,7) % all is 773
               ]
         ,TPos = koch_curve(1500,10,14)
         ,TNeg = not_koch_curve(1500,0,5)
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
+        ,(   P == true
+         ->  Pl = plot('Koch to Dragon Curve',@(false),@(true))
+         ;   Pl = false
+         )
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
-%!      koch_to_hilbert_curve_range(+N,+Stream) is det.
+
+%!      koch_to_hilbert_curve_range(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying given and generated examples.
 %
@@ -463,12 +493,17 @@ koch_to_dragon_curve_range(N,S):-
 %       Results are written to the given Stream. This can be
 %       "user_output" to print to terminal.
 %
-koch_to_hilbert_curve_range(N,S):-
+%       Plot is a boolean (true or false) that determines whether to
+%       plot experiments results from the given Stream or not. If Plot
+%       is "true" then Stream must be the path to a CSV file (not
+%       user_output) elser errors will be raised.
+%
+koch_to_hilbert_curve_range(N,S,P):-
         Lang = koch_curve
         ,T = s/3
-        ,Gs = 0:100/25 % 5 experiment sets
-        ,Sl = [koch_curve(1:41/10,0,5) % all is 63
-              ,koch_curve_with_vars(1:41/10,8,11) % all is 49
+        ,Gs = 0:1500/250 % 5 experiment sets
+        ,Sl = [koch_curve(20:20/10,0,5) % all is 63
+              ,koch_curve_with_vars(21:21/10,8,11) % all is 49
 	      ]
         ,Su = [hilbert_curve(1:41/10,0,4) % all is 121
               ,hilbert_curve_with_vars(1:41/10,11,13) % all is 68
@@ -476,7 +511,11 @@ koch_to_hilbert_curve_range(N,S):-
               ]
         ,TPos = koch_curve(1500,10,14)
         ,TNeg = not_koch_curve(1500,0,5)
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
+        ,(   P == true
+         ->  Pl = plot('Koch to Hilbert Curve',@(false),@(true))
+         ;   Pl = false
+         )
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
                 /*******************************

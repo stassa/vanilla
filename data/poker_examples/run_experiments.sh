@@ -8,7 +8,7 @@
 #
 ts=$(date +%d-%m-%Y_%H-%M-%S)
 # CSV and log file prefix
-tp="test_protocol_"
+tp="output/test_protocol_"
 # Experiment iterations.
 reps=10
 
@@ -19,24 +19,24 @@ reps=10
 #
 # experiment_file(data('poker_examples/experiment_script_weak_cgnf.pl'),exp_script_wcgnf).
 #
-csv="output/${tp}anbn_range_${ts}.csv"
-log="output/${tp}anbn_range_${ts}.log"
+csv="${tp}anbn_range_${ts}.csv"
+log="${tp}anbn_range_${ts}.log"
 swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/2,anbn_range($reps,'$csv',false),'$log'))." -t halt &
 ## Sleep two seconds to give logging the chance to create a new log file.
 sleep 2
 
-csv="output/${tp}anbm_range_${ts}.csv"
-log="output/${tp}anbm_range_${ts}.log"
+csv="${tp}anbm_range_${ts}.csv"
+log="${tp}anbm_range_${ts}.log"
 swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/2,anbm_range($reps,'$csv',false),'$log'))." -t halt &
 sleep 2
 
-csv="output/${tp}parens_range_${ts}.csv"
-log="output/${tp}parens_range_${ts}.log"
+csv="${tp}parens_range_${ts}.csv"
+log="${tp}parens_range_${ts}.log"
 swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/2,parens_range($reps,'$csv',false),'$log'))." -t halt &
 sleep 2
 
-csv="output/${tp}palindrome_range_${ts}.csv"
-log="output/${tp}palindrome_range_${ts}.log"
+csv="${tp}palindrome_range_${ts}.csv"
+log="${tp}palindrome_range_${ts}.log"
 swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/2,palindrome_range($reps,'$csv',false),'$log'))." -t halt &
 sleep 2
 
@@ -48,11 +48,22 @@ sleep 2
 ##
 ## experiment_file(data('poker_examples/experiment_script_lnf.pl'),exp_script_lnf).
 ##
-#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,test_dragon_to_hilbert_curve_range($reps,'output/test_protocol_dragon_hilbert.csv'),'output/test_protocol_dragon_hilbert.log'))." -t halt &
+#csv="${tp}dragon_to_hilbert_curve_range_${ts}.csv"
+#log="${tp}dragon_to_hilbert_curve_range_${ts}.log"
+#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,dragon_to_hilbert_curve_range($reps,'$csv',false),'$log'))." -t halt &
 #sleep 2
-#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,test_hilbert_to_dragon_curve_range($reps,'output/test_protocol_hilbert_dragon.csv'),'output/test_protocol_hilbert_dragon.log'))." -t halt &
+#
+#csv="${tp}hilbert_to_dragon_curve_range_${ts}.csv"
+#log="${tp}hilbert_to_dragon_curve_range_${ts}.log"
+#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,hilbert_to_dragon_curve_range($reps,'$csv',false),'$log'))." -t halt &
 #sleep 2
-#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,test_koch_to_dragon_curve_range($reps,'output/test_protocol_koch_dragon.csv'),'output/test_protocol_koch_dragon.log'))." -t halt &
+#
+#csv="${tp}koch_dragon_curve_range_${ts}.csv"
+#log="${tp}koch_dragon_curve_range_${ts}.log"
+#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,koch_to_dragon_curve_range($reps,'$csv',false),'$log'))." -t halt &
 #sleep 2
-#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,test_koch_to_hilbert_curve_range($reps,'output/test_protocol_koch_hilbert.csv'),'output/test_protocol_koch_hilbert.log'))." -t halt &
+#
+#csv="${tp}koch_to_hilbert_curve_range_${ts}.csv"
+#log="${tp}koch_to_hilbert_curve_range_${ts}.log"
+#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,koch_to_hilbert_curve_range($reps,'$csv',false),'$log'))." -t halt &
 #sleep 2
