@@ -64,13 +64,13 @@ configuration:metarule_constraints(M,fail):-
 
 % Identity clauses can only be pre-terminals.
 % The left hand side must be the target
-configuration:metarule_constraints(m(identity,P0,_P1),fail):-
-	ground(P0)
-        ,\+ target(P0).
+configuration:metarule_constraints(m(identity,P,_Q),fail):-
+	ground(P)
+        ,\+ target(P).
 % The right hand side must be a pre-terminal.
-configuration:metarule_constraints(m(identity,_P0,P1),fail):-
-	ground(P1)
-        ,\+ preterminal(P1).
+configuration:metarule_constraints(m(identity,_P,Q),fail):-
+	ground(Q)
+        ,\+ preterminal(Q).
 
 % The empty string can only be a pre-terminal.
 configuration:metarule_constraints(M,fail):-
@@ -83,52 +83,52 @@ configuration:metarule_constraints(M,fail):-
 % only be an invented predicate, or a pre-terminal.
 % This enforces Greibach Normal Form but allows for invented predicate
 % symbols, necessary for Chomsky Normal Form.
-configuration:metarule_constraints(m(chain,_P0,P1,_),fail):-
-	ground(P1)
-	,target(P1).
-configuration:metarule_constraints(m(tri_chain,_P0,P1,_,_),fail):-
-	ground(P1)
-	,target(P1).
+configuration:metarule_constraints(m(chain,_P,Q,_),fail):-
+	ground(Q)
+	,target(Q).
+configuration:metarule_constraints(m(tri_chain,_P,Q,_,_),fail):-
+	ground(Q)
+	,target(Q).
 
 % An invented predicate cannot immediately expand to an invented
 % predicate. Eliminates "oblique" left-recursions where an invented
 % predicate is mutually recursive with the target predicate without any
 % intervening pre-terminal, i.e. stuff like p --> inv_1 | inv_1 --> p.
-configuration:metarule_constraints(m(chain,P0,P1,_),fail):-
-	ground(P0)
-	,ground(P1)
-	,invented(P0)
-	,invented(P1).
-configuration:metarule_constraints(m(tri_chain,P0,P1,_,_),fail):-
-	ground(P0)
-	,ground(P1)
-	,invented(P0)
-	,invented(P1).
+configuration:metarule_constraints(m(chain,P,Q,_),fail):-
+	ground(P)
+	,ground(Q)
+	,invented(P)
+	,invented(Q).
+configuration:metarule_constraints(m(tri_chain,P,Q,_,_),fail):-
+	ground(P)
+	,ground(Q)
+	,invented(P)
+	,invented(Q).
 
 
 % Recursion in chain can only be tail-recursion.
-configuration:metarule_constraints(m(chain,P0,P1,_P2),fail):-
-	ground(P0)
-	,ground(P1)
-	,P0 == P1.
-configuration:metarule_constraints(m(chain,_P0,P1,P2),fail):-
-	ground(P1)
-	,ground(P2)
-	,P1 == P2.
+configuration:metarule_constraints(m(chain,P,Q,_R),fail):-
+	ground(P)
+	,ground(Q)
+	,P == Q.
+configuration:metarule_constraints(m(chain,_P,Q,R),fail):-
+	ground(Q)
+	,ground(R)
+	,Q == R.
 
 
 % Recursion in tri-chain can only be tail-recursion or recursion between
 % the head and "middle" body literal.
-configuration:metarule_constraints(m(tri_chain,P0,P1,_P2,_P3),fail):-
-	ground(P0)
-	,ground(P1)
-	,P0 == P1.
-configuration:metarule_constraints(m(tri_chain,_P0,P1,P2,_P3),fail):-
-	ground(P1)
-	,ground(P2)
-	,P1 == P2.
-configuration:metarule_constraints(m(tri_chain,_P0,_P1,P2,P3),fail):-
-	ground(P2)
-	,ground(P3)
-	,P2 == P3.
+configuration:metarule_constraints(m(tri_chain,P,Q,_R,_S),fail):-
+	ground(P)
+	,ground(Q)
+	,P == Q.
+configuration:metarule_constraints(m(tri_chain,_P,Q,R,_S),fail):-
+	ground(Q)
+	,ground(R)
+	,Q == R.
+configuration:metarule_constraints(m(tri_chain,_P,_Q,R,S),fail):-
+	ground(R)
+	,ground(S)
+	,R == S.
 
