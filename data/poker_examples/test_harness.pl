@@ -579,6 +579,8 @@ string_lengths(R,Min,Max,Ms,Ns):-
 %
 %       TODO: give example.
 %
+range_helper(I:I/K,K):-
+        !.
 range_helper(I:J/K,N):-
         M is J - I
         ,N is M / K + 1.

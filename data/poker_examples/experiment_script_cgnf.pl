@@ -10,6 +10,7 @@
                           ,palindrome/1
                           ,anbn_range/2
                           ,anbn_range/3
+                          ,anbn_range_unlabelled/3
                           ,anbn_anbm_range/2
                           ,anbm_anbn_range/2
                           ,anbn_anbm_filtering/0
@@ -242,7 +243,7 @@ anbn_range(N,S):-
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
 
 
-%!      anbn_range(+N,+Stream) is det.
+%!      anbn_range(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
 %
@@ -255,6 +256,31 @@ anbn_range(N,S,P):-
         ,Gs = 0:50/10
         ,Sl = anbn(1:16/5,0,45)
         ,Su = []
+        ,TPos = anbn(all,46,80)
+        ,TNeg = not_anbn(all,0,12)
+        ,(   P == true
+         ->  Pl = plot('a^nb^n',@(false),@(false))
+         ;   Pl = false
+         )
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
+
+%!      anbn_range_unlabelled(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying inputs and print evaluation results.
+%
+%       As anbn_range/3 but keeps the number of labelled examples
+%       constant over multiple iterations while varying the number of
+%       unlabelled examples.
+%
+anbn_range_unlabelled(N,S,P):-
+        Lang = anbn
+        ,T = s/2
+        ,Gs = 0:25/5
+        ,Sl = anbn(16:16/6,0,45)
+        ,Su = [anbm(1:21/5,0,6)
+              ,anbn(1:21/5,46,86)
+              ]
         ,TPos = anbn(all,46,80)
         ,TNeg = not_anbn(all,0,12)
         ,(   P == true

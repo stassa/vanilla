@@ -10,7 +10,9 @@
                            ,palindrome/1
                            ,anbn_range/3
                            ,anbm_range/3
+                           ,anbm_range_unlabelled/3
                            ,parens_range/3
+                           ,parens_range_unlabelled/3
                            ,palindrome_range/3
                            ,set_configs/1
                            ,cleanup_safe_example/0
@@ -242,6 +244,27 @@ anbm_range(N,S,P):-
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
+%!      anbm_range_unlabelled(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying inputs and print evaluation results.
+%
+anbm_range_unlabelled(N,S,P):-
+        Lang = anbm
+        ,T = s/2
+        ,Gs = 0:25/5
+        ,Sl = anbm(10:10/10,0,9)
+        ,Su = [anbn(1:21/5,0,45)
+              ,anbm(1:21/5,10,12)
+              ]
+        ,TPos = anbm(1500,12,18)
+        ,TNeg = not_anbm(1500,0,13)
+        ,(   P == true
+         ->  Pl = plot('a^nb^m (n >= m >= 0)',@(false),@(true))
+         ;   Pl = false
+         )
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
+
 %!      parens_range(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
@@ -256,6 +279,29 @@ parens_range(N,S,P):-
         ,TNeg = unbalanced_parens(all,0,15)
         ,(   P == true
          ->  Pl = plot('Balanced Parentheses',@(false),@(false))
+         ;   Pl = false
+         )
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
+
+%!      parens_range_unlabelled(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying inputs and print evaluation results.
+%
+parens_range_unlabelled(N,S,P):-
+        Lang = parens
+        ,T = p/2
+        ,Gs = 0:100/20
+        ,Sl = parens(10:10/10,0,10)
+        ,Su = [anbn(1:21/4,0,45)
+              ,anbm(1:21/4,10,12)
+              ,palindrome(1:21/4,0,5)
+              ,unbalanced_parens(1:21/4,0,10)
+              ]
+        ,TPos = parens(all,11,21)
+        ,TNeg = unbalanced_parens(all,0,15)
+        ,(   P == true
+         ->  Pl = plot('Balanced Parentheses',@(false),@(true))
          ;   Pl = false
          )
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
