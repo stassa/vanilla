@@ -1307,6 +1307,21 @@ internal_symbol_(not_sierpinski_triangle,s).
 internal_symbol_(sierpinski_arrowhead,s).
 internal_symbol_(not_sierpinski_arrowhead,s).
 
+internal_symbol_(even_bin,s).
+internal_symbol_(odd_bin,s).
+internal_symbol_(anbn_bin,s).
+internal_symbol_(not_anbn_bin,s).
+internal_symbol_(anbm_bin,s).
+internal_symbol_(not_anbm_bin,s).
+internal_symbol_(anbn_uo_bin,s).
+internal_symbol_(not_anbn_uo_bin,s).
+%internal_symbol_(anbn_uo_bin,p).
+%internal_symbol_(not_anbn_uo_bin,p).
+internal_symbol_(parens_bin,s).
+internal_symbol_(unbalanced_parens_bin,s).
+internal_symbol_(palindrome_bin,p).
+internal_symbol_(not_palindrome_bin,p).
+
 
 
                 /*******************************

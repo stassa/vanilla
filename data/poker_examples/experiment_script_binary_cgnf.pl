@@ -1,34 +1,27 @@
-:-module(exp_script_wcgnf, [parity/0
-                           ,anbn/0
-                           ,anbm/0
-                           ,parens/0
-                           ,palindrome/0
-                           ,parity/1
-                           ,anbn/1
-                           ,anbm/1
-                           ,parens/1
-                           ,palindrome/1
-                           ,anbn_range/3
-                           ,anbm_range/3
-                           ,anbm_range_unlabelled/3
-                           ,parens_range/3
-                           ,parens_range_unlabelled/3
-                           ,palindrome_range/3
-                           ,set_configs/1
-                           ,cleanup_safe_example/0
-                           ,setup_safe_example/1
-                           ,background_knowledge/2
-                           ,metarules/2
-                           ,labelled_example/2
-                           ,unlabelled_example/2
-                           ,a/2
-                           ,b/2
-                           ,lp/2
-                           ,rp/2
-                           ,zero/2
-                           ,one/2
-                           ,empty/2
-                          ]).
+:-module(binary_cgnf, [binary_parity/0
+                      ,binary_anbn/0
+                      ,binary_anbn_uo/0
+                      ,binary_anbm/0
+                      ,binary_parens/0
+                      ,binary_palindrome/0
+                      ,binary_anbn_uo/1
+                      ,binary_anbn_range/3
+                      ,binary_anbm_range/3
+                      ,binary_anbm_range_unlabelled/3
+                      ,binary_parens_range/3
+                      ,binary_parens_range_unlabelled/3
+                      ,binary_palindrome_range/3
+                      ,cleanup_safe_example/0
+                      ,setup_safe_example/1
+                      ,background_knowledge/2
+                      ,set_configs/1
+                      ,metarules/2
+                      ,labelled_example/2
+                      ,unlabelled_example/2
+                      ,zero/2
+                      ,one/2
+                      ,empty/2
+                      ]).
 
 :-use_module(project_root(configuration)).
 :-use_module(lib(poker/poker_auxiliaries)).
@@ -41,13 +34,14 @@
 :-poker_configuration:experiment_file(P,M)
   ,format('Loading experiment file module ~w from ~w.~n',[P,M]).
 
-/** <module> Unified script for experiments learning CFGs with Weak C-GNF.
+/** <module> Unified script for experiments learning bit-string CFGs with Weak C-GNF.
 
 */
 
 :-debug(generalise).
 :-debug(generate).
 :-debug(experiments).
+:-debug(experiment).
 :-debug(experiment_initial).
 :-debug(experiment_time).
 :-debug(experiment_examples).
@@ -64,52 +58,87 @@
                 *      SINGLE EXPERIMENTS      *
                 *******************************/
 
-% Simple set of single-run experiments. Use for quick eyballing of
-% results while working out the right configs.
-
-parity:-
-        Lang = even
-        ,T = q0/2
-        ,Sl = even(all,0,4)
-        ,Su = []
-        ,TPos = even(all,4,8)
-        ,TNeg = odd(all,0,4)
-        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
-
-anbn:-
-        Lang = anbn
+%!      binary_parity is det.
+%
+%       Run a single experiment and print the program and labelling.
+%
+binary_parity:-
+        Lang = even_bin
         ,T = s/2
-        ,Sl = anbn(all,0,6)
+        ,Sl = even_bin(all,0,4) % 16
         ,Su = []
-        ,TPos = anbn(all,8,20)
-        ,TNeg = not_anbn(all,0,3)
+        ,TPos = even_bin(all,4,8) % 248 ok duh
+        ,TNeg = odd_bin(all,0,4)
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
 
-anbm:-
-        Lang = anbm
+
+%!      binary_anbn is det.
+%
+%       Run a single experiment and print the program and labelling.
+%
+binary_anbn:-
+        Lang = anbn_bin
         ,T = s/2
-        ,Sl = anbm(all,0,4)
+        ,Sl = anbn_bin(all,0,6) % 3
         ,Su = []
-	,TPos = anbm(all,5,8)
-        ,TNeg = not_anbm(all,0,4)
+        ,TPos = anbn_bin(all,8,60) % 27
+        ,TNeg = not_anbn_bin(all,0,5) % 60
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
 
-parens:-
-        Lang = parens
-	,T = p/2
-	,Sl = parens(all,0,6)
-	,Su = []
-	,TPos = parens(all,0,20)
-	,TNeg = unbalanced_parens(all,0,15)
+
+%!      binary_anbn_uo is det.
+%
+%       Run a single experiment and print the program and labelling.
+%
+binary_anbn_uo:-
+        Lang = anbn_uo_bin
+        ,T = s/2
+        ,Sl = anbn_uo_bin(15,0,6) % 29
+        ,Su = []
+        ,TPos = anbn_uo_bin(all,5,10) % 342
+        ,TNeg = not_anbn_uo_bin(all,0,8) % 412
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
-palindrome:-
-	Lang = palindrome
-	,T = q0/2
-	,Sl = palindrome(all,0,4)
+
+%!      binary_anbm is det.
+%
+%       Run a single experiment and print the program and labelling.
+%
+binary_anbm:-
+        Lang = anbm_bin
+        ,T = s/2
+        ,Sl = anbm_bin(all,0,4)
+        ,Su = []
+	,TPos = anbm_bin(all,5,8)
+        ,TNeg = not_anbm_bin(all,0,5)
+        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
+
+
+%!      binary_parens is det.
+%
+%       Run a single experiment and print the program and labelling.
+%
+binary_parens:-
+        Lang = parens_bin
+	,T = s/2
+	,Sl = parens_bin(all,0,6) % 6
 	,Su = []
-	,TPos = palindrome(all,5,8)
-	,TNeg = not_palindrome(all,0,8)
+	,TPos = parens_bin(1500,7,20)
+	,TNeg = unbalanced_parens_bin(all,0,10) % 1982
+        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+
+
+%!      binary_palindrome is det.
+%
+%       Run a single experiment and print the program and labelling.
+%
+binary_palindrome:-
+	Lang = palindrome_bin
+	,T = p/2
+	,Sl = palindrome_bin(all,0,4) % 13
+	,Su = []
+	,TPos = palindrome_bin(all,5,15) % 752
+	,TNeg = not_palindrome_bin(all,0,10) % 1922
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
 
@@ -121,70 +150,19 @@ palindrome:-
 % random samples of labelled, unlabelled examples and generated negative
 % examples.
 
-%!      parity(+N) is det.
+%!      binary_anbn_uo is det.
 %
 %       Run N experiments and print the aggregate evaluation results.
 %
-parity(N):-
-        Lang = even
-        ,T = q0/2
-        ,Sl = even(all,0,4)
-        ,Su = []
-        ,TPos = even(all,4,8)
-        ,TNeg = odd(all,0,4)
-        ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
-
-%!      anbn(+N) is det.
-%
-%       Run N experiments and print the aggregate evaluation results.
-%
-anbn(N):-
-        Lang = anbn
+binary_anbn_uo(N):-
+        Lang = anbn_uo_bin
         ,T = s/2
-        ,Sl = anbn(all,0,6)
+        ,Sl = anbn_uo_bin(15,0,6) % 29
         ,Su = []
-        ,TPos = anbn(all,8,20)
-        ,TNeg = not_anbn(all,0,3)
+        ,TPos = anbn_uo_bin(all,5,10) % 342
+        ,TNeg = not_anbn_uo_bin(all,0,8) % 412
         ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
-%!      anbm(+N) is det.
-%
-%       Run N experiments and print the aggregate evaluation results.
-%
-anbm(N):-
-        Lang = anbm
-        ,T = s/2
-        ,Sl = anbm(all,0,4)
-        ,Su = []
-	,TPos = anbm(all,5,8)
-        ,TNeg = not_anbm(all,0,4)
-        ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
-
-%!      parens(+N) is det.
-%
-%       Run N experiments and print the aggregate evaluation results.
-%
-parens(N):-
-        Lang = parens
-	,T = p/2
-	,Sl = parens(all,0,6)
-	,Su = []
-	,TPos = parens(all,0,20)
-	,TNeg = unbalanced_parens(all,0,15)
-        ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
-
-%!      palindrome(+N) is det.
-%
-%       Run N experiments and print the aggregate evaluation results.
-%
-palindrome(N):-
-	Lang = palindrome
-	,T = q0/2
-	,Sl = palindrome(8,0,4)
-	,Su = []
-	,TPos = palindrome(all,5,8)
-	,TNeg = not_palindrome(all,0,8)
-        ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
 
                 /*******************************
@@ -197,7 +175,7 @@ palindrome(N):-
 % Results can be optionally plotted with matplotlib.
 
 
-%!      anbn_range(+N,+Stream,+Plot) is det.
+%!      binary_anbn_range(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
 %
@@ -210,14 +188,14 @@ palindrome(N):-
 %       results' CSV file will be saved, and read from, to create the
 %       plot.
 %
-anbn_range(N,S,P):-
-        Lang = anbn
+binary_anbn_range(N,S,P):-
+        Lang = anbn_bin
         ,T = s/2
         ,Gs = 0:25/5
-        ,Sl = anbn(1:21/5,0,45) % all is 22
+        ,Sl = anbn_bin(1:21/5,0,45) % all is 22
         ,Su = []
-        ,TPos = anbn(all,46,80)
-        ,TNeg = not_anbn(all,0,12)
+        ,TPos = anbn_bin(all,46,80)
+        ,TNeg = not_anbn_bin(all,0,12)
         ,(   P == true
          ->  Pl = plot('a^nb^n',@(false),@(false))
          ;   Pl = false
@@ -225,18 +203,34 @@ anbn_range(N,S,P):-
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
-%!      anbm_range(+N,+Stream,+Plot) is det.
+binary_anbn_uo_range(N,S,P):-
+        Lang = anbn_uo_bin
+        ,T = s/2
+        ,Gs = 0:25/5
+        ,Sl = anbn_uo_bin(1:21/5,0,6) % all is 29
+        ,Su = []
+        ,TPos = anbn_uo_bin(all,5,10)
+        ,TNeg = not_anbn_uo_bin(all,0,8)
+        ,(   P == true
+         ->  Pl = plot('a^nb^n',@(false),@(false))
+         ;   Pl = false
+         )
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
+
+
+%!      binary_anbm_range(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
 %
-anbm_range(N,S,P):-
-        Lang = anbm
+binary_anbm_range(N,S,P):-
+        Lang = anbm_bin
         ,T = s/2
         ,Gs = 0:25/5
-        ,Sl = anbm(1:61/10,0,9) % all is 88
+        ,Sl = anbm_bin(1:61/10,0,9) % all is 88
         ,Su = []
-        ,TPos = anbm(all,9,18)
-        ,TNeg = not_anbm(all,0,13)
+        ,TPos = anbm_bin(all,9,18)
+        ,TNeg = not_anbm_bin(all,0,13)
         ,(   P == true
          ->  Pl = plot('a^nb^m (n >= m >= 0)',@(false),@(false))
          ;   Pl = false
@@ -244,20 +238,20 @@ anbm_range(N,S,P):-
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
-%!      anbm_range_unlabelled(+N,+Stream,+Plot) is det.
+%!      binary_anbm_range_unlabelled(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
 %
-anbm_range_unlabelled(N,S,P):-
-        Lang = anbm
+binary_anbm_range_unlabelled(N,S,P):-
+        Lang = anbm_bin
         ,T = s/2
         ,Gs = 0:25/5
-        ,Sl = anbm(10:10/10,0,9)
-        ,Su = [anbn(1:21/5,0,45)
-              ,anbm(1:21/5,10,12)
+        ,Sl = anbm_bin(10:10/10,0,9)
+        ,Su = [anbn_bin(1:21/5,0,45)
+              ,anbm_bin(1:21/5,10,12)
               ]
-        ,TPos = anbm(1500,12,18)
-        ,TNeg = not_anbm(1500,0,13)
+        ,TPos = anbm_bin(1500,12,18)
+        ,TNeg = not_anbm_bin(1500,0,13)
         ,(   P == true
          ->  Pl = plot('a^nb^m (n >= m >= 0)',@(false),@(true))
          ;   Pl = false
@@ -265,18 +259,18 @@ anbm_range_unlabelled(N,S,P):-
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
-%!      parens_range(+N,+Stream,+Plot) is det.
+%!      binary_parens_range(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
 %
-parens_range(N,S,P):-
-        Lang = parens
-        ,T = p/2
+binary_parens_range(N,S,P):-
+        Lang = parens_bin
+        ,T = s/2
         ,Gs = 0:100/20
-        ,Sl = parens(1:61/10,0,10) % all is 54
+        ,Sl = parens_bin(1:61/10,0,10) % all is 65
         ,Su = []
-        ,TPos = parens(all,11,21)
-        ,TNeg = unbalanced_parens(all,0,15)
+        ,TPos = parens_bin(1500,11,21) % all is 23649
+        ,TNeg = unbalanced_parens_bin(1500,0,15) % all is 64909
         ,(   P == true
          ->  Pl = plot('Balanced Parentheses',@(false),@(false))
          ;   Pl = false
@@ -284,22 +278,22 @@ parens_range(N,S,P):-
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
-%!      parens_range_unlabelled(+N,+Stream,+Plot) is det.
+%!      binary_parens_range_unlabelled(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
 %
-parens_range_unlabelled(N,S,P):-
-        Lang = parens
-        ,T = p/2
+binary_parens_range_unlabelled(N,S,P):-
+        Lang = parens_bin
+        ,T = s/2
         ,Gs = 0:100/20
-        ,Sl = parens(10:10/10,0,10)
-        ,Su = [anbn(1:21/4,0,45)
-              ,anbm(1:21/4,10,12)
+        ,Sl = parens_bin(10:10/10,0,10)
+        ,Su = [anbn_bin(1:21/4,0,45)
+              ,anbm_bin(1:21/4,10,12)
               ,palindrome(1:21/4,0,5)
-              ,unbalanced_parens(1:21/4,0,10)
+              ,unbalanced_parens_bin(1:21/4,0,10)
               ]
-        ,TPos = parens(all,11,21)
-        ,TNeg = unbalanced_parens(all,0,15)
+        ,TPos = parens_bin(all,11,21)
+        ,TNeg = unbalanced_parens_bin(all,0,15)
         ,(   P == true
          ->  Pl = plot('Balanced Parentheses',@(false),@(true))
          ;   Pl = false
@@ -307,23 +301,24 @@ parens_range_unlabelled(N,S,P):-
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
-%!      palindrome_range(+N,+Stream,+Plot) is det.
+%!      binary_palindrome_range(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
 %
-palindrome_range(N,S,P):-
-        Lang = palindrome
-        ,T = q0/2
+binary_palindrome_range(N,S,P):-
+        Lang = palindrome_bin
+        ,T = p/2
         ,Gs = 0:250/50
-        ,Sl = palindrome(1:21/4,0,5) % all is 54
+        ,Sl = palindrome_bin(1:21/4,0,5) % all is 54
         ,Su = []
-        ,TPos = palindrome(all,6,16)
-        ,TNeg = not_palindrome(all,0,10)
+        ,TPos = palindrome_bin(all,6,16)
+        ,TNeg = not_palindrome_bin(all,0,10)
         ,(   P == true
          ->  Pl = plot('Palindrome',@(false),@(false))
          ;   Pl = false
          )
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
 
 
                 /*******************************
@@ -335,21 +330,18 @@ palindrome_range(N,S,P):-
 %
 %       Set configuration options for a target Language.
 %
-set_configs(even):-
-        poker_auxiliaries:set_configuration_option(fetch_clauses,[[builtins,bk,metarules]])
-        ,poker_auxiliaries:set_configuration_option(table_meta_interpreter, [false])
-        ,poker_auxiliaries:set_configuration_option(untable_meta_interpreter, [true])
-        ,poker_auxiliaries:set_poker_configuration_option(clause_limit,[5])
-        ,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
+set_configs(even_bin):-
+        poker_auxiliaries:set_poker_configuration_option(clause_limit,[5])
+        ,poker_auxiliaries:set_poker_configuration_option(gestalt,[true])
         ,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
         ,poker_auxiliaries:set_poker_configuration_option(max_invented,[1])
         ,poker_auxiliaries:set_poker_configuration_option(respecialise,[true])
-        ,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[generalised])
-        ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100])
+        ,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[none])
+        ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[6])
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
                                                          ,[random]).
 
-set_configs(anbn):-
+set_configs(anbn_bin):-
         poker_auxiliaries:set_poker_configuration_option(clause_limit,[3])
         ,poker_auxiliaries:set_poker_configuration_option(max_invented,[1])
         ,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
@@ -360,7 +352,18 @@ set_configs(anbn):-
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
                                                          ,[random]).
 
-set_configs(anbm):-
+set_configs(anbn_uo_bin):-
+        poker_auxiliaries:set_poker_configuration_option(clause_limit,[4])
+        ,poker_auxiliaries:set_poker_configuration_option(max_invented,[2])
+        ,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
+        ,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
+        ,poker_auxiliaries:set_poker_configuration_option(respecialise,[false])
+        ,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
+        ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[1500])
+        ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+                                                         ,[random]).
+
+set_configs(anbm_bin):-
         poker_auxiliaries:set_poker_configuration_option(clause_limit,[4])
         ,poker_auxiliaries:set_poker_configuration_option(max_invented,[1])
         ,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
@@ -371,18 +374,18 @@ set_configs(anbm):-
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
                                                          ,[random]).
 
-set_configs(parens):-
+set_configs(parens_bin):-
         poker_auxiliaries:set_poker_configuration_option(clause_limit,[4])
         ,poker_auxiliaries:set_poker_configuration_option(max_invented,[2])
         ,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
         ,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
         ,poker_auxiliaries:set_poker_configuration_option(respecialise,[true])
-        ,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
+        ,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[generalised])
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100])
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
                                                          ,[random]).
 
-set_configs(palindrome):-
+set_configs(palindrome_bin):-
         poker_auxiliaries:set_poker_configuration_option(clause_limit,[5])
         ,poker_auxiliaries:set_poker_configuration_option(max_invented,[0])
         ,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
@@ -392,6 +395,8 @@ set_configs(palindrome):-
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[250])
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
                                                          ,[random]).
+
+
 
 
                 /*******************************
@@ -404,15 +409,10 @@ set_configs(palindrome):-
 %
 weak_cgnf:target(s).
 weak_cgnf:target(p).
-weak_cgnf:target(q0).
 weak_cgnf:invented(inv_1).
 weak_cgnf:invented(inv_2).
 weak_cgnf:invented(inv_3).
 weak_cgnf:invented(inv_4).
-weak_cgnf:preterminal(a).
-weak_cgnf:preterminal(b).
-weak_cgnf:preterminal(lp).
-weak_cgnf:preterminal(rp).
 weak_cgnf:preterminal(one).
 weak_cgnf:preterminal(zero).
 weak_cgnf:preterminal(empty).
@@ -433,69 +433,66 @@ cleanup_safe_example.
 %
 %       Assert a clause of safe_example/1 for a Language.
 %
-setup_safe_example(even):-
+%       @tbd These appear to be carefully hand-tuned to give best
+%       results. In truth, they ain't. It's probably possible to
+%       optimise them for efficiency x accuracy.
+%
+setup_safe_example(even_bin):-
         !
         ,cleanup_safe_example
-        ,G = (poker_configuration:safe_example(m(q0,Ls,[])):-
+        ,G = (poker_configuration:safe_example(m(s,Ls,[])):-
              between(0,4,L)
              ,length(Ls,L))
         ,assert(G).
-setup_safe_example(anbn):-
+setup_safe_example(anbn_bin):-
         !
         ,cleanup_safe_example
         ,G = (poker_configuration:safe_example(m(s,Ls,[])):-
              between(0,9,L)
              ,length(Ls,L))
         ,assert(G).
-setup_safe_example(anbm):-
+setup_safe_example(anbn_uo_bin):-
         !
         ,cleanup_safe_example
         ,G = (poker_configuration:safe_example(m(s,Ls,[])):-
              between(0,9,L)
              ,length(Ls,L))
         ,assert(G).
-setup_safe_example(parens):-
+setup_safe_example(anbm_bin):-
         !
         ,cleanup_safe_example
-        ,G = (poker_configuration:safe_example(m(p,Ls,[])):-
+        ,G = (poker_configuration:safe_example(m(s,Ls,[])):-
+             between(0,9,L)
+             ,length(Ls,L))
+        ,assert(G).
+setup_safe_example(parens_bin):-
+        !
+        ,cleanup_safe_example
+        ,G = (poker_configuration:safe_example(m(s,Ls,[])):-
              between(0,10,L)
              ,length(Ls,L))
         ,assert(G).
-setup_safe_example(palindrome):-
+setup_safe_example(palindrome_bin):-
         !
         ,cleanup_safe_example
-        ,G = (poker_configuration:safe_example(m(q0,Ls,[])):-
+        ,G = (poker_configuration:safe_example(m(p,Ls,[])):-
              between(0,8,L)
              ,length(Ls,L))
         ,assert(G).
 
+% Palindrome
+background_knowledge(p/2,[one/2,zero/2,empty/2]).
+% Everything else
+background_knowledge(s/2,[one/2,zero/2,empty/2]).
 
-% s/2: anbn, anbm
-% p/2: parens
-% q0/2: palindrome
-% Probably good idea to unify them?
-background_knowledge(s/2,[a/2,b/2,empty/2]).
-background_knowledge(p/2,[lp/2,rp/2,empty/2]).
-background_knowledge(q0/2,[zero/2,one/2,empty/2]).
-
+% Palindrome is special
+metarules(p/2,[identity,chain,tri_chain]).
 metarules(s/2,[identity,chain]).
-metarules(p/2,[identity,chain]).
-metarules(q0/2,[identity,chain,tri_chain]).
 
-% Dummy, replaced by input to experiment predicate.
-labelled_example(s/2,_):- fail.
-labelled_example(p/2,_):- fail.
-labelled_example(q0/2,_):- fail.
+labelled_example(_,_):- fail.
 
-unlabelled_example(s/2,_):- fail.
-unlabelled_example(p/2,_):- fail.
-unlabelled_example(q0/2,_):- fail.
+unlabelled_example(_,_):- fail.
 
-a --> [a].
-b --> [b].
-lp --> ['('].
-rp --> [')'].
-zero --> [0].
 one --> [1].
+zero --> [0].
 empty --> [].
-
