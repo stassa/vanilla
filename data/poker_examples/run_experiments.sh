@@ -67,3 +67,32 @@ sleep 2
 #log="${tp}koch_to_hilbert_curve_range_${ts}.log"
 #swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,koch_to_hilbert_curve_range($reps,'$csv',false),'$log'))." -t halt &
 #sleep 2
+
+
+## Binary GFG low uncertainty regime experiments
+##
+## In lib/poker/poker_configuration.pl make sure to set the following option (and
+## unset all other experiment_file/2 options):
+##
+## experiment_file(data('poker_examples/experiment_script_binary_cgnf.pl'),binary_cgnf).
+##
+#csv="${tp}binary_anbn_range_${ts}.csv"
+#log="${tp}binary_anbn_range_${ts}.log"
+#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/2,binary_anbn_range($reps,'$csv',false),'$log'))." -t halt &
+### Sleep two seconds to give logging the chance to create a new log file.
+#sleep 2
+#
+#csv="${tp}binary_anbm_range_${ts}.csv"
+#log="${tp}binary_anbm_range_${ts}.log"
+#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/2,binary_anbm_range($reps,'$csv',false),'$log'))." -t halt &
+#sleep 2
+#
+#csv="${tp}binary_parens_range_${ts}.csv"
+#log="${tp}binary_parens_range_${ts}.log"
+#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/2,binary_parens_range($reps,'$csv',false),'$log'))." -t halt &
+#sleep 2
+#
+#csv="${tp}binary_palindrome_range_${ts}.csv"
+#log="${tp}binary_palindrome_range_${ts}.log"
+#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/2,binary_palindrome_range($reps,'$csv',false),'$log'))." -t halt &
+#sleep 2

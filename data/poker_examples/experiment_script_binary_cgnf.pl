@@ -289,7 +289,8 @@ binary_anbm_range(N,S,P):-
         Lang = anbm_bin
         ,T = s/2
         ,Gs = 0:25/5
-        ,Sl = anbm_bin(1:61/10,0,9) % all is 88
+        %,Sl = anbm_bin(1:61/10,0,9) % all is 88
+        ,Sl = anbm_bin(1:21/5,0,9) % all is 88
         ,Su = []
         ,TPos = anbm_bin(all,9,18)
         ,TNeg = not_anbm_bin(all,0,13)
@@ -329,7 +330,8 @@ binary_parens_range(N,S,P):-
         Lang = parens_bin
         ,T = s/2
         ,Gs = 0:100/20
-        ,Sl = parens_bin(1:61/10,0,10) % all is 65
+        %,Sl = parens_bin(1:61/10,0,10) % all is 65
+        ,Sl = parens_bin(1:21/5,0,10) % all is 65
         ,Su = []
         ,TPos = parens_bin(1500,11,21) % all is 23649
         ,TNeg = unbalanced_parens_bin(1500,0,15) % all is 64909
