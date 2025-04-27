@@ -339,7 +339,31 @@ binary_parens_range(N,S,P):-
          ->  Pl = plot('Balanced Parentheses',@(false),@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        % Needs more tabling RAM
+        ,Set = set_table_space(4_294_967_296,TS)
+        ,G = setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl)
+        % Table space reset to previous setting.
+        ,Cl = set_table_space(TS,_)
+        ,setup_call_cleanup(Set,G,Cl).
+
+
+%!      set_table_space(+New,-Current) is det.
+%
+%       Set the RAM limit for tabling.
+%
+%       New is the number of bytes, in base-two, in which to set the
+%       tabling RAM limit. This is done by modifying the value of
+%       the Prolog flag table_space.
+%
+%       Current is the current value of the table_space flag. Used to
+%       reset the table RAM to its previous setting later.
+%
+set_table_space(S,TS):-
+        current_prolog_flag(table_space, TS)
+        ,format('Current table space ~D~n',[TS])
+        ,set_prolog_flag(table_space,S)
+        ,current_prolog_flag(table_space, NS)
+        ,format('New table space ~D~n',[NS]).
 
 
 %!      binary_parens_range_unlabelled(+N,+Stream,+Plot) is det.
