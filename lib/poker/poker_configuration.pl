@@ -68,6 +68,7 @@ experiment_file(data('poker_examples/hello_world_poker.pl'),hello_world).
 %experiment_file(data('poker_examples/experiment_script_cgnf.pl'),exp_script_cgnf).
 %experiment_file(data('poker_examples/experiment_script_weak_cgnf.pl'),exp_script_wcgnf).
 %experiment_file(data('poker_examples/experiment_script_lnf.pl'),exp_script_lnf).
+%experiment_file(data('poker_examples/experiment_script_binary_cgnf.pl'),binary_cgnf).
 
 
 %!      flatten_prove_all(?Bool) is semidet.

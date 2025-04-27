@@ -6,6 +6,7 @@
                       ,binary_palindrome/0
                       ,binary_anbn_uo/1
                       ,binary_anbn_range/3
+                      ,binary_anbn_uo_range/3
                       ,binary_anbm_range/3
                       ,binary_anbm_range_unlabelled/3
                       ,binary_parens_range/3
@@ -36,6 +37,61 @@
 
 /** <module> Unified script for experiments learning bit-string CFGs with Weak C-GNF.
 
+Predicates in this module are used to setup and run experiments learning
+Context-Free Grammars for languages of bit-strings, i.e. where the
+terminals are in {0,1,epsilon} (where epsilon is the empty string).
+Grammars are learned in Definite Clause Grammars form (unsugared).
+
+There are six grammars used in experiments:
+
+1. Language of bit-strings with an even number of "1"s.
+
+Abbreviated as "even". Regular language. Accepts the empty string.
+
+2. a^nb^n where n > 0.
+
+Abbreviated as "anbn". Context Free. Characters "a" and "b" are replaced
+by 1 and 0, respectively. The language does not accept the empty string.
+
+
+3. {w in {a,b}* | count(a) = count(b)}
+
+Accepts strings of equal numbers of as and bs in any oreder. Abbreviated
+as "anbn_uo" (for "unordered"). Characters "a" and "b" are replaced by
+"1" and "0" respsectively. The language does accept the empty string.
+
+4. a^nb^m where n >= m >= 0.
+
+Abbreviated as "anbm". Context Free. Characters "a" and "b" are replaced
+by "1" and "0", respectively. The language does accept the empty string.
+
+
+5. Language of balanced parentheses
+
+Abbraviated as "parens". Context Free. Characters "(" and ")" are
+replaced by "1" and "0" respectively. Accepts the empty string.
+
+6. Language of palindromic bit-strings
+
+Abbreviated as "palindrome". Context Free. Accepts the empty string.
+
+
+Replacing characters "a", "b", "(", and ")" with "1" and "0" allows a
+single first-order background theory to be used for all experiments.
+This unified theory is the following Definite Clause Grammar:
+
+==
+one --> [1].
+zero --> [0].
+empty --> [].
+==
+
+All languages are Context Free except for the even parity language which
+is regular, so they can all be represented as Context Free Grammars
+(CFGs; a CFG can express a Regular language, but not the other way
+around). Therefore the Weak Chomsky-Greibach Normal Form is used as a
+Second Order background theory for all six languages.
+
 */
 
 :-debug(generalise).
@@ -58,9 +114,12 @@
                 *      SINGLE EXPERIMENTS      *
                 *******************************/
 
+% Simple set of single-run experiments. Use for quick eyballing of
+% results while working out the right configs.
+
 %!      binary_parity is det.
 %
-%       Run a single experiment and print the program and labelling.
+%       Learn a CFG of the even-parity Regular language.
 %
 binary_parity:-
         Lang = even_bin
@@ -74,7 +133,7 @@ binary_parity:-
 
 %!      binary_anbn is det.
 %
-%       Run a single experiment and print the program and labelling.
+%       Learn a CFG of the a^nb^n: n > 0 Context-Free Language.
 %
 binary_anbn:-
         Lang = anbn_bin
@@ -88,7 +147,7 @@ binary_anbn:-
 
 %!      binary_anbn_uo is det.
 %
-%       Run a single experiment and print the program and labelling.
+%       Learn a CFG of the unordered a^nb^n Context-Free Language.
 %
 binary_anbn_uo:-
         Lang = anbn_uo_bin
@@ -102,7 +161,7 @@ binary_anbn_uo:-
 
 %!      binary_anbm is det.
 %
-%       Run a single experiment and print the program and labelling.
+%       Learn a CFG of the a^nb^m: n >= m >= 0 Context-Free Language.
 %
 binary_anbm:-
         Lang = anbm_bin
@@ -116,7 +175,7 @@ binary_anbm:-
 
 %!      binary_parens is det.
 %
-%       Run a single experiment and print the program and labelling.
+%       Learn a CFG of the CFL of balanced parentheses.
 %
 binary_parens:-
         Lang = parens_bin
@@ -130,7 +189,7 @@ binary_parens:-
 
 %!      binary_palindrome is det.
 %
-%       Run a single experiment and print the program and labelling.
+%       Learn a CFG of the CFL of palindromic bit-strings.
 %
 binary_palindrome:-
 	Lang = palindrome_bin
@@ -203,6 +262,10 @@ binary_anbn_range(N,S,P):-
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
+%!      binary_anbn_uo_range(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying inputs and print evaluation results.
+%
 binary_anbn_uo_range(N,S,P):-
         Lang = anbn_uo_bin
         ,T = s/2
@@ -216,7 +279,6 @@ binary_anbn_uo_range(N,S,P):-
          ;   Pl = false
          )
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
-
 
 
 %!      binary_anbm_range(+N,+Stream,+Plot) is det.
@@ -395,8 +457,6 @@ set_configs(palindrome_bin):-
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[250])
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
                                                          ,[random]).
-
-
 
 
                 /*******************************
