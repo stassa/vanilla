@@ -12,6 +12,7 @@
                          ,hilbert_to_dragon_curve_range/3
                          ,koch_to_dragon_curve_range/3
                          ,koch_to_hilbert_curve_range/3
+                         ,dragon_to_koch_curve_range/3
                          ,hilbert_dragon_filtering/0
                          ,koch_dragon_filtering/0
                          ,hilbert_dragon_filtering/1
@@ -378,6 +379,7 @@ dragon_to_hilbert_curve_range(N,S,P):-
         ,T = s/3
         ,Gs = 0:1500/250
         ,Sl = dragon_curve(41:41/10,0,4) % all is 41
+        %,Sl = dragon_curve(1:41/10,0,4) % all is 41
         ,Su = [hilbert_curve(1:41/10,0,4) % all is 121
               ,hilbert_curve_with_vars(1:41/10,11,13) % all is 68
               ,dragon_curve(1:41/10,5,8) % all is 1236
@@ -398,21 +400,6 @@ dragon_to_hilbert_curve_range(N,S,P):-
 %       Given are labelled examples of the Hilbert Curve L-System and
 %       unlabelled examples of the Hilbert Curve and the Dragon Curve
 %       L-System, all mixed up.
-%
-%       Prints the Accuracy, TPR, and TNR means and standard errors of
-%       the hypotheses and labellings learned in each experiment set.
-%       The number of experimnet sets is determined by the range of
-%       internally generated examples.
-%
-%       Each experiment in an experiment set is repeated N times.
-%
-%       Results are written to the given Stream. This can be
-%       "user_output" to print to terminal.
-%
-%       Plot is a boolean (true or false) that determines whether to
-%       plot experiments results from the given Stream or not. If Plot
-%       is "true" then Stream must be the path to a CSV file (not
-%       user_output) elser errors will be raised.
 %
 hilbert_to_dragon_curve_range(N,S,P):-
         Lang = hilbert_curve
@@ -441,21 +428,6 @@ hilbert_to_dragon_curve_range(N,S,P):-
 %       unlabelled examples of the Koch Curve and the Dragon Curve
 %       L-System, all mixed up.
 %
-%       Prints the Accuracy, TPR, and TNR means and standard errors of
-%       the hypotheses and labellings learned in each experiment set.
-%       The number of experimnet sets is determined by the range of
-%       internally generated examples.
-%
-%       Each experiment in an experiment set is repeated N times.
-%
-%       Results are written to the given Stream. This can be
-%       "user_output" to print to terminal.
-%
-%       Plot is a boolean (true or false) that determines whether to
-%       plot experiments results from the given Stream or not. If Plot
-%       is "true" then Stream must be the path to a CSV file (not
-%       user_output) elser errors will be raised.
-%
 koch_to_dragon_curve_range(N,S,P):-
         Lang = koch_curve
         ,T = s/3
@@ -483,21 +455,6 @@ koch_to_dragon_curve_range(N,S,P):-
 %       unlabelled examples of the Koch Curve and the Hilbert Curve
 %       L-System, all mixed up.
 %
-%       Prints the Accuracy, TPR, and TNR means and standard errors of
-%       the hypotheses and labellings learned in each experiment set.
-%       The number of experimnet sets is determined by the range of
-%       internally generated examples.
-%
-%       Each experiment in an experiment set is repeated N times.
-%
-%       Results are written to the given Stream. This can be
-%       "user_output" to print to terminal.
-%
-%       Plot is a boolean (true or false) that determines whether to
-%       plot experiments results from the given Stream or not. If Plot
-%       is "true" then Stream must be the path to a CSV file (not
-%       user_output) elser errors will be raised.
-%
 koch_to_hilbert_curve_range(N,S,P):-
         Lang = koch_curve
         ,T = s/3
@@ -513,6 +470,33 @@ koch_to_hilbert_curve_range(N,S,P):-
         ,TNeg = not_koch_curve(1500,0,5)
         ,(   P == true
          ->  Pl = plot('Koch to Hilbert Curve',@(false),@(true))
+         ;   Pl = false
+         )
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
+
+%!      dragon_to_koch_range(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying given and generated examples.
+%
+%       Given are labelled examples of the Dragon Curve L-System and
+%       unlabelled examples of the Koch Curve and the Dragon Curve
+%       L-System, all mixed up.
+%
+dragon_to_koch_curve_range(N,S,P):-
+        Lang = dragon_curve
+        ,T = s/3
+        ,Gs = 0:1500/250
+        ,Sl = dragon_curve(41:41/10,0,4) % all is 41
+        %,Sl = dragon_curve(1:41/10,0,4) % all is 41
+        ,Su = [koch_curve(1:21/5,0,5) % all is 63
+              ,koch_curve_with_vars(1:21/5,8,11) % all is 49
+	      ,dragon_curve(1:41/10,5,8) % all is 1236
+              ]
+        ,TPos = dragon_curve(all,5,10)/hilbert_curve
+        ,TNeg = not_dragon_curve(all,0,4)
+        ,(   P == true
+         ->  Pl = plot('Dragon to Koch Curve',@(false),@(true))
          ;   Pl = false
          )
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
