@@ -290,7 +290,7 @@ binary_anbm_range(N,S,P):-
         ,T = s/2
         ,Gs = 0:25/5
         %,Sl = anbm_bin(1:61/10,0,9) % all is 88
-        ,Sl = anbm_bin(1:21/5,0,9) % all is 88
+        ,Sl = anbm_bin(1:41/10,0,9) % all is 88
         ,Su = []
         ,TPos = anbm_bin(all,9,18)
         ,TNeg = not_anbm_bin(all,0,13)
