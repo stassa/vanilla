@@ -67,6 +67,11 @@ sleep 2
 #log="${tp}koch_to_hilbert_curve_range_${ts}.log"
 #swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,koch_to_hilbert_curve_range($reps,'$csv',false),'$log'))." -t halt &
 #sleep 2
+#
+#csv="${tp}dragon_to_koch_curve_range_${ts}.csv"
+#log="${tp}dragon_to_koch_curve_range_${ts}.log"
+#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,dragon_to_koch_curve_range($reps,'$csv',false),'$log'))." -t halt &
+#sleep 2
 
 
 ## Binary GFG low uncertainty regime experiments
