@@ -418,7 +418,7 @@ hilbert_to_dragon_curve_range(N,S,P):-
         Lang = hilbert_curve
         ,T = s/3
         ,Gs = 0:1500/250 % 5 experiment sets
-        ,Sl = [hilbert_curve(20:10/10,0,4) % all is 121
+        ,Sl = [hilbert_curve(20:20/10,0,4) % all is 121
               ,hilbert_curve_with_vars(21:21/10,11,13) % all is 68
               ]
         ,Su = [dragon_curve(1:41/10,0,4) % all is 41
