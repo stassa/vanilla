@@ -5,13 +5,23 @@
                       ,binary_parens/0
                       ,binary_palindrome/0
                       ,binary_anbn_uo/1
+                      ,binary_anbn_ab_star_no_generated/1
+                      ,binary_anbn_anbm_no_generated/1
+                      ,binary_anbn_anbm_ab_star_no_generated/1
+                      ,binary_anbm_ab_star_no_generated/1
+                      ,binary_parens_ab_star_no_generated/1
+                      ,binary_palindrome_ab_star_no_generated/1
                       ,binary_anbn_range/3
+                      ,binary_anbn_ab_star_range/3
                       ,binary_anbn_uo_range/3
                       ,binary_anbm_range/3
+                      ,binary_anbm_ab_star_range/3
                       ,binary_anbm_range_unlabelled/3
                       ,binary_parens_range/3
+                      ,binary_parens_ab_star_range/3
                       ,binary_parens_range_unlabelled/3
                       ,binary_palindrome_range/3
+                      ,binary_palindrome_ab_star_range/3
                       ,cleanup_safe_example/0
                       ,setup_safe_example/1
                       ,background_knowledge/2
@@ -225,6 +235,177 @@ binary_anbn_uo(N):-
 
 
                 /*******************************
+                *   ZERO GENERATED EXAMPLES    *
+                *******************************/
+
+% Experiments with zero automatically generated examples. Used to
+% investigate the effect of unlabelled examples on learning and
+% labelling accuracy.
+
+
+%!      binary_anbn_ab_star_no_generated(+N) is det.
+%
+%       Run N experiments with zero automatically generated examples.
+%
+%       If N is 0 a single experiment is carried out and the learned
+%       hypothesis is written to the user output. Otherwise N
+%       experiments are carried out (including if N is 1) and only the
+%       means and standard errors of Accuracy, TPR and TNR are written.
+%
+%       Labelled examples of a^nb^n and unlabelled examples of {ab}* the
+%       language of all a-b strings. Except it's {0,1}* because this is
+%       the binary version.
+%
+binary_anbn_ab_star_no_generated(N):-
+        Lang = anbn_bin_ng
+        ,T = s/2
+        ,Sl = anbn_bin(all,0,12) % 6
+        ,Su = bit_string(all,0,6) % 64 duh
+        ,TPos = anbn_bin(all,13,60) % 24
+        ,TNeg = not_anbn_bin(all,0,6) % 124
+        ,(   N == 0
+         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ).
+
+
+%!      binary_anbn_anbm_no_generated(+N) is det.
+%
+%       Run N experiments with zero automatically generated examples.
+%
+%       If N is 0 a single experiment is carried out and the learned
+%       hypothesis is written to the user output. Otherwise N
+%       experiments are carried out (including if N is 1) and only the
+%       means and standard errors of Accuracy, TPR and TNR are written.
+%
+%       Labelled examples of a^nb^n and unlabelled examples of a^nb^m.
+%
+binary_anbn_anbm_no_generated(N):-
+        Lang = anbn_bin_ng
+        ,T = s/2
+        ,Sl = anbn_bin(all,0,12) % 3
+        ,Su = anbm(all,0,12) % 609
+        ,TPos = anbn_bin(all,8,60) % 27
+        ,TNeg = not_anbn_bin(all,6,10) % 1981
+        ,(   N == 0
+         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ).
+
+
+%!      binary_anbn_anbm_ab_star_no_generated(+N) is det.
+%
+%       Run N experiments with zero automatically generated examples.
+%
+%       If N is 0 a single experiment is carried out and the learned
+%       hypothesis is written to the user output. Otherwise N
+%       experiments are carried out (including if N is 1) and only the
+%       means and standard errors of Accuracy, TPR and TNR are written.
+%
+%       Labelled examples of a^nb^n and unlabelled examples of a^nb^m
+%       and {ab}*.
+%
+binary_anbn_anbm_ab_star_no_generated(N):-
+        Lang = anbn_bin_ng
+        ,T = s/2
+        ,Sl = anbn_bin(all,0,12) % 3
+        ,Su = [bit_string(all,0,6) % 64 duh
+              ,anbm(all,0,7) % 54
+              ]
+        ,TPos = anbn_bin(all,8,60) % 27
+        ,TNeg = not_anbn_bin(all,6,10) % 1981
+        ,(   N == 0
+         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ).
+
+
+%!      binary_anbm_ab_star_no_generated(+N) is det.
+%
+%       Run N experiments with zero automatically generated examples.
+%
+%       If N is 0 a single experiment is carried out and the learned
+%       hypothesis is written to the user output. Otherwise N
+%       experiments are carried out (including if N is 1) and only the
+%       means and standard errors of Accuracy, TPR and TNR are written.
+%
+%       Labelled examples of a^nb^m and unlabelled examples of {ab}* the
+%       language of all a-b strings. Except it's {0,1}* because this is
+%       the binary version.
+%
+binary_anbm_ab_star_no_generated(N):-
+        Lang = anbm_bin_ng
+        ,T = s/2
+        ,Sl = anbm_bin(all,0,4)
+        ,Su = bit_string(all,0,6)
+        ,TPos = anbm_bin(all,5,8)
+        ,TNeg = not_anbm_bin(all,0,6)
+        ,(   N == 0
+         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ).
+
+
+%!      binary_parens_ab_star_no_generated(+N) is det.
+%
+%       Run N experiments with zero automatically generated examples.
+%
+%       If N is 0 a single experiment is carried out and the learned
+%       hypothesis is written to the user output. Otherwise N
+%       experiments are carried out (including if N is 1) and only the
+%       means and standard errors of Accuracy, TPR and TNR are written.
+%
+%       Labelled examples of balanced parentheses and unlabelled
+%       examples of {ab}* the language of all a-b strings. Except it's
+%       {0,1}* because this is the binary version.
+%
+binary_parens_ab_star_no_generated(N):-
+        Lang = parens_bin_ng
+        ,T = s/2
+	,Sl = parens_bin(all,0,6) % 6
+        ,Su = bit_string(all,0,6)
+	,TPos = parens_bin(1500,7,20)
+	,TNeg = unbalanced_parens_bin(all,0,10) % 1982
+        ,(   N == 0
+         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ).
+
+
+%!      binary_palindrome_ab_star_no_generated(+N) is det.
+%
+%       Run N experiments with zero automatically generated examples.
+%
+%       If N is 0 a single experiment is carried out and the learned
+%       hypothesis is written to the user output. Otherwise N
+%       experiments are carried out (including if N is 1) and only the
+%       means and standard errors of Accuracy, TPR and TNR are written.
+%
+%       Labelled examples of palindrome and unlabelled examples of {ab}*
+%       the language of all a-b strings. Except it's {0,1}* because this
+%       is the binary version.
+%
+%       For this experiment {0,1}* is specially defined as
+%       bit_string_p/2, generating example atoms p(Xs,[]), matching the
+%       internal symbol of Palindrome. It's a bit of a mess.
+%
+binary_palindrome_ab_star_no_generated(N):-
+        Lang = palindrome_bin_ng
+        ,T = p/2
+	,Sl = palindrome_bin(all,0,4)
+        ,Su = [%bit_string_p(900,0,10)
+               palindrome_bin(all,5,10)
+              ,not_palindrome_bin(all,0,7)
+              ]
+	,TPos = palindrome_bin(all,5,15) % 752
+	,TNeg = not_palindrome_bin(all,0,10) % 1922
+        ,(   N == 0
+         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ).
+
+
+                /*******************************
                 *      RANGE EXPERIMENTS       *
                 *******************************/
 
@@ -257,6 +438,25 @@ binary_anbn_range(N,S,P):-
         ,TNeg = not_anbn_bin(all,0,12)
         ,(   P == true
          ->  Pl = plot('a^nb^n',@(false),@(false))
+         ;   Pl = false
+         )
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
+
+%!      binary_anbn_ab_star_range(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying inputs and print evaluation results.
+%
+binary_anbn_ab_star_range(N,S,P):-
+        Lang = anbn_bin_ng
+        ,T = s/2
+        ,Gs = 0:0/5
+        ,Sl = anbn_bin(1:21/5,0,45) % all is 22
+        ,Su = bit_string(0:64/16,0,6) % all is 64 duh
+        ,TPos = anbn_bin(all,13,60) % 24
+        ,TNeg = not_anbn_bin(all,0,6) % 124.
+        ,(   P == true
+         ->  Pl = plot('a^nb^n',@(false),@(true))
          ;   Pl = false
          )
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
@@ -296,6 +496,26 @@ binary_anbm_range(N,S,P):-
         ,TNeg = not_anbm_bin(all,0,13)
         ,(   P == true
          ->  Pl = plot('a^nb^m (n >= m >= 0)',@(false),@(false))
+         ;   Pl = false
+         )
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
+
+%!      binary_anbm_ab_star_range(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying inputs and print evaluation results.
+%
+binary_anbm_ab_star_range(N,S,P):-
+        Lang = anbm_bin_ng
+        ,T = s/2
+        ,Gs = 0:0/5
+        %,Sl = anbm_bin(1:41/10,0,9) % all is 88
+        ,Sl = anbm_bin(1:21/5,0,9) % all is 88
+        ,Su = bit_string(0:64/16,0,6) % all is 64 duh
+        ,TPos = anbm_bin(1500,10,18)
+        ,TNeg = not_anbm_bin(1500,0,13)
+        ,(   P == true
+         ->  Pl = plot('a^nb^m',@(false),@(true))
          ;   Pl = false
          )
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
@@ -366,6 +586,30 @@ set_table_space(S,TS):-
         ,format('New table space ~D~n',[NS]).
 
 
+%!      binary_parens_ab_star_range(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying inputs and print evaluation results.
+%
+binary_parens_ab_star_range(N,S,P):-
+        Lang = parens_bin_ng
+        ,T = s/2
+        ,Gs = 0:0/5
+        ,Sl = parens_bin(1:21/5,0,10) % all is 65
+        ,Su = bit_string(0:64/16,0,6) % all is 64 duh
+        ,TPos = parens_bin(1500,11,21) % all is 23649
+        ,TNeg = unbalanced_parens_bin(1500,0,15) % all is 64909
+        ,(   P == true
+         ->  Pl = plot('Parens',@(false),@(true))
+         ;   Pl = false
+         )
+        % Needs more tabling RAM
+        ,Set = set_table_space(4_294_967_296,TS)
+        ,G = setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl)
+        % Table space reset to previous setting.
+        ,Cl = set_table_space(TS,_)
+        ,setup_call_cleanup(Set,G,Cl).
+
+
 %!      binary_parens_range_unlabelled(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
@@ -408,6 +652,25 @@ binary_palindrome_range(N,S,P):-
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
+%!      binary_palindrome_ab_star_range(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying inputs and print evaluation results.
+%
+binary_palindrome_ab_star_range(N,S,P):-
+        Lang = palindrome_bin_ng
+        ,T = p/2
+        ,Gs = 0:0/5
+        ,Sl = palindrome_bin(1:21/4,0,5) % all is 54
+        ,Su = bit_string(0:128/32,0,7) % all is 255
+        ,TPos = palindrome_bin(all,6,16)
+        ,TNeg = not_palindrome_bin(all,0,10)
+        ,(   P == true
+         ->  Pl = plot('Parens',@(false),@(true))
+         ;   Pl = false
+         )
+        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
+
 
                 /*******************************
                 *        CONFIGURATION         *
@@ -419,7 +682,8 @@ binary_palindrome_range(N,S,P):-
 %       Set configuration options for a target Language.
 %
 set_configs(even_bin):-
-        poker_auxiliaries:set_poker_configuration_option(clause_limit,[5])
+        !
+        ,poker_auxiliaries:set_poker_configuration_option(clause_limit,[5])
         ,poker_auxiliaries:set_poker_configuration_option(gestalt,[true])
         ,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
         ,poker_auxiliaries:set_poker_configuration_option(max_invented,[1])
@@ -430,7 +694,8 @@ set_configs(even_bin):-
                                                          ,[random]).
 
 set_configs(anbn_bin):-
-        poker_auxiliaries:set_poker_configuration_option(clause_limit,[3])
+        !
+        ,poker_auxiliaries:set_poker_configuration_option(clause_limit,[3])
         ,poker_auxiliaries:set_poker_configuration_option(max_invented,[1])
         ,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
         ,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
@@ -440,8 +705,21 @@ set_configs(anbn_bin):-
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
                                                          ,[random]).
 
+set_configs(anbn_bin_ng):-
+        !
+        ,poker_auxiliaries:set_poker_configuration_option(clause_limit,[3])
+        ,poker_auxiliaries:set_poker_configuration_option(max_invented,[1])
+        ,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
+        ,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
+        ,poker_auxiliaries:set_poker_configuration_option(respecialise,[true])
+        ,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
+        ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[0])
+        ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+                                                         ,[random]).
+
 set_configs(anbn_uo_bin):-
-        poker_auxiliaries:set_poker_configuration_option(clause_limit,[4])
+        !
+        ,poker_auxiliaries:set_poker_configuration_option(clause_limit,[4])
         ,poker_auxiliaries:set_poker_configuration_option(max_invented,[2])
         ,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
         ,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
@@ -452,7 +730,8 @@ set_configs(anbn_uo_bin):-
                                                          ,[random]).
 
 set_configs(anbm_bin):-
-        poker_auxiliaries:set_poker_configuration_option(clause_limit,[4])
+        !
+        ,poker_auxiliaries:set_poker_configuration_option(clause_limit,[4])
         ,poker_auxiliaries:set_poker_configuration_option(max_invented,[1])
         ,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
         ,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
@@ -462,8 +741,21 @@ set_configs(anbm_bin):-
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
                                                          ,[random]).
 
+set_configs(anbm_bin_ng):-
+        !
+        ,poker_auxiliaries:set_poker_configuration_option(clause_limit,[4])
+        ,poker_auxiliaries:set_poker_configuration_option(max_invented,[1])
+        ,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
+        ,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
+        ,poker_auxiliaries:set_poker_configuration_option(respecialise,[true])
+        ,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[learned])
+        ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[0])
+        ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+                                                         ,[random]).
+
 set_configs(parens_bin):-
-        poker_auxiliaries:set_poker_configuration_option(clause_limit,[4])
+        !
+        ,poker_auxiliaries:set_poker_configuration_option(clause_limit,[4])
         ,poker_auxiliaries:set_poker_configuration_option(max_invented,[2])
         ,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
         ,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
@@ -473,8 +765,21 @@ set_configs(parens_bin):-
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
                                                          ,[random]).
 
+set_configs(parens_bin_ng):-
+        !
+        ,poker_auxiliaries:set_poker_configuration_option(clause_limit,[4])
+        ,poker_auxiliaries:set_poker_configuration_option(max_invented,[2])
+        ,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
+        ,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
+        ,poker_auxiliaries:set_poker_configuration_option(respecialise,[true])
+        ,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[generalised])
+        ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[0])
+        ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+                                                         ,[random]).
+
 set_configs(palindrome_bin):-
-        poker_auxiliaries:set_poker_configuration_option(clause_limit,[5])
+        !
+        ,poker_auxiliaries:set_poker_configuration_option(clause_limit,[5])
         ,poker_auxiliaries:set_poker_configuration_option(max_invented,[0])
         ,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
         ,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
@@ -483,6 +788,37 @@ set_configs(palindrome_bin):-
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[250])
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
                                                          ,[random]).
+
+set_configs(palindrome_bin_ng):-
+        !
+        %,poker_auxiliaries:set_poker_configuration_option(clause_limit,[3])
+        %,poker_auxiliaries:set_poker_configuration_option(max_invented,[1])
+        ,poker_auxiliaries:set_configuration_option(fetch_clauses,[[builtins,bk,metarules]])
+        ,poker_auxiliaries:set_configuration_option(table_meta_interpreter,[false])
+        ,poker_auxiliaries:set_poker_configuration_option(clause_limit,[5])
+        ,poker_auxiliaries:set_poker_configuration_option(max_invented,[0])
+        ,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
+        ,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
+        ,poker_auxiliaries:set_poker_configuration_option(respecialise,[false])
+        ,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[learned])
+        ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[0])
+        ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+                                                         ,[random]).
+
+
+set_configs(Lang):-
+        \+ memberchk(Lang,[even_bin
+                          ,anbn_bin
+                          ,anbn_bin_ng
+                          ,anbn_uo_bin
+                          ,anbm_bin
+                          ,anbm_bin_ng
+                          ,parens_bin
+                          ,parens_bin_ng
+                          ,palindrome_bin
+                          ,palindrome_bin_ng
+                          ])
+        ,throw('set_configs/1: Unknown Language':Lang).
 
 
                 /*******************************
@@ -537,6 +873,13 @@ setup_safe_example(anbn_bin):-
              between(0,9,L)
              ,length(Ls,L))
         ,assert(G).
+setup_safe_example(anbn_bin_ng):-
+        !
+        ,cleanup_safe_example
+        ,G = (poker_configuration:safe_example(m(s,Ls,[])):-
+             between(0,9,L)
+             ,length(Ls,L))
+        ,assert(G).
 setup_safe_example(anbn_uo_bin):-
         !
         ,cleanup_safe_example
@@ -551,7 +894,21 @@ setup_safe_example(anbm_bin):-
              between(0,9,L)
              ,length(Ls,L))
         ,assert(G).
+setup_safe_example(anbm_bin_ng):-
+        !
+        ,cleanup_safe_example
+        ,G = (poker_configuration:safe_example(m(s,Ls,[])):-
+             between(0,9,L)
+             ,length(Ls,L))
+        ,assert(G).
 setup_safe_example(parens_bin):-
+        !
+        ,cleanup_safe_example
+        ,G = (poker_configuration:safe_example(m(s,Ls,[])):-
+             between(0,10,L)
+             ,length(Ls,L))
+        ,assert(G).
+setup_safe_example(parens_bin_ng):-
         !
         ,cleanup_safe_example
         ,G = (poker_configuration:safe_example(m(s,Ls,[])):-
@@ -565,6 +922,16 @@ setup_safe_example(palindrome_bin):-
              between(0,8,L)
              ,length(Ls,L))
         ,assert(G).
+setup_safe_example(palindrome_bin_ng):-
+        !
+        ,cleanup_safe_example
+        ,G = (poker_configuration:safe_example(m(p,Ls,[])):-
+             between(0,8,L)
+             ,length(Ls,L))
+        ,assert(G).
+setup_safe_example(Lang):-
+        throw('setup_save_example/: Unknown Language':Lang).
+
 
 % Palindrome
 background_knowledge(p/2,[one/2,zero/2,empty/2]).

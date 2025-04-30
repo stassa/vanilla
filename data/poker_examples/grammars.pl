@@ -10,6 +10,8 @@
                    ,not_anbn_uo/2
                    ,parens/2
                    ,unbalanced_parens/2
+                   ,bit_string/2
+                   ,bit_string_p/2
                    ,even_bin/2
                    ,odd_bin/2
                    ,anbn_bin/2
@@ -181,6 +183,14 @@ not_not([1|Bs]) --> one, not_not(Bs).
                 *     BIT-STRING GRAMMARS      *
                 *******************************/
 
+bit_string --> [].
+bit_string --> one, bit_string.
+bit_string --> zero, bit_string.
+
+bit_string_p --> [].
+bit_string_p --> one, bit_string_p.
+bit_string_p --> zero, bit_string_p.
+
 even_bin(X,Y):- empty(X,Y).
 even_bin(X,Y):- zero(X,Z), even_bin(Z,Y).
 even_bin(X,Y):- one(X,Z), odd_bin(Z,Y).
@@ -190,6 +200,7 @@ odd_bin(X,Y):- one(X,Z), even_bin(Z,Y).
 anbn_bin --> one,zero.
 anbn_bin --> one,anbn_bin,zero.
 
+not_anbn_bin --> [].
 not_anbn_bin --> bit_string(Ss), { \+ phrase(anbn_bin,Ss) }.
 
 anbm_bin --> empty.

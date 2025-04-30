@@ -1275,6 +1275,9 @@ internal_symbol(L,_S):-
 %
 %       Business end of internal_symbol/2.
 %
+%       @tbd This is stupid and dumb and we need a better mechanism to
+%       map between internal symbols and language names.
+%
 internal_symbol_(even,q0).
 internal_symbol_(odd,q0).
 internal_symbol_(palindrome,q0).
@@ -1289,6 +1292,7 @@ internal_symbol_(parens,p).
 internal_symbol_(unbalanced_parens,p).
 internal_symbol_(not,q0).
 internal_symbol_(not_not,q0).
+% L-Systems
 internal_symbol_(algae,s).
 internal_symbol_(not_algae,s).
 internal_symbol_(fractal_plant,s).
@@ -1306,7 +1310,10 @@ internal_symbol_(sierpinski_triangle_with_vars,s).
 internal_symbol_(not_sierpinski_triangle,s).
 internal_symbol_(sierpinski_arrowhead,s).
 internal_symbol_(not_sierpinski_arrowhead,s).
-
+% Binary CFGs
+internal_symbol_(bit_string,s).
+% Same symbol as Palindrome
+internal_symbol_(bit_string_p,p).
 internal_symbol_(even_bin,s).
 internal_symbol_(odd_bin,s).
 internal_symbol_(anbn_bin,s).
@@ -1315,8 +1322,6 @@ internal_symbol_(anbm_bin,s).
 internal_symbol_(not_anbm_bin,s).
 internal_symbol_(anbn_uo_bin,s).
 internal_symbol_(not_anbn_uo_bin,s).
-%internal_symbol_(anbn_uo_bin,p).
-%internal_symbol_(not_anbn_uo_bin,p).
 internal_symbol_(parens_bin,s).
 internal_symbol_(unbalanced_parens_bin,s).
 internal_symbol_(palindrome_bin,p).
