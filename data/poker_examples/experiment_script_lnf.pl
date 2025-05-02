@@ -15,6 +15,10 @@
                          ,koch_curve_no_generated/1
                          ,koch_curve_no_generated_draw/0
                          ,sierpinski_triangle_no_generated/1
+                         ,dragon_curve_range/3
+                         ,hilbert_curve_range/3
+                         ,koch_curve_range/3
+                         ,sierpinski_triangle_range/3
                          ,dragon_to_hilbert_curve_range/3
                          ,hilbert_to_dragon_curve_range/3
                          ,koch_to_dragon_curve_range/3
@@ -205,8 +209,6 @@ koch_curve:-
 %       generated examples.
 %
 sierpinski_triangle:-
-% The first Koch Curve string that contains variable symbols has
-% length 9.
         Lang = sierpinski_triangle
         ,T = s/3
         ,Sl = [sierpinski_triangle(40,0,8)
@@ -455,7 +457,7 @@ hilbert_curve_no_generated_draw:-
         ,TPos = hilbert_curve(1500,4,12)
         ,TNeg = not_hilbert_curve(1500,0,4)
         ,PL = print_labelled(false)
-        ,DL = draw_labelled([T,7,[x],90,90,8,'top_left',850,550,'hilbert_curve.eps'])
+        ,DL = draw_labelled([T,7,[x],90,90,8,'top_left',850,550,'output/hilbert_curve.eps'])
         ,experiment_output:setup_run_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
 
 
@@ -508,7 +510,7 @@ koch_curve_no_generated_draw:-
         ,TNeg = not_koch_curve(1500,0,5)
         ,PL = print_labelled(false)
         ,DL = draw_labelled([T,6,[f,-,-,f,-,-,f],60,60,1,-(-450,-250),780,880
-                            ,'koch_curve.eps'])
+                            ,'output/koch_curve.eps'])
         ,experiment_output:setup_run_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
 
 
@@ -551,6 +553,125 @@ sierpinski_triangle_no_generated(N):-
 % unlabelled and generated negative examples. Use to investigate the
 % relation between labelled, unlabelled, and generated examples.
 
+
+%!      dragon_curve_range(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying automatically generated examples.
+%
+%       Given are labelled examples of the Dragon Curve L-System. No
+%       unlabelled examples are given.
+%
+%       Prints the Accuracy, TPR, and TNR means and standard errors of
+%       the hypotheses and labellings learned in each experiment set.
+%       The number of experimnet sets is determined by the range of
+%       automatically generated examples.
+%
+%       Each experiment in an experiment set is repeated N times.
+%
+%       Results are written to the given Stream. This can be
+%       "user_output" to print to terminal.
+%
+%       Plot is a boolean (true or false) that determines whether to
+%       plot experiments results from the given Stream or not. If Plot
+%       is "true" then Stream must be the path to a CSV file (not
+%       user_output) elser errors will be raised.
+%
+dragon_curve_range(N,S,P):-
+        Lang = dragon_curve
+        ,T = s/3
+        ,Gs = 0:1500/250 % 5 experiment sets
+        ,Sl = dragon_curve(1:41/10,0,4) % all is 41
+        ,Su = []
+        ,TPos = dragon_curve(all,5,10)/hilbert_curve
+        ,TNeg = not_dragon_curve(all,0,4)
+        ,What = 'generated'
+        ,(   P == true
+         ->  Pl = plot('Dragon Curve',@(false))
+         ;   Pl = false
+         )
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
+
+%!      hilbert_curve_range(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying automatically generated examples.
+%
+%       Given are labelled examples of the Hilbert Curve L-System. No
+%       unlabelled examples are given.
+%
+hilbert_curve_range(N,S,P):-
+        % Don't know why but this experiment sucks up all the table RAM
+        Lang = hilbert_curve_no_tabling
+        ,T = s/3
+        ,Gs = 0:1500/250 % 5 experiment sets
+        ,Sl = [hilbert_curve(20:20/10,0,4) % all is 121
+              ,hilbert_curve_with_vars(21:21/10,11,13) % all is 68
+              ]
+        ,Su = []
+        ,TPos = hilbert_curve(1500,0,12)
+        ,TNeg = not_hilbert_curve(1500,0,4)
+        ,What = 'generated'
+        ,(   P == true
+         ->  Pl = plot('Hilbert Curve',@(false))
+         ;   Pl = false
+         )
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
+
+%!      koch_curve_range(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying automatically generated examples.
+%
+%       Given are labelled examples of the Koch Curve L-System. No
+%       unlabelled examples are given.
+%
+koch_curve_range(N,S,P):-
+        Lang = koch_curve
+        ,T = s/3
+        ,Gs = 0:1500/250 % 5 experiment sets
+        ,Sl = [koch_curve(1:21/5,0,4) % all is 63
+              ,koch_curve_with_vars(1:21/5,8,11) % all is 49
+	      ]
+        ,Su = []
+        ,TPos = koch_curve(1500,10,14)
+        ,TNeg = not_koch_curve(1500,0,5)
+        ,What = 'generated'
+        ,(   P == true
+         ->  Pl = plot('Koch Curve',@(false))
+         ;   Pl = false
+         )
+        % Increased number of examples needs more table RAM
+        ,Sup = set_table_space(17_179_869_184,TS)
+        ,G = setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl)
+        ,Cup = set_table_space(TS,_)
+        ,setup_call_cleanup(Sup,G,Cup).
+
+
+%!      sierpinski_triangle_range(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying automatically generated examples.
+%
+%       Given are labelled examples of the Sierpinski Triangle L-System.
+%       No unlabelled examples are given.
+%
+sierpinski_triangle_range(N,S,P):-
+        Lang = sierpinski_triangle
+        ,T = s/3
+        ,Gs = 0:1500/250 % 5 experiment sets
+        ,Sl = [sierpinski_triangle(1:41/5,0,8) % all is 1681
+              ,sierpinski_triangle_with_vars(1:41/5,9,15) % all is 207
+              ]
+        ,Su = []
+        ,TPos = sierpinski_triangle(1000,0,14)
+        ,TNeg = not_sierpinski_triangle(1000,0,5)
+        ,What = 'generated'
+        ,(   P == true
+         ->  Pl = plot('Sierpinski Triangle',@(false))
+         ;   Pl = false
+         )
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
+
 %!      dragon_to_hilbert_curve_range(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying given and generated examples.
@@ -586,11 +707,12 @@ dragon_to_hilbert_curve_range(N,S,P):-
               ]
         ,TPos = dragon_curve(all,5,10)/hilbert_curve
         ,TNeg = not_dragon_curve(all,0,4)
+        ,What = 'generated'
         ,(   P == true
-         ->  Pl = plot('Dragon to Hilbert Curve','unlabelled',@(false))
+         ->  Pl = plot('Dragon to Hilbert Curve',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      hilbert_to_dragon_curve_range(+N,+Stream,+Plot) is det.
@@ -604,7 +726,7 @@ dragon_to_hilbert_curve_range(N,S,P):-
 hilbert_to_dragon_curve_range(N,S,P):-
         Lang = hilbert_curve
         ,T = s/3
-        ,Gs = 0:1500/250 % 5 experiment sets
+        ,Gs = 0:1500/250
         ,Sl = [hilbert_curve(20:20/10,0,4) % all is 121
               ,hilbert_curve_with_vars(21:21/10,11,13) % all is 68
               ]
@@ -613,11 +735,12 @@ hilbert_to_dragon_curve_range(N,S,P):-
               ]
         ,TPos = hilbert_curve(1500,0,12)
         ,TNeg = not_hilbert_curve(1500,0,4)
+        ,What = 'generated'
         ,(   P == true
-         ->  Pl = plot('Hilbert to Dragon Curve',@(false),@(true))
+         ->  Pl = plot('Hilbert to Dragon Curve',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      koch_to_dragon_curve_range(+N,+Stream,+Plot) is det.
@@ -638,13 +761,14 @@ koch_to_dragon_curve_range(N,S,P):-
         ,Su = [dragon_curve(1:41/10,0,4) % all is 41
               ,koch_curve(1:41/10,4,7) % all is 773
               ]
+        ,What = 'generated'
         ,TPos = koch_curve(1500,10,14)
         ,TNeg = not_koch_curve(1500,0,5)
         ,(   P == true
-         ->  Pl = plot('Koch to Dragon Curve',@(false),@(true))
+         ->  Pl = plot('Koch to Dragon Curve',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      koch_to_hilbert_curve_range(+N,+Stream,+Plot) is det.
@@ -668,11 +792,12 @@ koch_to_hilbert_curve_range(N,S,P):-
               ]
         ,TPos = koch_curve(1500,10,14)
         ,TNeg = not_koch_curve(1500,0,5)
+        ,What = 'generated'
         ,(   P == true
-         ->  Pl = plot('Koch to Hilbert Curve',@(false),@(true))
+         ->  Pl = plot('Koch to Hilbert Curve',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      dragon_to_koch_range(+N,+Stream,+Plot) is det.
@@ -695,11 +820,12 @@ dragon_to_koch_curve_range(N,S,P):-
               ]
         ,TPos = dragon_curve(all,5,10)/hilbert_curve
         ,TNeg = not_dragon_curve(all,0,4)
+        ,What = 'generated'
         ,(   P == true
-         ->  Pl = plot('Dragon to Koch Curve','unlabelled',@(true))
+         ->  Pl = plot('Dragon to Koch Curve',@(true))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
                 /*******************************
@@ -860,6 +986,30 @@ koch_dragon_filtering(N):-
 
 
                 /*******************************
+                *      EXPERIMENT HELPERS      *
+                *******************************/
+
+
+%!      set_table_space(+New,-Current) is det.
+%
+%       Set the RAM limit for tabling.
+%
+%       New is the number of bytes, in base-two, in which to set the
+%       tabling RAM limit. This is done by modifying the value of
+%       the Prolog flag table_space.
+%
+%       Current is the current value of the table_space flag. Used to
+%       reset the table RAM to its previous setting later.
+%
+set_table_space(S,TS):-
+        current_prolog_flag(table_space, TS)
+        ,format('Current table space ~D~n',[TS])
+        ,set_prolog_flag(table_space,S)
+        ,current_prolog_flag(table_space, NS)
+        ,format('New table space ~D~n',[NS]).
+
+
+                /*******************************
                 *        CONFIGURATION         *
                 *******************************/
 
@@ -904,6 +1054,18 @@ set_configs(dragon_curve_ng):-
 
 set_configs(hilbert_curve):-
 	!
+	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[8])
+	,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
+	,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
+	,poker_auxiliaries:set_poker_configuration_option(max_invented,[6])
+	,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+							 ,[random]).
+set_configs(hilbert_curve_no_tabling):-
+	!
+	,poker_auxiliaries:set_configuration_option(fetch_clauses,[[builtins,bk,metarules]])
+	,poker_auxiliaries:set_configuration_option(table_meta_interpreter,[false])
 	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[8])
 	,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
 	,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
@@ -1063,6 +1225,7 @@ setup_safe_example(Lang):-
                        ,dragon_curve
                        ,dragon_curve_ng
                        ,hilbert_curve
+                       ,hilbert_curve_no_tabling
                        ,hilbert_curve_ng
                        ,koch_curve
                        ,koch_curve_ng
