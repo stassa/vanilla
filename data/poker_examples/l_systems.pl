@@ -1,4 +1,5 @@
-:-module(l_systems,[algae/3
+:-module(l_systems,[l_star/3
+                   ,algae/3
                    ,not_algae/3
                    ,dragon_curve/3
                    ,not_dragon_curve/3
@@ -188,6 +189,51 @@ x --> [x].
 %       Ignored, used to control evolution of shape.
 %
 y --> [y].
+
+:- table l_star/3.
+
+%!      l_star  is nondet.
+%
+%       Maximally general L-System grammar.
+%
+l_star(X,Y,Z):- plus(Y,U), plus(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- minus(Y,U), minus(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- f(Y,U), f(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- g(Y,U), g(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- x(Y,U), x(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- x(Y,U), x(X,V), l_star(V,U,Z).
+
+l_star(X,Y,Z):- f(Y,U), plus(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- f(Y,U), minus(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- f(Y,U), f(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- f(Y,U), g(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- f(Y,U), x(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- f(Y,U), y(X,V), l_star(V,U,Z).
+
+l_star(X,Y,Z):- g(Y,U), plus(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- g(Y,U), minus(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- g(Y,U), f(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- g(Y,U), g(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- g(Y,U), x(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- g(Y,U), y(X,V), l_star(V,U,Z).
+
+l_star(X,Y,Z):- x(Y,U), plus(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- x(Y,U), minus(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- x(Y,U), f(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- x(Y,U), g(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- x(Y,U), x(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- x(Y,U), y(X,V), l_star(V,U,Z).
+
+l_star(X,Y,Z):- y(Y,U), plus(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- y(Y,U), minus(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- y(Y,U), f(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- y(Y,U), g(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- y(Y,U), x(X,V), l_star(V,U,Z).
+l_star(X,Y,Z):- y(Y,U), y(X,V), l_star(V,U,Z).
+
+l_star(X,Y,Y):- empty(X,Y).
+
+empty --> [].
 
 
 %!      dragon_curve(?String) is semidet.

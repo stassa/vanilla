@@ -436,16 +436,20 @@ binary_anbn_range(N,S,P):-
         ,Su = []
         ,TPos = anbn_bin(all,46,80)
         ,TNeg = not_anbn_bin(all,0,12)
+        ,What = 'generated'
         ,(   P == true
-         ->  Pl = plot('a^nb^n',@(false),@(false))
+         ->  Pl = plot('a^nb^n',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      binary_anbn_ab_star_range(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
+%
+%       Varies the number of unlabelled examples while keeping the
+%       number of automatically generated examples fixed.
 %
 binary_anbn_ab_star_range(N,S,P):-
         Lang = anbn_bin_ng
@@ -455,11 +459,12 @@ binary_anbn_ab_star_range(N,S,P):-
         ,Su = bit_string(0:64/16,0,6) % all is 64 duh
         ,TPos = anbn_bin(all,13,60) % 24
         ,TNeg = not_anbn_bin(all,0,6) % 124.
+        ,What = 'unlabelled'
         ,(   P == true
-         ->  Pl = plot('a^nb^n',@(false),@(true))
+         ->  Pl = plot('a^nb^n',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      binary_anbn_uo_range(+N,+Stream,+Plot) is det.
@@ -474,11 +479,12 @@ binary_anbn_uo_range(N,S,P):-
         ,Su = []
         ,TPos = anbn_uo_bin(all,5,10)
         ,TNeg = not_anbn_uo_bin(all,0,8)
+        ,What = 'generated'
         ,(   P == true
-         ->  Pl = plot('a^nb^n',@(false),@(false))
+         ->  Pl = plot('a^nb^n unordered',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      binary_anbm_range(+N,+Stream,+Plot) is det.
@@ -494,16 +500,20 @@ binary_anbm_range(N,S,P):-
         ,Su = []
         ,TPos = anbm_bin(all,9,18)
         ,TNeg = not_anbm_bin(all,0,13)
+        ,What = 'generated'
         ,(   P == true
-         ->  Pl = plot('a^nb^m (n >= m >= 0)',@(false),@(false))
+         ->  Pl = plot('a^nb^m (n >= m >= 0)',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      binary_anbm_ab_star_range(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
+%
+%       Varies the number of unlabelled examples while keeping the
+%       number of automatically generated examples fixed.
 %
 binary_anbm_ab_star_range(N,S,P):-
         Lang = anbm_bin_ng
@@ -514,16 +524,20 @@ binary_anbm_ab_star_range(N,S,P):-
         ,Su = bit_string(0:64/16,0,6) % all is 64 duh
         ,TPos = anbm_bin(1500,10,18)
         ,TNeg = not_anbm_bin(1500,0,13)
+        ,What = 'unlabelled'
         ,(   P == true
-         ->  Pl = plot('a^nb^m',@(false),@(true))
+         ->  Pl = plot('a^nb^m',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      binary_anbm_range_unlabelled(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
+%
+%       Keeps labelled examples fixed. Won't make sense to plot with
+%       current plotting script.
 %
 binary_anbm_range_unlabelled(N,S,P):-
         Lang = anbm_bin
@@ -535,11 +549,12 @@ binary_anbm_range_unlabelled(N,S,P):-
               ]
         ,TPos = anbm_bin(1500,12,18)
         ,TNeg = not_anbm_bin(1500,0,13)
+        ,What = 'unlabelled'
         ,(   P == true
-         ->  Pl = plot('a^nb^m (n >= m >= 0)',@(false),@(true))
+         ->  Pl = plot('a^nb^m (n >= m >= 0)',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      binary_parens_range(+N,+Stream,+Plot) is det.
@@ -555,13 +570,14 @@ binary_parens_range(N,S,P):-
         ,Su = []
         ,TPos = parens_bin(1500,11,21) % all is 23649
         ,TNeg = unbalanced_parens_bin(1500,0,15) % all is 64909
+        ,What = 'generated'
         ,(   P == true
-         ->  Pl = plot('Balanced Parentheses',@(false),@(false))
+         ->  Pl = plot('Balanced Parentheses',@(false))
          ;   Pl = false
          )
         % Needs more tabling RAM
         ,Set = set_table_space(4_294_967_296,TS)
-        ,G = setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl)
+        ,G = setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl)
         % Table space reset to previous setting.
         ,Cl = set_table_space(TS,_)
         ,setup_call_cleanup(Set,G,Cl).
@@ -590,6 +606,9 @@ set_table_space(S,TS):-
 %
 %       Run N experiments varying inputs and print evaluation results.
 %
+%       Varies the number of unlabelled examples while keeping the
+%       number of automatically generated examples fixed.
+%
 binary_parens_ab_star_range(N,S,P):-
         Lang = parens_bin_ng
         ,T = s/2
@@ -598,13 +617,14 @@ binary_parens_ab_star_range(N,S,P):-
         ,Su = bit_string(0:64/16,0,6) % all is 64 duh
         ,TPos = parens_bin(1500,11,21) % all is 23649
         ,TNeg = unbalanced_parens_bin(1500,0,15) % all is 64909
+        ,What = 'unlabelled'
         ,(   P == true
-         ->  Pl = plot('Parens',@(false),@(true))
+         ->  Pl = plot('Balanced Parentheses',@(false))
          ;   Pl = false
          )
         % Needs more tabling RAM
         ,Set = set_table_space(4_294_967_296,TS)
-        ,G = setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl)
+        ,G = setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl)
         % Table space reset to previous setting.
         ,Cl = set_table_space(TS,_)
         ,setup_call_cleanup(Set,G,Cl).
@@ -613,6 +633,9 @@ binary_parens_ab_star_range(N,S,P):-
 %!      binary_parens_range_unlabelled(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
+%
+%       Keeps labelled examples fixed. Won't make sense to plot with
+%       current plotting script.
 %
 binary_parens_range_unlabelled(N,S,P):-
         Lang = parens_bin
@@ -626,11 +649,12 @@ binary_parens_range_unlabelled(N,S,P):-
               ]
         ,TPos = parens_bin(all,11,21)
         ,TNeg = unbalanced_parens_bin(all,0,15)
+        ,What = 'unlabelled'
         ,(   P == true
-         ->  Pl = plot('Balanced Parentheses',@(false),@(true))
+         ->  Pl = plot('Balanced Parentheses',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      binary_palindrome_range(+N,+Stream,+Plot) is det.
@@ -645,16 +669,20 @@ binary_palindrome_range(N,S,P):-
         ,Su = []
         ,TPos = palindrome_bin(all,6,16)
         ,TNeg = not_palindrome_bin(all,0,10)
+        ,What = 'generated'
         ,(   P == true
-         ->  Pl = plot('Palindrome',@(false),@(false))
+         ->  Pl = plot('Palindrome',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      binary_palindrome_ab_star_range(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
+%
+%       Varies the number of unlabelled examples while keeping the
+%       number of automatically generated examples fixed.
 %
 binary_palindrome_ab_star_range(N,S,P):-
         Lang = palindrome_bin_ng
@@ -664,11 +692,12 @@ binary_palindrome_ab_star_range(N,S,P):-
         ,Su = bit_string(0:128/32,0,7) % all is 255
         ,TPos = palindrome_bin(all,6,16)
         ,TNeg = not_palindrome_bin(all,0,10)
+        ,What = 'unlabelled'
         ,(   P == true
-         ->  Pl = plot('Parens',@(false),@(true))
+         ->  Pl = plot('Palindrome',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 

@@ -258,11 +258,12 @@ anbn_range(N,S,P):-
         ,Su = []
         ,TPos = anbn(all,46,80)
         ,TNeg = not_anbn(all,0,12)
+        ,What = 'generated'
         ,(   P == true
-         ->  Pl = plot('a^nb^n',@(false),@(false))
+         ->  Pl = plot('a^nb^n',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      anbn_range_unlabelled(+N,+Stream,+Plot) is det.
@@ -271,7 +272,7 @@ anbn_range(N,S,P):-
 %
 %       As anbn_range/3 but keeps the number of labelled examples
 %       constant over multiple iterations while varying the number of
-%       unlabelled examples.
+%       unlabelled examples. Plots won't look very meaningful.
 %
 anbn_range_unlabelled(N,S,P):-
         Lang = anbn
@@ -283,11 +284,12 @@ anbn_range_unlabelled(N,S,P):-
               ]
         ,TPos = anbn(all,46,80)
         ,TNeg = not_anbn(all,0,12)
+        ,What = 'unlabelled'
         ,(   P == true
-         ->  Pl = plot('a^nb^n',@(false),@(false))
+         ->  Pl = plot('a^nb^n',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      anbn_anbm_range(+N,+Stream) is det.

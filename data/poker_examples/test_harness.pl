@@ -1,6 +1,6 @@
 :-module(test_harness,[experiments_filtering/10
                       ,experiment_filtering/9
-                      ,experiments_ranges/8
+                      ,experiments_ranges/9
                       ,range_helper/2
                       ,experiments/7
                       ,experiment/6
@@ -156,18 +156,33 @@ experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u):-
 
 
 
-%!      experiments_ranges(+Target,+N,+Gen,+Lab,+Unlab,+TPos,+TNeg,-Results)
+%!      experiments_ranges(+Target,+What,+N,+Gen,+Lab,+Unlab,+TPos,+TNeg,-Results)
 %!      is det.
 %
 %       Run N experiments with example numbers increasing over a range.
 %
-%       This predicate runs a set of experiments determined by Gend,
-%       each with K iteration determined by Init, and repeating N times:
+%       This predicate runs a set of experiments determined by What,
+%       each with K iteration determined by Init, and repeating N times.
+%
+%       What is one of [generated, unlabelled], that determines whether
+%       the experiment is based on the variation of automatically
+%       generated or given unlabelled examples.
+%
+%       If What is 'generated', the experiment is executed as follows:
 %
 %       For each setting G in |Gen| experiment sets
 %           Set unlabelled_examples(G)
-%           For each itereation I in |Lab| iterations
+%           For each iteration I in |Lab| iterations
 %                   expand Lab, Unlab -> Li, Ui
+%                   Call: experiments(Target,N,Li,Ui,TPos,TNeg,Res)
+%
+%       If What is 'unlabelled', the experiment is executed as follows:
+%
+%       For each language spec term U in |Unlab| experiment sets
+%           Expand U generating unlabelled exampls Ui
+%           For each iteration I in |Lab| iterations
+%                   expand Lab, Gen -> Li, G
+%                   Set unlabelled_examples(G)
 %                   Call: experiments(Target,N,Li,Ui,TPos,TNeg,Res)
 %
 %       Arguments are as follows.
@@ -253,7 +268,7 @@ experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u):-
 %       sure we're not giving as arguments totally bogus ranges, or ones
 %       that will raise an error.
 %
-experiments_ranges(T,N,Gs,Ls,Us,TestPos,TestNeg,Rs):-
+experiments_ranges(generated,T,N,Gs,Ls,Us,TestPos,TestNeg,Rs):-
         range_interval(Gs,Gs_e)
         ,maplist(expanded_range,[Ls,Us],[Ls_e,Us_e])
         ,maplist(length,[Gs_e,Ls_e],[Gn,Ln])
@@ -265,10 +280,32 @@ experiments_ranges(T,N,Gs,Ls,Us,TestPos,TestNeg,Rs):-
                         % Iteration: incrments of initial examples
                         ,debug(experiments,'Iterations per set: ~w',[Ln])
                         % Experiments: repetitions over each iteration
-                        %,maplist(nth1(I),[Ls_e,Us_e],[Ls_i,Us_i])
                         ,nth1_labelled_unlabelled(I,Ls_e,Us_e,Ls_i,Us_i)
                         ,debug(experiments,'Iteration ~w of ~w with:',[I,Ln])
                         ,debug(experiments,'Generated negative examples: ~w',[G])
+                        ,maplist(spec_value,[Ls_i,Us_i],[L,U])
+                        ,debug(experiments,'Labelled examples: ~w',[L])
+                        ,debug(experiments,'Unlabelled examples: ~w',[U])
+                        ,experiments(T,N,Ls_i,Us_i,TestPos,TestNeg,Rs_i)
+                        )
+                       ,Rs)
+        ,Clean = set_poker_configuration_option(unlabelled_examples,[C])
+        ,setup_call_cleanup(Set,Call,Clean).
+experiments_ranges(unlabelled,T,N,Gs,Ls,Us,TestPos,TestNeg,Rs):-
+        range_interval(Gs,Gs_e)
+        ,maplist(expanded_range,[Ls,Us],[Ls_e,Us_e])
+        ,maplist(length,[Gs_e,Ls_e,Us_e],[_Gn,Ln,Un])
+        ,Set =  poker_configuration:unlabelled_examples(C)
+        ,Call = findall(I/Gi/L/U-Rs_i
+                       ,(nth1(Ui,Us_e,Us_i)
+                        ,debug(experiments,'Experiment set ~w of ~w.',[Ui,Un])
+                        % Iteration: incrments of initial examples
+                        ,debug(experiments,'Iterations per set: ~w',[Ln])
+                        % Experiments: repetitions over each iteration
+                        ,nth1_labelled_unlabelled(I,Ls_e,Gs_e,Ls_i,Gi)
+                        ,set_poker_configuration_option(unlabelled_examples,[Gi])
+                        ,debug(experiments,'Iteration ~w of ~w with:',[I,Ln])
+                        ,debug(experiments,'Generated negative examples: ~w',[Gi])
                         ,maplist(spec_value,[Ls_i,Us_i],[L,U])
                         ,debug(experiments,'Labelled examples: ~w',[L])
                         ,debug(experiments,'Unlabelled examples: ~w',[U])
@@ -1293,6 +1330,7 @@ internal_symbol_(unbalanced_parens,p).
 internal_symbol_(not,q0).
 internal_symbol_(not_not,q0).
 % L-Systems
+internal_symbol_(l_star,s).
 internal_symbol_(algae,s).
 internal_symbol_(not_algae,s).
 internal_symbol_(fractal_plant,s).

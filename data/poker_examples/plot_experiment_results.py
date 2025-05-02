@@ -21,15 +21,22 @@ style = 'seaborn-v0_8-colorblind'
 
 plt.style.use(style)
 
-def plot_data(experiment,path,debug=False,has_unlabelled=False):
+fig, axs = plt.subplots(3,2,constrained_layout=True)
+fig.set_size_inches(10,8)
 
-    data = csv.csv_data(experiment,path,debug,has_unlabelled)
+# experiment: string, the name of the experiment
+# path: string, path to data csv
+# experiment_sets: string, 'generated' or 'unlabelled', incremented in experiment sets
+# debug: boolean, whereas to debug CSV data to output or not.
+def plot_data(experiment,path,experiment_sets='generated',debug=False):
 
-    experiment_sets = data['experiment_sets']
+    data = csv.csv_data(experiment,path,experiment_sets,debug)
+
+    num_iterations = data['num_iterations']
     max_iteration = data['max_iteration']
     generated = data['generated']
     unlabelled = data['unlabelled']
-    labelled = data['initial']
+    labelled = data['labelled']
     labellingAcc = data['labellingAcc']
     labellingAccSE = data['labellingAccSE']
     labellingTPR = data['labellingTPR']
@@ -46,13 +53,15 @@ def plot_data(experiment,path,debug=False,has_unlabelled=False):
     # Data structures used to set colours, linestyles and markers for labels to be used in a custom legend.
     # Setup colour ranges. Still trying things here.
     #cmap = plt.cm.jet
-    cmap = plt.cm.managua
+    #cmap = plt.cm.managua
     #cmap = cmr.ocean
     #cmap = cmr.rainforest
-    #cmap = cmr.guppy
-    #colors = cmap(np.linspace(0.3, 0.7, max_iteration))
+    cmap = cmr.pepper
+    #cmap = cmr.bubblegum
+    #cmap = cmr.gem
+    colors = cmap(np.linspace(0.3, 0.7, max_iteration))
     #colors = cmap(np.linspace(0.1, 0.7, max_iteration))
-    colors = cmap(np.linspace(0, 1, max_iteration))
+    #colors = cmap(np.linspace(0, 1, max_iteration))
     palette = itertools.cycle(colors)
     range_colors = {}
 
@@ -78,38 +87,13 @@ def plot_data(experiment,path,debug=False,has_unlabelled=False):
     # Stores plots to get labels later.
     plots = []
 
-    #print(f'max_iteration: {max_iteration}')
-
     row = 0
     col = 0
 
-    # Always used
-    xticks_labelled = labelled[0:max_iteration]
-    xlabels_labelled = labelled[0:max_iteration]
-    xlabel_labelled = 'Labelled Examples'
+    xticks = labelled[0:max_iteration]
+    xlabels = labelled[0:max_iteration]
+    xlabel = 'Labelled Examples'
 
-    xticks_unlabelled = unlabelled[0:max_iteration]
-    xlabels_unlabelled = unlabelled[0:max_iteration]
-    xlabel_unlabelled = 'Unlabelled Examples'
-
-    # If we have no unlabelled examples we have only six sub-plots.
-    if unlabelled == []:
-        fig, axs = plt.subplots(3,2,constrained_layout=True)
-        fig.set_size_inches(10,8)
-
-    # If we have unlabelled examples we have 12 sub-plots. 
-    elif unlabelled != []:
-
-        fig, axs = plt.subplots(3,4,constrained_layout=True)
-        fig.set_size_inches(13,8)
-            
-        axs[row,col+3].set_title("Hypothesis")
-        axs[row,col+2].set_title("Labelling")
-
-        axs[row+2,col+2].set_xlabel(xlabel_unlabelled)
-        axs[row+2,col+3].set_xlabel(xlabel_unlabelled)
-
-    # Titles and labels for the labelled examples sub-plots
     axs[row,col].set_title("Labelling")
     axs[row,col+1].set_title("Hypothesis")
 
@@ -117,12 +101,23 @@ def plot_data(experiment,path,debug=False,has_unlabelled=False):
     axs[row+1,col].set_ylabel("TPR")
     axs[row+2,col].set_ylabel("TNR")
 
-    axs[row+2,col].set_xlabel(xlabel_labelled)
-    axs[row+2,col+1].set_xlabel(xlabel_labelled)
+    axs[row+2,col].set_xlabel(xlabel)
+    axs[row+2,col+1].set_xlabel(xlabel)
 
-    for i in range(0,experiment_sets,max_iteration):
+    #face_colour = 'xkcd:eggshell'
+    face_colour = 'xkcd:light grey'
+    #face_colour = 'xkcd:silver'
+    #face_colour = 'xkcd:very light pink'
+
+    for i in range(0,num_iterations,max_iteration):
         j = i + max_iteration
-        lab = str(generated[i])
+
+        lab = ''
+
+        if experiment_sets == 'generated':
+            lab = str(generated[i])
+        elif experiment_sets == 'unlabelled':
+            lab = str(unlabelled[i])
 
         # Add a new colour to the range if it doesn't exist.
         if not lab in range_colors:
@@ -141,65 +136,44 @@ def plot_data(experiment,path,debug=False,has_unlabelled=False):
         plot = axs[row,col].errorbar(labelled[0:max_iteration],labellingAcc[i:j],yerr=labellingAccSE[i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
         plots.append(plot)
         axs[row,col].grid(visible=True, which='major', axis='both')  
-        axs[row,col].set_xticks(xticks_labelled, labels=xlabels_labelled)
+        axs[row,col].set_xticks(xticks, labels=xlabels)
+
+        axs[row,col].set_facecolor(face_colour)
 
         # Middle left
         axs[row+1,col].errorbar(labelled[0:max_iteration],labellingTPR[i:j],yerr=labellingTPRSE[i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
         axs[row+1,col].grid(visible=True, which='major', axis='both')  
-        axs[row+1,col].set_xticks(xticks_labelled, labels=xlabels_labelled)
+        axs[row+1,col].set_xticks(xticks, labels=xlabels)
+
+        axs[row+1,col].set_facecolor(face_colour)
 
         # Lower left
         axs[row+2,col].errorbar(labelled[0:max_iteration],labellingTNR[i:j],yerr=labellingTNRSE[i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
         axs[row+2,col].grid(visible=True, which='major', axis='both')
-        axs[row+2,col].set_xticks(xticks_labelled, labels=xlabels_labelled)
+        axs[row+2,col].set_xticks(xticks, labels=xlabels)
+
+        axs[row+2,col].set_facecolor(face_colour)
 
         # Upper Right
         axs[row,col+1].errorbar(labelled[0:max_iteration],programAcc[i:j],yerr=programAccSE[i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
         axs[row,col+1].grid(visible=True, which='major', axis='both')
-        axs[row,col+1].set_xticks(xticks_labelled, labels=xlabels_labelled)
+        axs[row,col+1].set_xticks(xticks, labels=xlabels)
+
+        axs[row,col+1].set_facecolor(face_colour)
 
         # Upper Right
         axs[row+1,col+1].errorbar(labelled[0:max_iteration],programTPR[i:j],yerr=programTPRSE[i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
         axs[row+1,col+1].grid(visible=True, which='major', axis='both')
-        axs[row+1,col+1].set_xticks(xticks_labelled, labels=xlabels_labelled)
+        axs[row+1,col+1].set_xticks(xticks, labels=xlabels)
+
+        axs[row+1,col+1].set_facecolor(face_colour)
 
         # Lower left
         axs[row+2,col+1].errorbar(labelled[0:max_iteration],programTNR[i:j],yerr=programTNRSE[i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
         axs[row+2,col+1].grid(visible=True, which='major', axis='both')
-        axs[row+2,col+1].set_xticks(xticks_labelled, labels=xlabels_labelled)
+        axs[row+2,col+1].set_xticks(xticks, labels=xlabels)
 
-        # Plot unlabelled examples
-        if unlabelled != []:
-
-            ## Thid column left
-            axs[row,col+2].errorbar(unlabelled[0:max_iteration],labellingAcc[i:j],yerr=labellingAccSE[i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
-            axs[row,col+2].grid(visible=True, which='major', axis='both')  
-            axs[row,col+2].set_xticks(xticks_unlabelled, labels=xlabels_unlabelled)
-
-            # Middle left
-            axs[row+1,col+2].errorbar(unlabelled[0:max_iteration],labellingTPR[i:j],yerr=labellingTPRSE[i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
-            axs[row+1,col+2].grid(visible=True, which='major', axis='both')  
-            axs[row+1,col+2].set_xticks(xticks_unlabelled, labels=xlabels_unlabelled)
-
-            # Lower left
-            axs[row+2,col+2].errorbar(unlabelled[0:max_iteration],labellingTNR[i:j],yerr=labellingTNRSE[i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
-            axs[row+2,col+2].grid(visible=True, which='major', axis='both')
-            axs[row+2,col+2].set_xticks(xticks_unlabelled, labels=xlabels_unlabelled)
-
-            # Upper Right
-            axs[row,col+3].errorbar(unlabelled[0:max_iteration],programAcc[i:j],yerr=programAccSE[i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
-            axs[row,col+3].grid(visible=True, which='major', axis='both')
-            axs[row,col+3].set_xticks(xticks_unlabelled, labels=xlabels_unlabelled)
-
-            # Upper Right
-            axs[row+1,col+3].errorbar(unlabelled[0:max_iteration],programTPR[i:j],yerr=programTPRSE[i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
-            axs[row+1,col+3].grid(visible=True, which='major', axis='both')
-            axs[row+1,col+3].set_xticks(xticks_unlabelled, labels=xlabels_unlabelled)
-
-            # Lower left
-            axs[row+2,col+3].errorbar(unlabelled[0:max_iteration],programTNR[i:j],yerr=programTNRSE[i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
-            axs[row+2,col+3].grid(visible=True, which='major', axis='both')
-            axs[row+2,col+3].set_xticks(xticks_unlabelled, labels=xlabels_unlabelled)
+        axs[row+2,col+1].set_facecolor(face_colour)
 
     fig.align_labels() 
     fig.align_titles()
@@ -224,7 +198,12 @@ def plot_data(experiment,path,debug=False,has_unlabelled=False):
         line = Line2D([0], [0], color=color, marker=marker, linestyle=linestyle, label=slab)
         legend_elements.append(line)
 
+    if experiment_sets == 'generated':
+        title = 'Generated'
+    elif experiment_sets == 'unlabelled':
+        title = 'Unlabelled'
+
     # Creates a custom legend.
-    fig.legend(handles=legend_elements,loc='outside right center',fontsize='small',title='Generated\nexamples',title_fontsize='small')
+    fig.legend(handles=legend_elements,loc='outside right center',fontsize='small',title=f'{title}\nexamples',title_fontsize='small')
 
     plt.show()

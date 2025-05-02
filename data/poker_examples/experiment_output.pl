@@ -1,10 +1,11 @@
 :-module(experiment_output,[setup_and_run_experiment/7
                            ,setup_and_run_experiments/7
-                           ,setup_and_run_range_experiments/9
                            ,setup_and_run_range_experiments/10
+                           ,setup_and_run_range_experiments/11
                            ,setup_and_run_filter_experiment/9
                            ,setup_run_filter_experiment_draw/9
                            ,setup_and_run_filter_experiments/9
+                           ,setup_run_experiment_draw/7
                            ,run_experiment_protocol/3
                            ]).
 
@@ -121,7 +122,7 @@ print_experiments_results([[LAccMs,LTPRMs,LTNRMs]
 
 
 
-%!      setup_and_run_range_experiments(+Stream,+Lang,+Tgt,+N,+Gs,+Lab,+Unl,+TPos,+TNeg)
+%!      setup_and_run_range_experiments(+Stream,+W,+Lang,+Tgt,+N,+Gs,+Lab,+Unl,+TPos,+TNeg)
 %!      is det.
 %
 %       Setup Poker and run an experiment varying inputs over a range.
@@ -134,11 +135,11 @@ print_experiments_results([[LAccMs,LTPRMs,LTNRMs]
 %       Consult that predicate's documnetation for the meaning of its
 %       arguments.
 %
-setup_and_run_range_experiments(Strm,Lang,T,N,Gs,Sl,Su,TPos,TNeg):-
+setup_and_run_range_experiments(Strm,W,Lang,T,N,Gs,Sl,Su,TPos,TNeg):-
         experiment_file:set_configs(Lang)
         ,experiment_file:cleanup_safe_example
         ,experiment_file:setup_safe_example(Lang)
-        ,test_harness:experiments_ranges(T,N,Gs,Sl,Su,TPos,TNeg,Results)
+        ,test_harness:experiments_ranges(W,T,N,Gs,Sl,Su,TPos,TNeg,Results)
         ,print_range_experiment_results(Strm,Results).
 
 
@@ -240,7 +241,7 @@ print_range_result(Stm,I,G,L,U,[[LAccM,LTPRM,LTNRM]
 
 
 
-%!      setup_and_run_range_experiments(+Strm,+Lang,+Tgt,+N,+Gs,+Lab,+Unl,+TPos,+TNeg,+Plot)
+%!      setup_and_run_range_experiments(+Strm,+L,+Wt,+Tgt,+N,+Gs,+Lab,+Ul,+TPos,+TNeg,+Plot)
 %!      is det.
 %
 %       Setup Poker and run an experiment varying inputs over a range.
@@ -248,28 +249,28 @@ print_range_result(Stm,I,G,L,U,[[LAccM,LTPRM,LTNRM]
 %       Like setup_and_run_range_experiments/9 but can also plot
 %       results.
 %
-setup_and_run_range_experiments(Strm,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl):-
+setup_and_run_range_experiments(Strm,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl):-
         experiment_file:set_configs(Lang)
         ,experiment_file:cleanup_safe_example
         ,experiment_file:setup_safe_example(Lang)
-        ,test_harness:experiments_ranges(T,N,Gs,Sl,Su,TPos,TNeg,Results)
+        ,test_harness:experiments_ranges(What,T,N,Gs,Sl,Su,TPos,TNeg,Results)
         ,print_range_experiment_results(Strm,Results)
         ,(   Pl == false
          ->  true
-         ;   Pl = plot(Exp,D,U)
-            ,plot_range_experiment_results(Exp,Strm,D,U)
+         ;   Pl = plot(Exp,D)
+            ,plot_range_experiment_results(Exp,Strm,What,D)
          ).
 
 
-%!      plot_range_experiment_results(+Experiment,+File,+Debug,+Unlabelled)
+%!      plot_range_experiment_results(+Experiment,+File,+What,+Debug)
 %!      is det.
 %
 %       Plot experiments results with Matplotplib.
 %
 %       Thin shell calling Python plotting module.
 %
-plot_range_experiment_results(Exp,Fn,D,U):-
-        py_call(plot_experiment_results:plot_data(Exp,Fn,debug=D,has_unlabelled=U)).
+plot_range_experiment_results(Exp,Fn,W,D):-
+        py_call(plot_experiment_results:plot_data(Exp,Fn,experiment_sets=W,debug=D)).
 
 
 
@@ -387,6 +388,24 @@ setup_run_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Os):-
         ,print_results(PsU,PosU,NegU,LabU,ProgU,print_examples(Pu))
         ,draw_results(PsL,DsL)
         ,draw_results(PsU,DsU).
+
+
+%!      setup_run_experiment_draw(+Lang,+Tgt,+Lab,+Ulab,+TPos,+TNeg,+Opts)
+%!      is det.
+%
+%       Setup & run an L-System experiment and draw the resulting image.
+%
+setup_run_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,Os):-
+        Os = [print_labelled(Pl)
+             ,draw_labelled(DsL)
+             ]
+        ,experiment_file:set_configs(Lang)
+        ,experiment_file:cleanup_safe_example
+        ,experiment_file:setup_safe_example(Lang)
+        ,experiment(T,Sl,Su,TPos,TNeg,Res)
+        ,Res = [Ps,Pos,Neg,Lab,Prog]
+        ,print_results(Ps,Pos,Neg,Lab,Prog,print_examples(Pl))
+        ,draw_results(Ps,DsL).
 
 
 %!      draw_results(+Program,+Params) is det.

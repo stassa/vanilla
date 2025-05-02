@@ -218,11 +218,12 @@ anbn_range(N,S,P):-
         ,Su = []
         ,TPos = anbn(all,46,80)
         ,TNeg = not_anbn(all,0,12)
+        ,What = 'generated'
         ,(   P == true
-         ->  Pl = plot('a^nb^n',@(false),@(false))
+         ->  Pl = plot('a^nb^n',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      anbm_range(+N,+Stream,+Plot) is det.
@@ -237,16 +238,19 @@ anbm_range(N,S,P):-
         ,Su = []
         ,TPos = anbm(all,9,18)
         ,TNeg = not_anbm(all,0,13)
+        ,What = 'generated'
         ,(   P == true
-         ->  Pl = plot('a^nb^m (n >= m >= 0)',@(false),@(false))
+         ->  Pl = plot('a^nb^m (n >= m >= 0)',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      anbm_range_unlabelled(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
+%
+%       Keeps labelled examples fixed. Plots won't look great.
 %
 anbm_range_unlabelled(N,S,P):-
         Lang = anbm
@@ -258,11 +262,12 @@ anbm_range_unlabelled(N,S,P):-
               ]
         ,TPos = anbm(1500,12,18)
         ,TNeg = not_anbm(1500,0,13)
+        ,What = 'unlabelled'
         ,(   P == true
-         ->  Pl = plot('a^nb^m (n >= m >= 0)',@(false),@(true))
+         ->  Pl = plot('a^nb^m (n >= m >= 0)',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      parens_range(+N,+Stream,+Plot) is det.
@@ -275,18 +280,21 @@ parens_range(N,S,P):-
         ,Gs = 0:100/20
         ,Sl = parens(1:61/10,0,10) % all is 54
         ,Su = []
-        ,TPos = parens(all,11,21)
-        ,TNeg = unbalanced_parens(all,0,15)
+        ,TPos = parens(1500,11,21)
+        ,TNeg = unbalanced_parens(1500,0,15)
+        ,What = 'generated'
         ,(   P == true
-         ->  Pl = plot('Balanced Parentheses',@(false),@(false))
+         ->  Pl = plot('Balanced Parentheses',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      parens_range_unlabelled(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
+%
+%       Keeps labelled examples fixed. Won't look great in plots.
 %
 parens_range_unlabelled(N,S,P):-
         Lang = parens
@@ -300,11 +308,12 @@ parens_range_unlabelled(N,S,P):-
               ]
         ,TPos = parens(all,11,21)
         ,TNeg = unbalanced_parens(all,0,15)
+        ,What = 'generated'
         ,(   P == true
-         ->  Pl = plot('Balanced Parentheses',@(false),@(true))
+         ->  Pl = plot('Balanced Parentheses',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      palindrome_range(+N,+Stream,+Plot) is det.
@@ -319,11 +328,12 @@ palindrome_range(N,S,P):-
         ,Su = []
         ,TPos = palindrome(all,6,16)
         ,TNeg = not_palindrome(all,0,10)
+        ,What = 'generated'
         ,(   P == true
-         ->  Pl = plot('Palindrome',@(false),@(false))
+         ->  Pl = plot('Palindrome',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
                 /*******************************

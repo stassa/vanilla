@@ -1,11 +1,14 @@
 import csv
 
-
-def csv_data(experiment,path,debug=True,has_unlabelled=False):
+# experiment: string, the name of the experiment
+# path: string, path to data CSV
+# experiment_sets: string, 'generated' or 'unlabelled', incremented in experiment sets
+# debug: boolean, whereas to debug CSV data to output or not.
+def csv_data(experiment,path,experiment_sets='generated',debug=True):
 
     iterations = []
     generated = []
-    initial = []
+    labelled = []
     unlabelled = []
     labellingAcc = []
     labellingTPR = []
@@ -21,8 +24,6 @@ def csv_data(experiment,path,debug=True,has_unlabelled=False):
     programTPRSE = []
     programTNRSE = []
 
-    unl = ''
-
     # Data munging munge munge munge
     with open(path, newline='') as csvfile:
         reader = csv.DictReader(csvfile)
@@ -33,8 +34,7 @@ def csv_data(experiment,path,debug=True,has_unlabelled=False):
             gen = int(row['Generated'])
             ini = int(row['Labelled'])
 
-            if has_unlabelled:
-                unl = int(row['Unlabelled'])
+            unl = int(row['Unlabelled'])
 
             accl = float(row['LabAccM'])
             tprl = float(row['LabTPRM'])
@@ -55,10 +55,9 @@ def csv_data(experiment,path,debug=True,has_unlabelled=False):
             iterations.append(iteration)
 
             generated.append(gen)
-            initial.append(ini)
+            labelled.append(ini)
 
-            if has_unlabelled:
-                unlabelled.append(unl)
+            unlabelled.append(unl)
 
             labellingAcc.append(accl)
             labellingTPR.append(tprl)
@@ -77,17 +76,15 @@ def csv_data(experiment,path,debug=True,has_unlabelled=False):
             programTNRSE.append(tnrpSe)
 
     max_iteration = max(iterations)
-    experiment_sets = len(iterations)
-
-    #print(np.shape(labellingAcc))
-    #print(np.shape(labellingAccSE))
+    num_iterations = len(iterations)
 
     if (debug):
 
         # Debugging
         print("iterations: ",iterations)
+        print("max_iteration: ",max_iteration)
         print("generated: ",generated)
-        print("initial: ",initial)
+        print("labelled: ",labelled)
         print("unlabelled: ",unlabelled)
         print("labellingAcc: ",labellingAcc)
         print("labellingTPR: ",labellingTPR)
@@ -96,11 +93,20 @@ def csv_data(experiment,path,debug=True,has_unlabelled=False):
         print("programTPR: ",programTPR)
         print("programTNR: ",programTNR)
 
-        print("generated:", generated[::max_iteration])
-        print("initial:", initial[0:max_iteration])
-        print("unlabelled:", unlabelled[0:max_iteration])
+        if experiment_sets == 'generated':
+            print(f'experiment_sets: {experiment_sets}')
+            print("generated:", generated[::max_iteration])
+            print("labelled:", labelled[0:max_iteration])
+            print("unlabelled:", unlabelled[0:max_iteration])
+        elif experiment_sets == 'unlabelled':
+            print(f'experiment_sets: {experiment_sets}')
+            print("generated:", generated[0:max_iteration])
+            print("labelled:", labelled[0:max_iteration])
+            print("unlabelled:", unlabelled[0:max_iteration])
+        else:
+            print(f'experiment_sets: {experiment_sets}')
 
-        for i in range(0,experiment_sets,max_iteration):
+        for i in range(0,num_iterations,max_iteration):
             j = i + max_iteration
             print('i: ',str(i),'j: ',str(j))
             print("labellingAcc:", labellingAcc[i:j])
@@ -117,10 +123,11 @@ def csv_data(experiment,path,debug=True,has_unlabelled=False):
             print("programTPRSE:", programTPRSE[i:j])
             print("programTNRSE:", programTNRSE[i:j])
 
-    data = {'experiment': experiment
+    data = {'experiment_sets': experiment_sets
+            ,'experiment': experiment
             ,'iterations': iterations
             ,'generated': generated
-            ,'initial': initial
+            ,'labelled': labelled
             ,'unlabelled': unlabelled 
             ,'labellingAcc': labellingAcc
             ,'labellingTPR': labellingTPR
@@ -135,7 +142,7 @@ def csv_data(experiment,path,debug=True,has_unlabelled=False):
             ,'programTPRSE': programTPRSE
             ,'programTNRSE': programTNRSE
             ,'max_iteration': max_iteration
-            ,'experiment_sets': experiment_sets
+            ,'num_iterations': num_iterations
             }
 
     return data

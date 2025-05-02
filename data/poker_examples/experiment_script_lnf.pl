@@ -8,6 +8,13 @@
                          ,hilbert_curve/1
                          ,koch_curve/1
                          ,sierpinski_triangle/1
+                         ,dragon_curve_no_generated/1
+                         ,dragon_curve_no_generated_draw/0
+                         ,hilbert_curve_no_generated/1
+                         ,hilbert_curve_no_generated_draw/0
+                         ,koch_curve_no_generated/1
+                         ,koch_curve_no_generated_draw/0
+                         ,sierpinski_triangle_no_generated/1
                          ,dragon_to_hilbert_curve_range/3
                          ,hilbert_to_dragon_curve_range/3
                          ,koch_to_dragon_curve_range/3
@@ -156,7 +163,7 @@ hilbert_curve:-
 % length 11.
         Lang = hilbert_curve
         ,T = s/3
-        ,Sl = [hilbert_curve(all,0,3)
+        ,Sl = [hilbert_curve(all,0,4)
 	      ,hilbert_curve_with_vars(all,11,11)
 	      ]
         ,Su = []
@@ -305,7 +312,7 @@ hilbert_curve(N):-
 koch_curve(N):-
 % The first Koch Curve string that contains variable symbols has
 % length 8.
-        Lang = koch_curve
+        Lang = koch_curve_ng
         ,T = s/3
         ,Sl = [koch_curve(all,0,3)
 	      ,koch_curve_with_vars(all,8,9)
@@ -340,6 +347,199 @@ sierpinski_triangle(N):-
         ,TPos = sierpinski_triangle(1000,0,14)
         ,TNeg = not_sierpinski_triangle(1000,0,5)
         ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
+
+
+                /*******************************
+                *   ZERO GENERATED EXAMPLES    *
+                *******************************/
+
+% Experiments with zero automatically generated examples. Used to
+% investigate the effect of unlabelled examples on learning and
+% labelling accuracy.
+
+
+%!      dragon_curve_no_generated(+N) is det.
+%
+%       Run N experiments with zero automatically generated examples.
+%
+%       If N is 0 a single experiment is carried out and the learned
+%       hypothesis is written to the user output. Otherwise N
+%       experiments are carried out (including if N is 1) and only the
+%       means and standard errors of Accuracy, TPR and TNR are written.
+%
+%       Labelled examples of Dragon Curve and unlabelled examples of
+%       l_star the language of all L-System strings with symbols in
+%       {+,-,f,g,x,y} (where each symbol can be both a constant and a
+%       variable).
+%
+dragon_curve_no_generated(N):-
+        Lang = dragon_curve_ng
+        ,T = s/3
+        ,Sl = dragon_curve(all,0,4)
+        ,Su = [] %l_star(800,0,4)
+        ,TPos = dragon_curve(all,5,10)
+        ,TNeg = not_dragon_curve(all,0,4)
+        ,(   N == 0
+         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ).
+
+
+%!      dragon_curve_no_generated is det.
+%
+%       Run N experiments with zero automatically generated examples.
+%
+%       Like dragon_curve_no_generated/1 but runs a single experiment
+%       and draws the resulting L-System.
+%
+dragon_curve_no_generated_draw:-
+        Lang = dragon_curve_ng
+        ,T = s/3
+        ,Sl = dragon_curve(all,0,4)
+        %,Su = l_star(1000,0,4)
+        ,Su = [dragon_curve(1500,5,10)
+              ,not_dragon_curve(1500,0,4)
+              ]
+        %,Su = []
+        ,TPos = dragon_curve(100,5,10)
+        ,TNeg = not_dragon_curve(100,0,4)
+        ,PL = print_labelled(false)
+        ,DL = draw_labelled([T,16,[f],90,90,2,-(-280,50),850,550
+                            ,'output/dragon_curve_1.eps'])
+        ,experiment_output:setup_run_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
+
+
+%!      hilbert_curve_no_generated(+N) is det.
+%
+%       Run N experiments with zero automatically generated examples.
+%
+%       If N is 0 a single experiment is carried out and the learned
+%       hypothesis is written to the user output. Otherwise N
+%       experiments are carried out (including if N is 1) and only the
+%       means and standard errors of Accuracy, TPR and TNR are written.
+%
+%       Labelled examples of Hilbert Curve and unlabelled examples of
+%       l_star the language of all L-System strings with symbols in
+%       {+,-,f,g,x,y} (where each symbol can be both a constant and a
+%       variable).
+%
+hilbert_curve_no_generated(N):-
+        Lang = hilbert_curve_ng
+        ,T = s/3
+        ,Sl = [hilbert_curve(all,0,3)
+	      ,hilbert_curve_with_vars(all,11,11)
+	      ]
+        ,Su = [] % l_star(800,0,4)
+        ,TPos = hilbert_curve(1500,4,12)
+        ,TNeg = not_hilbert_curve(1500,0,4)
+        ,(   N == 0
+         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ).
+
+
+%!      hilbert_curve_no_generated is det.
+%
+%       Run N experiments with zero automatically generated examples.
+%
+%       Like hilbert_curve_no_generated/1 but runs a single experiment
+%       and draws the resulting L-System.
+%
+hilbert_curve_no_generated_draw:-
+        Lang = hilbert_curve_ng
+        ,T = s/3
+        ,Sl = [hilbert_curve(all,0,3)
+	      ,hilbert_curve_with_vars(all,11,11)
+	      ]
+        ,Su = [] % l_star(800,0,4)
+        ,TPos = hilbert_curve(1500,4,12)
+        ,TNeg = not_hilbert_curve(1500,0,4)
+        ,PL = print_labelled(false)
+        ,DL = draw_labelled([T,7,[x],90,90,8,'top_left',850,550,'hilbert_curve.eps'])
+        ,experiment_output:setup_run_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
+
+
+%!      koch_curve_no_generated(+N) is det.
+%
+%       Run N experiments with zero automatically generated examples.
+%
+%       If N is 0 a single experiment is carried out and the learned
+%       hypothesis is written to the user output. Otherwise N
+%       experiments are carried out (including if N is 1) and only the
+%       means and standard errors of Accuracy, TPR and TNR are written.
+%
+%       Labelled examples of Koch Curve and unlabelled examples of
+%       l_star the language of all L-System strings with symbols in
+%       {+,-,f,g,x,y} (where each symbol can be both a constant and a
+%       variable).
+%
+koch_curve_no_generated(N):-
+        Lang = koch_curve_ng
+        ,T = s/3
+        ,Sl = [koch_curve(all,0,3)
+	      ,koch_curve_with_vars(all,8,9)
+	      ]
+        ,Su = l_star(800,0,4)
+        ,TPos = koch_curve(all,0,14)
+        ,TNeg = not_koch_curve(all,0,5)
+        ,(   N == 0
+         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ).
+
+
+%!      koch_curve_no_generated is det.
+%
+%       Run N experiments with zero automatically generated examples.
+%
+%       Like koch_curve_no_generated/1 but runs a single experiment
+%       and draws the resulting L-System.
+%
+koch_curve_no_generated_draw:-
+        Lang = koch_curve_ng
+        ,T = s/3
+        ,Sl = [koch_curve(all,0,3)
+	      ,koch_curve_with_vars(all,8,9)
+	      ]
+        ,Su = [l_star(5000,0,4)
+              %,koch_curve(all,4,10)
+              ]
+        ,TPos = koch_curve(1500,0,14)
+        ,TNeg = not_koch_curve(1500,0,5)
+        ,PL = print_labelled(false)
+        ,DL = draw_labelled([T,6,[f,-,-,f,-,-,f],60,60,1,-(-450,-250),780,880
+                            ,'koch_curve.eps'])
+        ,experiment_output:setup_run_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
+
+
+
+%!      sierpinski_triangle_no_generated(+N) is det.
+%
+%       Run N experiments with zero automatically generated examples.
+%
+%       If N is 0 a single experiment is carried out and the learned
+%       hypothesis is written to the user output. Otherwise N
+%       experiments are carried out (including if N is 1) and only the
+%       means and standard errors of Accuracy, TPR and TNR are written.
+%
+%       Labelled examples of Sierpinski Triangle and unlabelled examples
+%       of l_star the language of all L-System strings with symbols in
+%       {+,-,f,g,x,y} (where each symbol can be both a constant and a
+%       variable).
+%
+sierpinski_triangle_no_generated(N):-
+        Lang = sierpinski_triangle_ng
+        ,T = s/3
+        ,Sl = [sierpinski_triangle(40,0,8)
+	      ,sierpinski_triangle_with_vars(all,9,15)
+	      ]
+        ,Su = l_star(800,0,4)
+        ,TPos = sierpinski_triangle(1000,0,14)
+        ,TNeg = not_sierpinski_triangle(1000,0,5)
+        ,(   N == 0
+         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ).
 
 
 
@@ -378,8 +578,8 @@ dragon_to_hilbert_curve_range(N,S,P):-
         Lang = dragon_curve
         ,T = s/3
         ,Gs = 0:1500/250
-        ,Sl = dragon_curve(41:41/10,0,4) % all is 41
-        %,Sl = dragon_curve(1:41/10,0,4) % all is 41
+        %,Sl = dragon_curve(41:41/10,0,4) % all is 41
+        ,Sl = dragon_curve(1:41/10,0,4) % all is 41
         ,Su = [hilbert_curve(1:41/10,0,4) % all is 121
               ,hilbert_curve_with_vars(1:41/10,11,13) % all is 68
               ,dragon_curve(1:41/10,5,8) % all is 1236
@@ -387,7 +587,7 @@ dragon_to_hilbert_curve_range(N,S,P):-
         ,TPos = dragon_curve(all,5,10)/hilbert_curve
         ,TNeg = not_dragon_curve(all,0,4)
         ,(   P == true
-         ->  Pl = plot('Dragon to Hilbert Curve',@(false),@(true))
+         ->  Pl = plot('Dragon to Hilbert Curve','unlabelled',@(false))
          ;   Pl = false
          )
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
@@ -487,8 +687,8 @@ dragon_to_koch_curve_range(N,S,P):-
         Lang = dragon_curve
         ,T = s/3
         ,Gs = 0:1500/250
-        ,Sl = dragon_curve(41:41/10,0,4) % all is 41
-        %,Sl = dragon_curve(1:41/10,0,4) % all is 41
+        %,Sl = dragon_curve(41:41/10,0,4) % all is 41
+        ,Sl = dragon_curve(1:41/10,0,4) % all is 41
         ,Su = [koch_curve(1:21/5,0,5) % all is 63
               ,koch_curve_with_vars(1:21/5,8,11) % all is 49
 	      ,dragon_curve(1:41/10,5,8) % all is 1236
@@ -496,7 +696,7 @@ dragon_to_koch_curve_range(N,S,P):-
         ,TPos = dragon_curve(all,5,10)/hilbert_curve
         ,TNeg = not_dragon_curve(all,0,4)
         ,(   P == true
-         ->  Pl = plot('Dragon to Koch Curve',@(false),@(true))
+         ->  Pl = plot('Dragon to Koch Curve','unlabelled',@(true))
          ;   Pl = false
          )
         ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
@@ -691,6 +891,17 @@ set_configs(dragon_curve):-
 	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
 							 ,[random]).
 
+set_configs(dragon_curve_ng):-
+	!
+	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[5])
+	,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
+	,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
+	,poker_auxiliaries:set_poker_configuration_option(max_invented,[2])
+	,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[0])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+							 ,[random]).
+
 set_configs(hilbert_curve):-
 	!
 	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[8])
@@ -702,6 +913,17 @@ set_configs(hilbert_curve):-
 	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
 							 ,[random]).
 
+set_configs(hilbert_curve_ng):-
+	!
+	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[8])
+	,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
+	,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
+	,poker_auxiliaries:set_poker_configuration_option(max_invented,[6])
+	,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[0])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+							 ,[random]).
+
 set_configs(koch_curve):-
 	!
 	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[6])
@@ -710,6 +932,17 @@ set_configs(koch_curve):-
 	,poker_auxiliaries:set_poker_configuration_option(max_invented,[4])
 	,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
 	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+							 ,[random]).
+
+set_configs(koch_curve_ng):-
+	!
+	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[6])
+	,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
+	,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
+	,poker_auxiliaries:set_poker_configuration_option(max_invented,[4])
+	,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[0])
 	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
 							 ,[random]).
 
@@ -726,6 +959,20 @@ set_configs(sierpinski_triangle):-
 	,poker_auxiliaries:set_poker_configuration_option(max_invented,[5])
 	,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
 	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[200])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+							 ,[random]).
+
+set_configs(sierpinski_triangle_ng):-
+	!
+	,poker_auxiliaries:set_configuration_option(fetch_clauses,[[builtins,bk,metarules]])
+	,poker_auxiliaries:set_configuration_option(table_meta_interpreter, [false])
+	,poker_auxiliaries:set_configuration_option(untable_meta_interpreter, [true])
+	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[6])
+	,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
+	,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
+	,poker_auxiliaries:set_poker_configuration_option(max_invented,[5])
+	,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[0])
 	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
 							 ,[random]).
 
@@ -814,9 +1061,13 @@ setup_safe_example(Lang):-
         !
         ,must_be(oneof([algae
                        ,dragon_curve
+                       ,dragon_curve_ng
                        ,hilbert_curve
+                       ,hilbert_curve_ng
                        ,koch_curve
+                       ,koch_curve_ng
                        ,sierpinski_triangle
+                       ,sierpinski_triangle_ng
                        ,hilbert_dragon
                        ,koch_dragon
                        ,hilbert_dragon_filter]
