@@ -604,8 +604,8 @@ hilbert_curve_range(N,S,P):-
         Lang = hilbert_curve_no_tabling
         ,T = s/3
         ,Gs = 0:1500/250 % 5 experiment sets
-        ,Sl = [hilbert_curve(20:20/10,0,4) % all is 121
-              ,hilbert_curve_with_vars(21:21/10,11,13) % all is 68
+        ,Sl = [hilbert_curve(1:21/5,0,4) % all is 121
+              ,hilbert_curve_with_vars(1:21/5,11,13) % all is 68
               ]
         ,Su = []
         ,TPos = hilbert_curve(1500,0,12)
@@ -658,8 +658,8 @@ sierpinski_triangle_range(N,S,P):-
         Lang = sierpinski_triangle
         ,T = s/3
         ,Gs = 0:1500/250 % 5 experiment sets
-        ,Sl = [sierpinski_triangle(1:41/5,0,8) % all is 1681
-              ,sierpinski_triangle_with_vars(1:41/5,9,15) % all is 207
+        ,Sl = [sierpinski_triangle(1:21/5,0,8) % all is 1681
+              ,sierpinski_triangle_with_vars(1:21/5,9,15) % all is 207
               ]
         ,Su = []
         ,TPos = sierpinski_triangle(1000,0,14)
@@ -1031,7 +1031,7 @@ set_configs(algae):-
 
 set_configs(dragon_curve):-
 	!
-	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[4])
+	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[5])
 	,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
 	,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
 	,poker_auxiliaries:set_poker_configuration_option(max_invented,[2])

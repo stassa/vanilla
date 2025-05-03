@@ -269,7 +269,8 @@ experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u):-
 %       that will raise an error.
 %
 experiments_ranges(generated,T,N,Gs,Ls,Us,TestPos,TestNeg,Rs):-
-        range_interval(Gs,Gs_e)
+        !
+        ,range_interval(Gs,Gs_e)
         ,maplist(expanded_range,[Ls,Us],[Ls_e,Us_e])
         ,maplist(length,[Gs_e,Ls_e],[Gn,Ln])
         ,Set =  poker_configuration:unlabelled_examples(C)

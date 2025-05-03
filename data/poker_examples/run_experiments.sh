@@ -40,6 +40,34 @@ log="${tp}palindrome_range_${ts}.log"
 swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/2,palindrome_range($reps,'$csv',false),'$log'))." -t halt &
 sleep 2
 
+## L-System low uncertainty regime experiments
+## Uncomment this block and comment the one above to run this set of experiments.
+##
+## In lib/poker/poker_configuration.pl make sure to set the following option (and
+## unset all other experiment_file/2 options):
+##
+## experiment_file(data('poker_examples/experiment_script_lnf.pl'),exp_script_lnf).
+##
+#csv="${tp}dragon_curve_range_${ts}.csv"
+#log="${tp}dragon_curve_range_${ts}.log"
+#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,dragon_curve_range($reps,'$csv',false),'$log'))." -t halt &
+#sleep 2
+#
+#csv="${tp}hilbert_curve_range_${ts}.csv"
+#log="${tp}hilbert_curve_range_${ts}.log"
+#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,hilbert_curve_range($reps,'$csv',false),'$log'))." -t halt &
+#sleep 2
+#
+#csv="${tp}koch_curve_range_${ts}.csv"
+#log="${tp}koch_curve_range_${ts}.log"
+#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,koch_curve_range($reps,'$csv',false),'$log'))." -t halt &
+#sleep 2
+#
+#csv="${tp}sierpinski_triangle_range_${ts}.csv"
+#log="${tp}sierpinski_triangle_range_${ts}.log"
+#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,sierpinski_triangle_range($reps,'$csv',false),'$log'))." -t halt &
+#sleep 2
+
 ## L-System moderate uncertainty regime experiments
 ## Uncomment this block and comment the one above to run this set of experiments.
 ##
