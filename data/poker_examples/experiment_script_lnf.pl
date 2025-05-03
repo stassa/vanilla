@@ -294,8 +294,8 @@ hilbert_curve(N):-
 	      ,hilbert_curve_with_vars(all,11,11)
 	      ]
         ,Su = []
-        ,TPos = hilbert_curve(all,0,12)
-        ,TNeg = not_hilbert_curve(all,0,4)
+        ,TPos = hilbert_curve(1500,0,12)
+        ,TNeg = not_hilbert_curve(1500,0,4)
         ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
 %!      koch_curve(+N) is det.
@@ -314,7 +314,7 @@ hilbert_curve(N):-
 koch_curve(N):-
 % The first Koch Curve string that contains variable symbols has
 % length 8.
-        Lang = koch_curve_ng
+        Lang = koch_curve
         ,T = s/3
         ,Sl = [koch_curve(all,0,3)
 	      ,koch_curve_with_vars(all,8,9)
@@ -629,8 +629,10 @@ koch_curve_range(N,S,P):-
         Lang = koch_curve
         ,T = s/3
         ,Gs = 0:1500/250 % 5 experiment sets
-        ,Sl = [koch_curve(1:21/5,0,4) % all is 63
-              ,koch_curve_with_vars(1:21/5,8,11) % all is 49
+        ,Sl = [%koch_curve(1:21/5,0,4) % all is 63
+              %,koch_curve_with_vars(1:21/5,8,11) % all is 49
+               koch_curve(0:20/5,0,4) % all is 20
+              ,koch_curve_with_vars(1:5/1,8,9) % all is 5
 	      ]
         ,Su = []
         ,TPos = koch_curve(1500,10,14)
@@ -641,7 +643,7 @@ koch_curve_range(N,S,P):-
          ;   Pl = false
          )
         % Increased number of examples needs more table RAM
-        ,Sup = set_table_space(17_179_869_184,TS)
+        ,Sup = set_table_space(33_554_432_000,TS)
         ,G = setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl)
         ,Cup = set_table_space(TS,_)
         ,setup_call_cleanup(Sup,G,Cup).
@@ -658,8 +660,10 @@ sierpinski_triangle_range(N,S,P):-
         Lang = sierpinski_triangle
         ,T = s/3
         ,Gs = 0:1500/250 % 5 experiment sets
-        ,Sl = [sierpinski_triangle(1:21/5,0,8) % all is 1681
-              ,sierpinski_triangle_with_vars(1:21/5,9,15) % all is 207
+        ,Sl = [%sierpinski_triangle(1:21/5,0,8) % all is 1681
+              %,sierpinski_triangle_with_vars(1:21/5,9,15) % all is 207
+               sierpinski_triangle(1:31/6,0,8) % all is 1681
+              ,sierpinski_triangle_with_vars(1:126/25,9,10) % all is 128
               ]
         ,Su = []
         ,TPos = sierpinski_triangle(1000,0,14)
@@ -1062,6 +1066,7 @@ set_configs(hilbert_curve):-
 	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100])
 	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
 							 ,[random]).
+
 set_configs(hilbert_curve_no_tabling):-
 	!
 	,poker_auxiliaries:set_configuration_option(fetch_clauses,[[builtins,bk,metarules]])
