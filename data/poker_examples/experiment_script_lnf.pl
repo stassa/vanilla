@@ -3,6 +3,10 @@
                          ,hilbert_curve/0
                          ,koch_curve/0
                          ,sierpinski_triangle/0
+                         ,dragon_curve_draw/0
+                         ,hilbert_curve_draw/0
+                         ,koch_curve_draw/0
+                         ,sierpinski_triangle_draw/0
                          ,algae/1
                          ,dragon_curve/1
                          ,hilbert_curve/1
@@ -198,7 +202,7 @@ koch_curve:-
         ,TNeg = not_koch_curve(all,0,5)
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
-%!      hilbert_curve is det.
+%!      sierpinski_triangle is det.
 %
 %       Run a single experiment learning an L-System grammar.
 %
@@ -218,6 +222,112 @@ sierpinski_triangle:-
         ,TPos = sierpinski_triangle(1000,0,14)
         ,TNeg = not_sierpinski_triangle(1000,0,5)
         ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+
+
+                /*******************************
+                *      TURTLE EXPERIMENTS      *
+                *******************************/
+
+% Experiments in drawing correct L-Systems with a turtle interpreter.
+% Experiments that measure Accuracy, TPR and TNR of learened programs
+% evaluate those programs as acceptors, but L-Systems are meant to be
+% run as generators of drawing commands for a Turtle languge
+% interpreter. This batch of experiments can be used to visualise the
+% learned L-systems to check their correctness.
+
+%!      dragon_curve_draw is det.
+%
+%       Run a single experiment learning an L-System grammar.
+%
+%       Given are labelled examples of the Dragon Curve L-system and no
+%       unlabelled examples.
+%
+%       Prints the learned hypothesis and labelling of internally
+%       generated examples. Also generates L-System strings from the
+%       learned hypothesis and draws the resulting fractal with Turtle
+%       graphics.
+%
+dragon_curve_draw:-
+        Lang = dragon_curve
+        ,T = s/3
+        ,Sl = dragon_curve(all,0,4)
+        ,Su = []
+        ,TPos = dragon_curve(all,5,10)
+        ,TNeg = not_dragon_curve(all,0,4)
+        ,PL = print_labelled(false)
+        ,DL = draw_labelled([T,16,[f],90,90,2,-(-280,50),850,550
+                            ,'output/dragon_curve_1.eps'])
+        ,setup_run_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
+
+
+%!      hilbert_curve_draw is det.
+%
+%       Run a single experiment learning an L-System grammar.
+%
+%       Given are labelled examples of the Hilbert Curve L-system and no
+%       unlabelled examples.
+%
+hilbert_curve_draw:-
+        Lang = hilbert_curve
+        ,T = s/3
+        ,Sl = [hilbert_curve(all,0,4)
+	      ,hilbert_curve_with_vars(all,11,11) % all is 2
+	      ]
+        ,Su = []
+        ,TPos = hilbert_curve(10000,0,12)
+        ,TNeg = not_hilbert_curve(10000,0,4)
+        ,PL = print_labelled(false)
+        ,DL = draw_labelled([T,7,[x],90,90,8,'top_left',850,550,'output/hilbert_curve.eps'])
+        ,Set = set_table_space(8_589_934_592,TS)
+        ,G = setup_run_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL])
+        ,Cln = set_table_space(TS,_)
+        ,setup_call_cleanup(Set,G,Cln).
+
+
+%!      hilbert_curve is det.
+%
+%       Run a single experiment learning an L-System grammar.
+%
+%       Given are labelled examples of the Koch Curve L-system and no
+%       unlabelled examples.
+%
+koch_curve_draw:-
+% The first Koch Curve string that contains variable symbols has
+% length 8.
+        Lang = koch_curve
+        ,T = s/3
+        ,Sl = [koch_curve(all,0,3)
+	      ,koch_curve_with_vars(all,8,9)
+	      ]
+        ,Su = []
+        ,TPos = koch_curve(all,0,14)
+        ,TNeg = not_koch_curve(all,0,5)
+        ,PL = print_labelled(false)
+        ,DL = draw_labelled([T,6,[f,-,-,f,-,-,f],60,60,1,-(-450,-250),780,880
+                            ,'output/koch_curve.eps'])
+        ,setup_run_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
+
+
+%!      sierpinski_triangle_draw is det.
+%
+%       Run a single experiment learning an L-System grammar.
+%
+%       Given are labelled examples of the Sierpinski Triangle L-system
+%       and no unlabelled examples.
+%
+sierpinski_triangle_draw:-
+        Lang = sierpinski_triangle
+        ,T = s/3
+        ,Sl = [sierpinski_triangle(40,0,8)
+	      ,sierpinski_triangle_with_vars(all,9,15)
+	      ]
+	,Su = []
+        ,TPos = sierpinski_triangle(1000,0,14)
+        ,TNeg = not_sierpinski_triangle(1000,0,5)
+        ,PL = print_labelled(false)
+        ,DL = draw_labelled([T,6,[f,-,g,-,g],120,200,6,-(-480,65),400,350
+                            ,'output/sierpinski_triangle.eps'])
+        ,setup_run_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
 
 
                 /*******************************

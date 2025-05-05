@@ -374,7 +374,7 @@ hilbert_char(y) --> y.
 %       Angle: 120
 %
 %       Draw with:
-%       _S = sierpinski_triangle, _K = 6, _A = [f,-,g,-,g], test_harness:( peano(_K,_I), l_system(_S,_A,_I,_Ss) ), atomic_list_concat(_Ss,'',_Is), writeln(_Is), test_harness:draw(_Is,120,120,6,'center').
+%       ?- _M = l_systems, _S = sierpinski_triangle, _I = 6, _A = [f,-,g,-,g], _M:l_system(_S,_M,_A,_I,_Ss), atomic_list_concat(_Ss,'',_Is), writeln(_Is), _M:draw(_Is,120,120,6,-(-480,65),400,350,'output/sierpinski_triangle.eps'), !.
 %
 %       Source:
 %       https://en.wikipedia.org/wiki/L-system#Example_5:_Sierpinski_triangle
