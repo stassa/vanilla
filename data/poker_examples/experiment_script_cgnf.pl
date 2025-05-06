@@ -240,7 +240,8 @@ anbn_range(N,S):-
         ,Su = []
         ,TPos = anbn(all,46,80)
         ,TNeg = not_anbn(all,0,12)
-        ,setup_and_run_range_experiments(S,Lang,T,N,Gs,Sl,Su,TPos,TNeg).
+        ,What = 'generated'
+        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg).
 
 
 %!      anbn_range(+N,+Stream,+Plot) is det.
