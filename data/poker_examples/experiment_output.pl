@@ -135,7 +135,7 @@ print_experiments_results([[LAccMs,LTPRMs,LTNRMs]
 %       Consult that predicate's documnetation for the meaning of its
 %       arguments.
 %
-setup_and_run_range_experiments(Strm,W,Lang,T,N,Gs,Sl,Su,TPos,TNeg):-
+setup_and_run_range_experiments(Strm,Lang,W,T,N,Gs,Sl,Su,TPos,TNeg):-
         experiment_file:set_configs(Lang)
         ,experiment_file:cleanup_safe_example
         ,experiment_file:setup_safe_example(Lang)
