@@ -4,15 +4,12 @@
                       ,range_helper/2
                       ,experiments/7
                       ,experiment/6
-                      ,generate_initial/2
                       ,generate_initial/3
-                      ,generate_initial/5
                       ,generate_initial/6
                       ,count_initial/3
                       ,count_initial/6
                       ,test_labelling/4
-                      ,test_program/5
-                      %,test_draw/11
+                      ,test_program/6
                       ]).
 
 :-use_module(lib(poker/poker)).
@@ -145,10 +142,10 @@ filtering_results(LU,Rs,[Ms_l,SEs_l,Ms_p,SEs_p]):-
 experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u):-
         debug(experiment,'Learning from labelled examples.',[])
         ,experiment_data(T,_,_,BK,MS)
-        ,generate_initial(Sl,Ls)
-        ,generate_initial(Su,Us)
+        ,generate_initial(Sl,T,Ls)
+        ,generate_initial(Su,T,Us)
         ,test_target(Sl,Sl_T)
-        ,experiment(Sl_T,Ls,Us,BK,MS,TPosL,TNegL,Res_l)
+        ,experiment(Sl_T,T,Ls,Us,BK,MS,TPosL,TNegL,Res_l)
         ,debug(experiment,'Learning from examples labelled negative.',[])
         ,test_target(Su,Su_)
         ,debug(experiment,'Filtering out internally generated example.',[])
@@ -157,7 +154,7 @@ experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u):-
         ,ord_intersect(Us_s,Neg_s,Ss)
         ,debug_length(experiment_filtered,'Left with ~w negative examples.',Ss)
         ,debug_clauses_length(experiment_filtered_full,'Left with ~w negative examples:',Ss)
-        ,experiment(Su_,Ss,[],BK,MS,TPosU,TNegU,Res_u).
+        ,experiment(Su_,T,Ss,[],BK,MS,TPosU,TNegU,Res_u).
 
 
 
@@ -874,14 +871,14 @@ sum(A,B,C):-
 %
 experiment(T,Sl,Su,TPos,TNeg,Res):-
         debug(experiment,'Generating labelled examples...',[])
-        ,generate_initial(Sl,Ls)
+        ,generate_initial(Sl,T,Ls)
         ,debug(experiment,'Generating unlabelled examples...',[])
-        ,generate_initial(Su,Us)
+        ,generate_initial(Su,T,Us)
         ,experiment_data(T,_,_,BK,MS)
         ,test_target(Sl,Sl_)
-        ,experiment(Sl_,Ls,Us,BK,MS,TPos,TNeg,Res).
+        ,experiment(Sl_,T,Ls,Us,BK,MS,TPos,TNeg,Res).
 
-%!      experiment(+Tgt,+Lab,+Unlab,+BK,+MS,+TestPos,+TestNeg,-Results)
+%!      experiment(+Tgt,+Sym,+Lab,+Unlab,+BK,+MS,+TestPos,+TestNeg,-Results)
 %!      is det.
 %
 %       Business end of experiment/6
@@ -892,6 +889,14 @@ experiment(T,Sl,Su,TPos,TNeg,Res):-
 %
 %       Tgt is the symbol, but not arity, of a target theory, used to
 %       evaluate the labelling and program learned from Lab and Unlab.
+%
+%       Sym is a predicate indicator, Functor/Arity of the program
+%       learned from Lab and Unlab. Sym is also the predicate indicator
+%       of test examples in TestPos and TestNeg, and in examples
+%       generated according to Lab and Unlab. Sym should correspond to a
+%       learning target defined in the current experiment file (i.e. the
+%       first argument of experiment file interface predicates like
+%       background_knowledge/2, metarules/2, labelled_examples/2 etc).
 %
 %       Lab and Unlab are sets of ground atoms, labelled examples of
 %       Tgt and unlabelled examples of unknown programs, respectively.
@@ -916,7 +921,7 @@ experiment(T,Sl,Su,TPos,TNeg,Res):-
 %       convenient to pass around language generation specification
 %       terms and it's more convenient to pass sets of examples.
 %
-experiment(Sl,Ls,Us,BK,MS,TPos,TNeg,[Ps,Pos,Neg,Rs_l,Rs_p]):-
+experiment(Sl,S,Ls,Us,BK,MS,TPos,TNeg,[Ps,Pos,Neg,Rs_l,Rs_p]):-
         debug_length(experiment_initial,'Got ~w labelled examples.',Ls)
         ,debug_clauses_length(experiment_initial_full,'Got ~w labelled examples:',Ls)
         ,debug_length(experiment_initial,'Got ~w unlabelled examples.',Us)
@@ -929,7 +934,7 @@ experiment(Sl,Ls,Us,BK,MS,TPos,TNeg,[Ps,Pos,Neg,Rs_l,Rs_p]):-
         ,debug_clauses_length(experiment_examples_full,'~w Positive examples:',Pos)
         ,debug_clauses_length(experiment_examples_full,'~w Negative examples:',Neg)
         ,test_labelling(Sl,Pos,Neg,Rs_l)
-        ,test_program(Sl,Ps,TPos,TNeg,Rs_p).
+        ,test_program(Sl,S,Ps,TPos,TNeg,Rs_p).
 
 
 %!      debug_time(+Subject,+Goal) is det.
@@ -987,13 +992,19 @@ test_labelling(S,Pos,Neg,[Acc,TPR,TNR]):-
         ,debug(test_labelling,'Labelling: Measured Acc: ~w TPR: ~w TNR: ~w',[Acc,TPR,TNR]).
 
 
-%!      test_program(+Language,+Program,+TestPos,+TestNeg,-Results) is
-%!      det.
+%!      test_program(+Language,+Symbol,+Program,+TestPos,+TestNeg,-Results)
+%!      is det.
 %
 %       Test a Program on positive and negative examples.
 %
 %       Language is a predicate symbol, but not arity, of the grammar to
 %       use to generate positive and negative example strings.
+%
+%       Symbol is a predicate indicator, Functor/Arity of Program and
+%       of the examples in TestPos and TestNeg. Sym should correspond to
+%       a learning target defined in the current experiment file (i.e.
+%       the first argument of experiment file interface predicates like
+%       background_knowledge/2, metarules/2, labelled_examples/2 etc).
 %
 %       Program is the learned program to test against the examples
 %       generated by Language.
@@ -1006,53 +1017,54 @@ test_labelling(S,Pos,Neg,[Acc,TPR,TNR]):-
 %       Rate and True Negative Rate, respectively, of the Program's
 %       labelling of examples generated by Language.
 %
-test_program(_,[],_,_,[0.5,0.0,1.0]):-
+test_program(_,_,[],_,_,[0.5,0.0,1.0]):-
 % The empty hypothesis rejects all.
         !.
-test_program(T/_,Cs,TPs,TNs,[Acc,TPR,TNR]):-
+test_program(T/_,S,Cs,TPs,TNs,[Acc,TPR,TNR]):-
 % Allow the target to be a predicate indicator.
-        test_program(T,Cs,TPs,TNs,[Acc,TPR,TNR])
+% TODO: wait, why?
+        test_program(T,S,Cs,TPs,TNs,[Acc,TPR,TNR])
         ,!.
-test_program(T,Cs,Test_Pos,Test_Neg,[Acc,TPR,TNR]):-
+test_program(T,S/A,Cs,Test_Pos,Test_Neg,[Acc,TPR,TNR]):-
         debug(test_program,'Testing learned program for target: ~w',[T])
         ,debug_clauses_length(test_program_full,'Testing ~w-clause learned program:',Cs)
         ,Program_module = experiment_file
-        ,once( internal_symbol(T,T_) )
-        ,S = (assert_program(Program_module,Cs,Rs)
+        ,Set = (assert_program(Program_module,Cs,Rs)
              ,poker:table_untable_predicates(table,Program_module,Cs)
              )
         ,G = (debug(test_program_full,'Generating positive testing examples.',[])
-             ,generate_examples(pos,Test_Pos,Pos)
+             ,generate_examples(pos,Test_Pos,S/A,Pos)
              ,debug(test_program_full,'Generating negative testing examples.',[])
-             ,generate_examples(neg,Test_Neg,Neg)
-             ,accuracy(Program_module,T_,Pos,Neg,Acc)
-             ,tpr(Program_module,T_,Pos,TPR)
-             ,tnr(Program_module,T_,Neg,TNR)
+             ,generate_examples(neg,Test_Neg,S/A,Neg)
+             ,accuracy(Program_module,S,Pos,Neg,Acc)
+             ,tpr(Program_module,S,Pos,TPR)
+             ,tnr(Program_module,S,Neg,TNR)
              )
         ,C = (erase_program_clauses(Rs)
              ,poker:table_untable_predicates(table,Program_module,Cs)
              )
-        ,setup_call_cleanup(S,G,C)
+        ,setup_call_cleanup(Set,G,C)
         ,debug(test_program,'Program: Measured Acc: ~w TPR: ~w TNR: ~w',[Acc,TPR,TNR]).
 
 
-%!      generate_positives(+Sign,+Spec,-Examples) is det.
+%!      generate_positives(+Sign,+Spec,+Symbol,-Examples) is det.
 %
 %       Generate Examples of the given Sign to test a learned program.
-%
-%       Spec is a language generation specification term.
 %
 %       Sign is one of [pos,neg], for positive and negative examples,
 %       respectively.
 %
-%       Examples is a list of examples generated according to
-%       geneate_examples/5, which should be loaded to memory from the
-%       current experiment file; the symbols of grammars to use to
-%       generate examples are defined in that predicate.
+%       Spec is a language generation specification term.
 %
-generate_examples(Sign,Ts,Es):-
+%       Symbol is a predicate indicator, Functor/Arity of the Examples
+%       to be generated.
+%
+%       Examples is a list of examples generated according to Spec with
+%       a call generate_initial(Spec,Symbol,Example_I).
+%
+generate_examples(Sign,Ts,S,Es):-
         findall(Es_i
-               ,generate_initial(Ts,Es_i)
+               ,generate_initial(Ts,S,Es_i)
                ,Es_)
         ,flatten(Es_,Es)
         ,(   Sign == pos
@@ -1069,96 +1081,6 @@ generate_examples(Sign,Ts,Es):-
                 /*******************************
                 *     LANGUAGE GENERATION      *
                 *******************************/
-
-
-%!      generate_initial(+Targets,-Examples) is det.
-%
-%       Generate atoms used as examples for a set of targets.
-%
-%       Similar to generate_initial/5 but allows atoms to be generated
-%       from a compisition of two or more target languages.
-%
-%       Targets is either a list of terms S(N,J,K), or a single such
-%       term. Targets may also be a pair Targets/Filter.
-%
-%       In each term S(N,J,K), S is the symbol of a target language
-%       that must be defined as a Definite Clause Grammar in
-%       test_harness.
-%
-%       N, J, K, are the numbers of atoms to generate and the minimum
-%       (J) and maximum (K) length of strings represented by those
-%       atoms. N can be the atom "all", in which case, you guessed it,
-%       _all_ examples of strings of S of length between J and K will be
-%       generated.
-%
-%       If Targets is a term Targets/Filter, Filter is an atom, the
-%       symbol, but not arity, of a language by which to filter
-%       Examples.
-%
-%       Examples is the list of atoms generated that way. Those are
-%       atoms of each S, therefore they are atoms in Definite Clause
-%       Grammars notation i.e. they are of the form S(Xs,Ys,...) where
-%       Xs, Ys, etc. are lists of characters representing strings in
-%       a language.
-%
-%       If a Filter option is given all examples of the filtering
-%       language are removed from Examples before returning.
-%
-%       Example:
-%       ==
-%       ?- test_harness:generate_initial(anbn(all,0,12),_Es), maplist(writeln,_Es).
-%       s([a,b],[])
-%       s([a,a,b,b],[])
-%       s([a,a,a,b,b,b],[])
-%       s([a,a,a,a,b,b,b,b],[])
-%       s([a,a,a,a,a,b,b,b,b,b],[])
-%       s([a,a,a,a,a,a,b,b,b,b,b,b],[])
-%       true.
-%
-%       ?- test_harness:generate_initial([anbn(all,0,6),anbm(all,0,3)],_Es)
-%       ,maplist(writeln,_Es).
-%
-%       s([a,b],[])
-%       s([a,a,b,b],[])
-%       s([a,a,a,b,b,b],[])
-%       s([],[])
-%       s([a],[])
-%       s([a,a],[])
-%       s([a,b],[])
-%       s([a,a,a],[])
-%       s([a,a,b],[])
-%       s([a,a,b],[])
-%       true.
-%       ==
-%
-%       This predicate calls generate_initial/5 and passes it the name
-%       of each tagret language, and the corresponding number, and min
-%       and max length of strings to generate.
-%
-%       Also see filter_by_language/3 for examples of calling
-%       generate_initial/2 with a filtering term.
-%
-%       @deprecated generate_initial/3
-%
-generate_initial(T/F,Es_f):-
-        !
-        ,generate_initial(T,Es)
-        ,filter_by_language(F,Es,Es_f).
-generate_initial(T,Es):-
-        \+ is_list(T)
-        ,compound(T)
-        ,T =.. [S,N,J,K]
-        ,generate_initial(S,N,J,K,Es)
-        ,!.
-generate_initial(Ts,Es):-
-        is_list(Ts)
-        ,findall(Es_s
-               ,(member(T,Ts)
-                ,generate_initial(T,Es_s)
-                )
-               ,Es_)
-        ,flatten(Es_,Es).
-
 
 
 %!      generate_initial(+Targets,+Symbol,-Examples) is det.
@@ -1239,7 +1161,7 @@ generate_initial(Ts,Es):-
 generate_initial(T/F,S,Es_f):-
         !
         ,generate_initial(T,S,Es)
-        ,filter_by_language(F,Es,Es_f).
+        ,filter_by_language(F,S,Es,Es_f).
 generate_initial(T,S,Es):-
         \+ is_list(T)
         ,compound(T)
@@ -1257,24 +1179,27 @@ generate_initial(Ts,S,Es):-
 
 
 
-%!      filter_by_language(+Filter,+Unlabelled,-Filtered) is det.
+%!      filter_by_language(+Filter,+Symbol,+Examples,-Filtered) is det.
 %
-%       Filter, or not, Unlabelled examples by a target predicate.
+%       Filter, or not, a set of Examples by a target language.
 %
-%       Filter is the name of a DCG defined in test_harness. This
-%       predicate will remove from Unlabelled all examples that are also
-%       examples of Filter.
+%       Filter is the symobl, but not arity, of a grammar used in
+%       experiments. This predicate will remove from Examples all atoms
+%       that are also examples of Filter.
 %
-%       Unlabelled is a list of negative examples of the current target
-%       lanuage.
+%       Symbol is a predicate indicator, Functor/Arity, of all atoms in
+%       Examples.
 %
-%       Filtered is the list Unlabelled with examples of the grammar in
-%       Filter removed.
+%       Examples is a list of example atoms of a grammar including zero
+%       or more atoms of Filter.
+%
+%       Filtered is the list Examples with all examples of Filter
+%       removed.
 %
 %       Example use:
 %       ==
 %       % No filtering
-%       ?- test_harness:generate_initial(anbm(all,0,4),_Es)
+%       ?- test_harness:generate_initial(anbm(all,0,4),s/2,_Es)
 %       , maplist(writeln,_Es), length(_Es,N).
 %       s([],[])
 %       s([a],[])
@@ -1290,9 +1215,9 @@ generate_initial(Ts,S,Es):-
 %       s([a,a,b,b],[])
 %       N = 12.
 %
-%       % Filtering by anbn; note aabb is gone:
+%       % Filtering by anbn; note ab and aabb are gone:
 %
-%       ?- test_harness:generate_initial(anbm(all,0,4)/anbn,_Es)
+%       ?- test_harness:generate_initial(anbm(all,0,4)/anbn,s/2,_Es)
 %       , maplist(writeln,_Es), length(_Es,N).
 %       s([],[])
 %       s([a],[])
@@ -1308,28 +1233,24 @@ generate_initial(Ts,S,Es):-
 %
 %       %Filter by anbm itself: everything's gone:
 %
-%       ?- test_harness:generate_initial(anbm(all,0,4)/anbm,_Es)
+%       ?- test_harness:generate_initial(anbm(all,0,4)/anbm,s/2,_Es)
 %       , maplist(writeln,_Es), length(_Es,N).
 %       N = 0.
 %       ==
 %
-filter_by_language(S,Us,Us_f):-
-        debug(filter_by_language,'Filtering examples by ~w',[S])
-        ,once( internal_symbol(S,S_) )
-        ,current_predicate(S,E)
-        % S may be S//0 or S//1. Or...?
-        ,functor(E,S,A)
+filter_by_language(L,S/A,Es,Es_f):-
+        debug(filter_by_language,'Filtering examples by ~w',[L])
         ,length(Args,A)
-        % Atom with internal symbol name
-        ,E =.. [S|Args]
+        % Atom of filtering language
+        ,E =.. [L|Args]
         ,findall(U
-                ,(member(U,Us)
-                 % Atom with external symbol name
-                 ,U =.. [S_|Args]
-                 % Call the internal one
+                ,(member(U,Es)
+                 % Atom of Examples to be filtered
+                 ,U =.. [S|Args]
+                 % Call the filtering language
                  ,\+ call(E)
                  )
-                ,Us_f)
+                ,Es_f)
         % Cuts backtracking over more call(E)results.
         ,!.
 
@@ -1392,156 +1313,6 @@ generate_example(L,S/3,N,E_):-
         ,E =.. [L,Is,Os,[]]
         ,call(E)
         ,E_ =.. [S,Is,Os,[]].
-
-
-
-%!      generate_initial(+Language,+N,+Min,+Max,-Atoms) is det.
-%
-%       Generate a set of atoms to use as initial examples in Poker.
-%
-%       Language is the symbol, but not arity, of the target theory used
-%       to generate atoms.
-%
-%       N is either a number or the atom all. If N is a number, it's the
-%       number of atoms to generate. If it is "all", then all atoms with
-%       strings of length between Min and Max will be generated.
-%
-%       Min and Max are the upper and lower bounds on the length of
-%       strings, represented as definite clause grammars input lists, in
-%       the generated atoms.
-%
-%       Atoms is the list of generated atoms.
-%
-%       When N is a number this predicate first generates _all_ atoms
-%       with input lists of length between Min and Max, and then samples
-%       N of those atoms, with a call to k_list_samples/3. The sampled
-%       atoms are returned in Atoms.
-%
-%       @deprecated generate_initial/6
-%
-generate_initial(S,N,J,K,Es):-
-        debug(generate_initial,'Generating ~w ~w examples of length in [~w,~w].'
-             ,[N,S,J,K])
-        ,findall(E
-               ,(between(J,K,I)
-                ,generate_example(S,I,E)
-                )
-               ,Es_)
-        ,(   number(N)
-         ->  k_list_samples(N,Es_,Es)
-         ;   N == all
-         ->  Es = Es_
-         ).
-
-
-%!      generate_example(+Target,+Length,-Atom) is nondet.
-%
-%       Generate an Atom with a list of characters of the given Length.
-%
-%       Variant of generate_example_all/3 used by generate_initial/5.
-%
-%       @tbd This predicate initially filtered out atoms with strings
-%       consisting of a single character, e.g. only 1 or only 0. This is
-%       probably no longer a good idea so for now the filtering is
-%       commented out, which means this predicate behaves exactly like
-%       generate_example_all/3. If filtering is really not needed, the
-%       two should be merged.
-%
-generate_example(S,N,E_):-
-        once( internal_symbol(S,S_) )
-        ,length(Xs,N)
-        ,E =.. [S,Xs,[]]
-        ,current_predicate(_,E)
-        ,!
-        ,call(E)
-        ,E_ =.. [S_,Xs,[]].
-generate_example(S,N,E_):-
-        once( internal_symbol(S,S_) )
-        ,length(Is,N)
-        ,E =.. [S,Is,Os,[]]
-        ,current_predicate(_,E)
-        ,call(E)
-        ,E_ =.. [S_,Is,Os,[]].
-
-
-%!      internal_symbol(?Internal,?External) is semidet.
-%
-%       Mapping between names of External and Internal predicate defs.
-%
-%       Needed because the grammars used to generate ground-truth
-%       strings are given more descriptive names than the ones in
-%       experiment files. Experiment files are putting it on to
-%       underline the self-supervised capabilities of Poker.
-%
-%       Raises type error if Internal is not a language defined in this
-%       module.
-%
-internal_symbol(L,S):-
-        internal_symbol_(L,S)
-        ,!.
-internal_symbol(L,_S):-
-        findall(Li
-               ,internal_symbol_(Li,_)
-               ,Ls)
-        ,writeln(Ls)
-        ,must_be(oneof(Ls),L).
-
-%!      internal_symbol_(?Language,?Symbol) is semidet.
-%
-%       Business end of internal_symbol/2.
-%
-%       @tbd This is stupid and dumb and we need a better mechanism to
-%       map between internal symbols and language names.
-%
-internal_symbol_(even,q0).
-internal_symbol_(odd,q0).
-internal_symbol_(palindrome,q0).
-internal_symbol_(not_palindrome,q0).
-internal_symbol_(anbn,s).
-internal_symbol_(not_anbn,s).
-internal_symbol_(anbm,s).
-internal_symbol_(not_anbm,s).
-internal_symbol_(anbn_uo,s).
-internal_symbol_(not_anbn_uo,s).
-internal_symbol_(parens,p).
-internal_symbol_(unbalanced_parens,p).
-internal_symbol_(not,q0).
-internal_symbol_(not_not,q0).
-% L-Systems
-internal_symbol_(l_star,s).
-internal_symbol_(algae,s).
-internal_symbol_(not_algae,s).
-internal_symbol_(fractal_plant,s).
-internal_symbol_(not_fractal_plant,s).
-internal_symbol_(dragon_curve,s).
-internal_symbol_(not_dragon_curve,s).
-internal_symbol_(koch_curve,s).
-internal_symbol_(koch_curve_with_vars,s).
-internal_symbol_(not_koch_curve,s).
-internal_symbol_(hilbert_curve,s).
-internal_symbol_(hilbert_curve_with_vars,s).
-internal_symbol_(not_hilbert_curve,s).
-internal_symbol_(sierpinski_triangle,s).
-internal_symbol_(sierpinski_triangle_with_vars,s).
-internal_symbol_(not_sierpinski_triangle,s).
-internal_symbol_(sierpinski_arrowhead,s).
-internal_symbol_(not_sierpinski_arrowhead,s).
-% Binary CFGs
-internal_symbol_(bit_string,s).
-% Same symbol as Palindrome
-internal_symbol_(bit_string_p,p).
-internal_symbol_(even_bin,s).
-internal_symbol_(odd_bin,s).
-internal_symbol_(anbn_bin,s).
-internal_symbol_(not_anbn_bin,s).
-internal_symbol_(anbm_bin,s).
-internal_symbol_(not_anbm_bin,s).
-internal_symbol_(anbn_uo_bin,s).
-internal_symbol_(not_anbn_uo_bin,s).
-internal_symbol_(parens_bin,s).
-internal_symbol_(unbalanced_parens_bin,s).
-internal_symbol_(palindrome_bin,p).
-internal_symbol_(not_palindrome_bin,p).
 
 
 
