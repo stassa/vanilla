@@ -1,8 +1,13 @@
 :-module(test_harness,[experiments_filtering/10
+                      ,experiments_filtering/12
                       ,experiment_filtering/9
+                      ,experiment_filtering/11
+                      ,experiments_ranges/10
                       ,experiments_ranges/9
                       ,range_helper/2
+                      ,experiments/8
                       ,experiments/7
+                      ,experiment/7
                       ,experiment/6
                       ,generate_initial/3
                       ,generate_initial/6
@@ -30,26 +35,32 @@ labelled by Poker, or the programs it learns to label them.
 % To draw L-Systems with Python's turtle library, via Janus.
 :- py_add_lib_dir(data(poker_examples)).
 
-
 %!      experiments_filtering(+T,+N,+Ls,+Us,+LPos,+LNeg,+UPos,+UNeg,+LRes,+URes)
+%!      is det.
+%!      experiments_filtering(+T,+N,+Ls,+Us,+LPos,+LNeg,+LGen,+UPos,+UNeg,+UGen,+LRes,+URes)
 %!      is det.
 %
 %       Run N experiments separating unlabelled examples of two targets.
 %
-%       Like experiment_filtering/9 but repeats an experiment N times.
+%       Like experiment_filtering/[9,11] but repeats each experiment N
+%       times.
 %
 experiments_filtering(T,N,Sl,Su,TPosL,TNegL,TPosU,TNegU,RsLab,RsUlb):-
+        experiments_filtering(T,N,Sl,Su,TPosL,TNegL,nil,TPosU,TNegU,nil,RsLab,RsUlb).
+
+experiments_filtering(T,N,Sl,Su,TPosL,TNegL,TGnL,TPosU,TNegU,TGnU,RsLab,RsUlb):-
         findall([LRes_l,LRes_p]-[URes_l,URes_p]
                ,(between(1,N,I)
                 ,debug(experiments,'Experiment ~w of ~w',[I,N])
-                ,experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u)
-                ,Res_l = [_PsL,_PosL,_NegL,LRes_l,LRes_p]
-                ,Res_u = [_PsU,_PosU,_NegU,URes_l,URes_p]
+                ,experiment_filtering(T,Sl,Su,TPosL,TNegL,TGnL,TPosU,TNegU,TGnU,Res_l,Res_u)
+                ,Res_l = [_PsL,_NL,_PosL,_NegL,LRes_l,LRes_p,_LRes_g]
+                ,Res_u = [_PsU,_NU,_PosU,_NegU,URes_l,URes_p,_URes_g]
                 )
                ,Rs)
         ,pairs_keys_values(Rs,Rs_l,Rs_u)
         ,filtering_results('Labelled',Rs_l,RsLab)
         ,filtering_results('Unlabelled',Rs_u,RsUlb).
+
 
 
 %!      filtering_results(+What,+Results,-Expanded) is det.
@@ -88,8 +99,10 @@ filtering_results(LU,Rs,[Ms_l,SEs_l,Ms_p,SEs_p]):-
 
 
 
-%!       experiment_filtering(+T,+Ls,+Us,+LPos,+LNeg,+UPos,+UNeg,+LRes,+URes)
-%!       is det.
+%!      experiment_filtering(+T,+Ls,+Us,+LPos,+LNeg,+UPos,+UNeg,+LRes,+URes)
+%!      is det.
+%!      experiment_filtering(+T,+Ls,+Us,+LPos,+LNeg,+LGen,+UPos,+UNeg,+UGen,+LRes,+URes)
+%!      is det.
 %
 %       Run an experiment separating unlabelled examples of two targets.
 %
@@ -139,26 +152,43 @@ filtering_results(LU,Rs,[Ms_l,SEs_l,Ms_p,SEs_p]):-
 %       examples, respectively. LRes and URes are as in experiment/6.
 %       Refer to that predicate for details.
 %
+%       LGen and UGen are language generation specification terms
+%       Lang(N,Min,Max) used to evaluate the learned hypothesis as a
+%       generator, not just an acceptor. Lang should be the
+%       language of Labelled or Unlabelled (or the first one, if
+%       Labelled is a list) for LGen and UGen, respectively. N, Min, Max
+%       are the numbers, and min and max string lengths of generated
+%       atoms. Each generated atom is passed to Lang to count the number
+%       of atoms it accepts.
+%
+%       Alternatively, either of LGen, UGen can be the atom 'nil', in
+%       which case generation accuracy will not be tested.
+%
 experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u):-
+        experiment_filtering(T,Sl,Su,TPosL,TNegL,nil,TPosU,TNegU,nil,Res_l,Res_u).
+
+experiment_filtering(T,Sl,Su,TPosL,TNegL,TGenL,TPosU,TNegU,TGenU,Res_l,Res_u):-
         debug(experiment,'Learning from labelled examples.',[])
         ,experiment_data(T,_,_,BK,MS)
         ,generate_initial(Sl,T,Ls)
         ,generate_initial(Su,T,Us)
         ,test_target(Sl,Sl_T)
-        ,experiment(Sl_T,T,Ls,Us,BK,MS,TPosL,TNegL,Res_l)
+        ,experiment(Sl_T,T,Ls,Us,BK,MS,TPosL,TNegL,TGenL,Res_l)
         ,debug(experiment,'Learning from examples labelled negative.',[])
         ,test_target(Su,Su_)
         ,debug(experiment,'Filtering out internally generated example.',[])
-        ,Res_l = [_Ps,_Pos,Neg,_Rs_l,_Rs_p]
+        ,Res_l = [_Ps,_N,_Pos,Neg,_Rs_l,_Rs_p,_Rs_g]
         ,maplist(list_to_ord_set,[Us,Neg],[Us_s,Neg_s])
         ,ord_intersect(Us_s,Neg_s,Ss)
         ,debug_length(experiment_filtered,'Left with ~w negative examples.',Ss)
         ,debug_clauses_length(experiment_filtered_full,'Left with ~w negative examples:',Ss)
-        ,experiment(Su_,T,Ss,[],BK,MS,TPosU,TNegU,Res_u).
+        ,experiment(Su_,T,Ss,[],BK,MS,TPosU,TNegU,TGenU,Res_u).
 
 
 
 %!      experiments_ranges(+Target,+What,+N,+Gen,+Lab,+Unlab,+TPos,+TNeg,-Results)
+%!      is det.
+%!      experiments_ranges(+What,+Tgt,+N,+Gen,+Lab,+Unlab,+TPos,+TNeg,+TGen,-Results)
 %!      is det.
 %
 %       Run N experiments with example numbers increasing over a range.
@@ -176,7 +206,7 @@ experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u):-
 %           Set unlabelled_examples(G)
 %           For each iteration I in |Lab| iterations
 %                   expand Lab, Unlab -> Li, Ui
-%                   Call: experiments(Target,N,Li,Ui,TPos,TNeg,Res)
+%                   Call: experiments(Target,N,Li,Ui,TPos,TNeg,TGen,Res)
 %
 %       If What is 'unlabelled', the experiment is executed as follows:
 %
@@ -185,7 +215,7 @@ experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u):-
 %           For each iteration I in |Lab| iterations
 %                   expand Lab, Gen -> Li, G
 %                   Set unlabelled_examples(G)
-%                   Call: experiments(Target,N,Li,Ui,TPos,TNeg,Res)
+%                   Call: experiments(Target,N,Li,Ui,TPos,TNeg,TGen,Res)
 %
 %       Arguments are as follows.
 %
@@ -212,13 +242,24 @@ experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u):-
 %       or lists thereof, as in Labelled and Unlabelled where, used to
 %       generate positive and negative testing examples, respectively.
 %
+%       TGen is a language generation specification term Lang(N,Min,Max)
+%       used to evaluate the learned hypothesis as a generator, not
+%       just an acceptor. Lang should be the language of Lab (or the
+%       first one, if Lab is a list) and N, Min, Max are the numbers,
+%       and min and max string lengths of generated atoms. Each
+%       generated atom is passed to Lang to count the number of atoms it
+%       accepts.
+%
+%       Alternatively, TGen can be the atom 'nil', in which case
+%       generation accuracy will not be tested.
+%
 %       Results is a list of lists of terms I/G/L/U-Rs, where I is the
 %       iteration, G is the number of internally generated examples, L
 %       and U are the numbers of labelled and unlabelled examples
 %       respectively and Rs is a list-of-lists of results lists as
 %       returned by experiments/7.
 %
-%       Example query:
+%       Example query [TODO: needs update]:
 %       ==
 %       test_harness:experiments_ranges(
 %       s/2
@@ -270,7 +311,10 @@ experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u):-
 %       sure we're not giving as arguments totally bogus ranges, or ones
 %       that will raise an error.
 %
-experiments_ranges(generated,T,N,Gs,Ls,Us,TestPos,TestNeg,Rs):-
+experiments_ranges(W,T,N,Gs,Ls,Us,TestPos,TestNeg,Rs):-
+        experiments_ranges(W,T,N,Gs,Ls,Us,TestPos,TestNeg,nil,Rs).
+
+experiments_ranges(generated,T,N,Gs,Ls,Us,TestPos,TestNeg,TestGen,Rs):-
         !
         ,range_interval(Gs,Gs_e)
         ,maplist(expanded_range,[Ls,Us],[Ls_e,Us_e])
@@ -289,12 +333,12 @@ experiments_ranges(generated,T,N,Gs,Ls,Us,TestPos,TestNeg,Rs):-
                         ,maplist(spec_value,[Ls_i,Us_i],[L,U])
                         ,debug(experiments,'Labelled examples: ~w',[L])
                         ,debug(experiments,'Unlabelled examples: ~w',[U])
-                        ,experiments(T,N,Ls_i,Us_i,TestPos,TestNeg,Rs_i)
+                        ,experiments(T,N,Ls_i,Us_i,TestPos,TestNeg,TestGen,Rs_i)
                         )
                        ,Rs)
         ,Clean = set_poker_configuration_option(unlabelled_examples,[C])
         ,setup_call_cleanup(Set,Call,Clean).
-experiments_ranges(unlabelled,T,N,Gs,Ls,Us,TestPos,TestNeg,Rs):-
+experiments_ranges(unlabelled,T,N,Gs,Ls,Us,TestPos,TestNeg,TestGen,Rs):-
         range_interval(Gs,Gs_e)
         ,maplist(expanded_range,[Ls,Us],[Ls_e,Us_e])
         ,maplist(length,[Gs_e,Ls_e,Us_e],[_Gn,Ln,Un])
@@ -312,7 +356,7 @@ experiments_ranges(unlabelled,T,N,Gs,Ls,Us,TestPos,TestNeg,Rs):-
                         ,maplist(spec_value,[Ls_i,Us_i],[L,U])
                         ,debug(experiments,'Labelled examples: ~w',[L])
                         ,debug(experiments,'Unlabelled examples: ~w',[U])
-                        ,experiments(T,N,Ls_i,Us_i,TestPos,TestNeg,Rs_i)
+                        ,experiments(T,N,Ls_i,Us_i,TestPos,TestNeg,TestGen,Rs_i)
                         )
                        ,Rs)
         ,Clean = set_poker_configuration_option(unlabelled_examples,[C])
@@ -639,14 +683,21 @@ range_helper(I:J/K,N):-
 
 %!      experiments(+Target,+N,+Labelled,+Unlabelled,+TestPos,+TestNeg,-Results)
 %!      is det.
+%!      experiments(+Trgt,+N,+Labelled,+Unlabelled,+TestPos,+TestNeg,+TestGen,-Results)
+%!      is det.
 %
-%       Run N experiments with both Labelld and Unlabelled examples.
+%       Run N experiments with both Labelled and Unlabelled examples.
 %
-%       Target is a predicate indicator, S/A, of a learning target
-%       defined in the current experiment file. T is used to collect
-%       background knowledge and metarules for the experiment, but _not_
-%       to generate examples. Examples are generated according to
-%       Labelled and Unlabelled.
+%       As experiments/7 but also measures the average and standard
+%       error of a) the length of learned hypotheses and b) the accuracy
+%       of the learned hypotheses as generators, compared to the true
+%       definition of a Target.
+%
+%       Trgt is a predicate indicator, S/A, of a learning target defined
+%       in the current experiment file. T is used to collect background
+%       knowledge and metarules for the experiment, but _not_ to
+%       generate examples. Examples are generated according to Labelled
+%       and Unlabelled.
 %
 %       N is the number of experiments to run.
 %
@@ -665,8 +716,20 @@ range_helper(I:J/K,N):-
 %       or lists thereof, as in Labelled and Unlabelled where, used to
 %       generate positive and negative testing examples, respectively.
 %
-%       Results is a list Labelling, Program, with the same meaning as
-%       in experiments/6. Copying from that predicate's documentation:
+%       TestGen is a language generation specification term Lang(N,Min,Max)
+%       used to evaluate the learned hypothesis as a generator, not
+%       just an acceptor. Lang should be the language of Lab (or the
+%       first one, if Lab is a list) and N, Min, Max are the numbers,
+%       and min and max string lengths of generated atoms. Each
+%       generated atom is passed to Lang to count the number of atoms it
+%       accepts.
+%
+%       Alternatively, TestGen can be the atom 'nil', in which case
+%       generation accuracy will not be tested.
+%
+%       Results is a list [Length, Labelling, Program, Generation], with
+%       the same meaning as in experiments/6. Copying from that
+%       predicate's documentation:
 %
 %       Results is a list of four sub-lists [Ms_L, SEs_L, Ms_P, SEs_P],
 %       each of which is a list [Acc,TPR,TNR], where Acc is the
@@ -696,20 +759,43 @@ range_helper(I:J/K,N):-
 %       , maplist(print_clauses,['Hypothesis:','Positives:','Negatives:'],[_Ps,_Pos,_Neg]).
 %       ==
 %
-experiments(T,N,Sl,Su,TPos,TNeg,[Ms_l,SEs_l,Ms_p,SEs_p]):-
-        findall(Res_l-Res_p
+experiments(T,N,Sl,Su,TPos,TNeg,Res):-
+        experiments(T,N,Sl,Su,TPos,TNeg,nil,Res).
+
+experiments(T,N,Sl,Su,TPos,TNeg,TestGen,[Ms_h,SE_h,Ms_l,SEs_l,Ms_p,SEs_p,Ms_g,SE_g]):-
+        findall([H,Res_l,Res_p,Res_g]
                ,(between(1,N,I)
                 ,debug(experiments,'Experiment ~w of ~w',[I,N])
-                ,experiment(T,Sl,Su,TPos,TNeg,[_Ps,_Pos,_Neg,Res_l,Res_p])
+                ,experiment(T,Sl,Su,TPos,TNeg,TestGen,[_Ps,H,_Pos,_Neg,Res_l,Res_p,Res_g])
                 )
                ,Rs)
-        ,pairs_keys_values(Rs,Rs_l,Rs_p)
+        ,results_parts(Rs,Rs_h,Rs_l,Rs_p,Rs_g)
         ,result_means(Rs_l,Ms_l)
         ,result_means(Rs_p,Ms_p)
         ,result_SEs(Rs_l,Ms_l,SEs_l)
         ,result_SEs(Rs_p,Ms_p,SEs_p)
+        ,maplist(average,[Rs_h,Rs_g],[Ms_h_,Ms_g_])
+        ,maplist(standard_deviation,[Rs_h,Rs_g],[Ms_h_,Ms_g_],SDs)
+        ,maplist(standard_error,[Rs_h,Rs_g],SDs,[SE_h_,SE_g_])
+        ,maplist(atomize,[Ms_h_,Ms_g_,SE_h_,SE_g_],[Ms_h,Ms_g,SE_h,SE_g])
         ,debug(experiments,'Labelling means: ~w, standard errors: ~w',[Ms_l,SEs_l])
-        ,debug(experiments,'Program means: ~w, standard errors: ~w',[Ms_p,SEs_p]).
+        ,debug(experiments,'Program means: ~w, standard errors: ~w',[Ms_p,SEs_p])
+        ,debug(experiments,'Program length mean: ~w, standard error: ~w',[Ms_h,SE_h])
+        ,debug(experiments,'Generation mean: ~w, standard error: ~w',[Ms_g,SE_g]).
+
+
+%!      results_parts(+Res,-Length,-Labelling,-Proggram,-Generated) is
+%!      det.
+%
+%       Split a list of lists of Results to its component parts.
+%
+results_parts(Rs,Hs,Rs_l,Rs_p,Rs_g):-
+        results_parts(Rs,Hs,[],Rs_l,[],Rs_p,[],Rs_g,[]).
+
+results_parts([],Hs,Hs,Rs_l,Rs_l,Rs_p,Rs_p,Rs_g,Rs_g):-
+        !.
+results_parts([[H,L,P,G]|Rs],[H|AccHs],Hs,[L|AccL],Rs_l,[P|AccP],Rs_p,[G|AccG],Rs_g):-
+        results_parts(Rs,AccHs,Hs,AccL,Rs_l,AccP,Rs_p,AccG,Rs_g).
 
 
 %!      result_SEs(+Results,+Means,-StandardErrors) is det.
@@ -801,41 +887,47 @@ sum(A,B,C):-
 
 %!      experiment(+Target,+Labelled,+Unlabelled,+TestPos,+TestNeg,-Results)
 %!      is det.
+%!      experiment(+Trgt,+Labelled,+Unlabelled,+TestPos,+TestNeg,TestGen,-Results)
+%!      is det.
 %
 %       Run an experiment with both Labelled and Unlabelled examples.
 %
-%       Similar to experiment/5, but allows training and testing with
-%       both labelled and unlabelled examples. Additionally the
-%       Unlabelled examples (but not the labelled examples) can be
-%       generated from a composition of grammars rather than a single
-%       grammar.
-%
-%       T is a predicate indicator, S/A, of a learning target defined in
-%       the current experiment file. T is used to collect background
-%       knowledge and metarules for the experiment, but _not_ to
-%       generate examples. Examples are generated according to Labelled
-%       and Unlabelled.
+%       Trgt is a predicate indicator, S/A, of a learning target defined
+%       in the current experiment file. Trgt is used to collect
+%       background knowledge and metarules for the experiment, but _not_
+%       to generate examples. Examples are generated according to
+%       Labelled and Unlabelled.
 %
 %       Labelled is a language generation specification term
-%       Sl(Nl,Jl,Kl), where Sl is the symbol of a grammar defined in
-%       test_harness and used to a) generate labelled examples and b)
-%       evaluate the labelling and c) the program learned by Poker from
-%       those examples, and Nl, Jl, and Kl, are the number (or atom
-%       "all" for ... all) of strings of the language Sl to generate as
-%       Definite Clause Grammars atoms, and minimum and maximum length
-%       of strings in those atoms.
+%       Sl(Nl,Jl,Kl), or list thereof, where Sl is the symbol of a
+%       grammar defined in test_harness and used to a) generate labelled
+%       examples and b) evaluate the labelling and c) the program
+%       learned by Poker from those examples, and Nl, Jl, and Kl, are
+%       the number (or atom "all" for ... all) of strings of the
+%       language Sl to generate as Definite Clause Grammars atoms, and
+%       minimum and maximum length of strings in those atoms.
 %
 %       Unlabelled is a languge generation specification term
-%       Su(Nu,Ju,Ku), with the same meaning as Labelled, except that Su
-%       is the symbol of a grammar used to generate unlabelled examples.
-%       Unlabelled can alterantively be a list of terms Su(Nu,Ju,Ku), in
-%       which case the generated unlabelled examples are a combination
-%       of atoms from all the listed languages and with the
-%       corresponding numbers.
+%       Su(Nu,Ju,Ku), or list thereof, with the same meaning as
+%       Labelled, except that Su is the symbol of a grammar used to
+%       generate unlabelled examples. Unlabelled can alterantively be a
+%       list of terms Su(Nu,Ju,Ku), in which case the generated
+%       unlabelled examples are a combination of atoms from all the
+%       listed languages and with the corresponding numbers.
 %
 %       TestPos and TestNeg are language generation specification terms,
 %       or lists thereof, as in Labelled and Unlabelled where, used to
 %       generate positive and negative testing examples, respectively.
+%
+%       TestGen is a language specification term Lang(I,J,K) used to
+%       test the learned program as a generator. First, I atoms of
+%       Target with strings of length between J and K are generated by
+%       executing the learned hypothesis as a genereator. Then the
+%       generated atoms are passed to Lang. The number of those atoms
+%       that are accepted by Lang is added to Results.
+%
+%       Alternatively, TestGen can be the atom 'nil', in which case
+%       generation accuracy will not be tested.
 %
 %       Generation of labelled and unlabelled training examples, and
 %       positive and negative testing examples is handled by
@@ -847,16 +939,18 @@ sum(A,B,C):-
 %       be a list, i.e. it is not currently possible to compose two
 %       grammars to create a set of labelled examples.
 %
-%       Results is as in experiment/5, a list [Ps,Pos,Neg,Ms_L,Ms_R],
-%       where:
+%       Results is as in experiment/5, a list
+%       [Ps,N,Pos,Neg,Rs_L,Rs_R,Rs_G], where:
 %
 %       * Ps is the learned hypothesis
+%       * N is the length of Ps
 %       * Pos is the list of positive examples identified
 %       * Neg is the list of negative examples identified
-%       * Ms_L is the list of labelling results
-%       * Ms_R is the list of program results.
+%       * Rs_L is the list of labelling results
+%       * Rs_R is the list of program results.
+%       * Rs_G is the accuracy of Ps executed as a geneator.
 %
-%       Each of Ms_L and Ms_R is a list [Acc,TPR,TNR], where:
+%       Each of Rs_L and Rs_R is a list [Acc,TPR,TNR], where:
 %
 %       In Ms_L
 %       * Acc is the accuracy of the labelling of atoms in Pos and Neg.
@@ -870,22 +964,26 @@ sum(A,B,C):-
 %       * TNR is the True Negative Rate of the program.
 %
 experiment(T,Sl,Su,TPos,TNeg,Res):-
+        experiment(T,Sl,Su,TPos,TNeg,nil,Res).
+
+experiment(T,Sl,Su,TPos,TNeg,TGen,Res):-
         debug(experiment,'Generating labelled examples...',[])
         ,generate_initial(Sl,T,Ls)
         ,debug(experiment,'Generating unlabelled examples...',[])
         ,generate_initial(Su,T,Us)
         ,experiment_data(T,_,_,BK,MS)
         ,test_target(Sl,Sl_)
-        ,experiment(Sl_,T,Ls,Us,BK,MS,TPos,TNeg,Res).
+        ,experiment(Sl_,T,Ls,Us,BK,MS,TPos,TNeg,TGen,Res).
 
-%!      experiment(+Tgt,+Sym,+Lab,+Unlab,+BK,+MS,+TestPos,+TestNeg,-Results)
+
+%!      experiment(+Tgt,+Sym,+Lab,+Unlab,+BK,+MS,+TestPos,+TestNeg,TestGen,-Results)
 %!      is det.
 %
 %       Business end of experiment/6
 %
 %       Learns from examples of Lab and Unlab, expanded from language
 %       generation specification terms passed to its parent
-%       (experiment/6).
+%       (experiment/7).
 %
 %       Tgt is the symbol, but not arity, of a target theory, used to
 %       evaluate the labelling and program learned from Lab and Unlab.
@@ -912,16 +1010,27 @@ experiment(T,Sl,Su,TPos,TNeg,Res):-
 %       is evaluated according to the known definition of Tgt in this
 %       file.
 %
+%       TestGen is a language generation specification term
+%       Lang(N,Min,Max) used to evaluate the learned hypothesis as a
+%       generator, not just an acceptor. Lang should be the language of
+%       Lab (or the first one, if Lab is a list) and N, Min, Max are the
+%       numbers, and min and max string lengths of generated atoms. Each
+%       generated atom is passed to Lang to count the number of atoms it
+%       accepts.
+%
+%       Alternatively, TestGen can be the atom 'nil', in which case
+%       generation accuracy will not be tested.
+%
 %       Results is the list of evaluation results for the labelling and
 %       program learned from Lab and Unlab. Refer to the parent
-%       predicate, experiment/6, for a full description.
+%       predicate, experiment/7, for a full description.
 %
 %       The motivation to have this as a separate predicate is that we
 %       reuse it e.g. in experiment_filtering/9 where it is not
 %       convenient to pass around language generation specification
 %       terms and it's more convenient to pass sets of examples.
 %
-experiment(Sl,S,Ls,Us,BK,MS,TPos,TNeg,[Ps,Pos,Neg,Rs_l,Rs_p]):-
+experiment(Sl,S,Ls,Us,BK,MS,TPos,TNeg,TGen,[Ps,N,Pos,Neg,Rs_l,Rs_p,Rs_g]):-
         debug_length(experiment_initial,'Got ~w labelled examples.',Ls)
         ,debug_clauses_length(experiment_initial_full,'Got ~w labelled examples:',Ls)
         ,debug_length(experiment_initial,'Got ~w unlabelled examples.',Us)
@@ -934,7 +1043,9 @@ experiment(Sl,S,Ls,Us,BK,MS,TPos,TNeg,[Ps,Pos,Neg,Rs_l,Rs_p]):-
         ,debug_clauses_length(experiment_examples_full,'~w Positive examples:',Pos)
         ,debug_clauses_length(experiment_examples_full,'~w Negative examples:',Neg)
         ,test_labelling(Sl,Pos,Neg,Rs_l)
-        ,test_program(Sl,S,Ps,TPos,TNeg,Rs_p).
+        ,test_program(Sl,S,Ps,TPos,TNeg,Rs_p)
+        ,test_generated(Sl,S,TGen,Ps,Rs_g)
+        ,length(Ps,N).
 
 
 %!      debug_time(+Subject,+Goal) is det.
@@ -1030,8 +1141,8 @@ test_program(T,S/A,Cs,Test_Pos,Test_Neg,[Acc,TPR,TNR]):-
         ,debug_clauses_length(test_program_full,'Testing ~w-clause learned program:',Cs)
         ,Program_module = experiment_file
         ,Set = (assert_program(Program_module,Cs,Rs)
-             ,poker:table_untable_predicates(table,Program_module,Cs)
-             )
+               ,poker:table_untable_predicates(table,Program_module,Cs)
+               )
         ,G = (debug(test_program_full,'Generating positive testing examples.',[])
              ,generate_examples(pos,Test_Pos,S/A,Pos)
              ,debug(test_program_full,'Generating negative testing examples.',[])
@@ -1075,6 +1186,84 @@ generate_examples(Sign,Ts,S,Es):-
         ,format(atom(M),'Generated ~~w ~w testing examples',[Sign_])
         ,debug_length(generate_examples,M,Es)
         ,debug_clauses_length(generate_examples_full,M,Es).
+
+
+
+%!      test_generated(+Language,+Symbol,+Spec,+Program,-Acc) is det.
+%
+%       Measure the accuracy of a learned Program as a generator.
+%
+%       Language is the symbol, but not arity of a DCG used to test
+%       generated atoms.
+%
+%       Symbol is the predicate indicator, Symbol/Arity of a learning
+%       target.
+%
+%       Spec is a language generation term used to generate examples of
+%       Program for testing against Language.
+%
+%       Program is a learned hypothesis.
+%
+%       Acc is the accuracy of Program as a generator with respect to
+%       Language, calculated by executing Program as a generator
+%       according to Spec, then passing the generator atoms to Language
+%       to test if they are accepted.
+%
+test_generated(_,_S,nil,_Cs,0.0):-
+        !.
+test_generated(Lang,S/A,Spec,Cs,TPR):-
+        Spec =.. [Lang,N,J,K]
+        ,M = experiment_file
+        ,Set = (assert_program(M,Cs,Rs)
+               ,poker:table_untable_predicates(table,M,Cs)
+               )
+        ,G = (generate_test(M,S/A,N,J,K,Es)
+             ,accuracy(test_harness,Lang,Es,[],TPR)
+             )
+        ,C = (erase_program_clauses(Rs)
+             ,poker:table_untable_predicates(table,M,Cs)
+             )
+        ,setup_call_cleanup(Set,G,C).
+
+
+%!      generate_test(+Module,+Sym,+N,+J,+K,-Examples) is det.
+%
+%       Genereate examples of a learned hypothesis.
+%
+%       Filthy copy/pasta of generate_test/5 with a Module term to
+%       locate the learned program to use as a generator.
+%
+generate_test(M,S,N,J,K,Es):-
+        debug(generate_test,'Generating ~w ~w test examples of length in [~w,~w].'
+             ,[N,S,J,K])
+        ,findall(E
+               ,(between(J,K,I)
+                ,generate_example_test(M,S,I,E)
+                )
+               ,Es_)
+        ,(   number(N)
+         ->  k_list_samples(N,Es_,Es)
+         ;   N == all
+         ->  Es = Es_
+         ).
+
+
+%!      generate_example_test(+Module,+Symbol,+N,-Example) is nondet.
+%
+%       Generator of examples for generate_test/6.
+%
+%       Filthy copy/pasta of generate_example_test/3 with extra term to
+%       locate the learned program to use as a generator.
+%
+generate_example_test(M,S/2,N,E):-
+        !
+        ,length(Xs,N)
+        ,E =.. [S,Xs,[]]
+        ,call(M:E).
+generate_example_test(M,S/3,N,E):-
+        length(Is,N)
+        ,E =.. [S,Is,_Os,[]]
+        ,call(M:E).
 
 
 

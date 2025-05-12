@@ -138,7 +138,7 @@ binary_parity:-
         ,Su = []
         ,TPos = even_bin(all,4,8) % 248 ok duh
         ,TNeg = odd_bin(all,0,4)
-        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
 
 
 %!      binary_anbn is det.
@@ -152,7 +152,7 @@ binary_anbn:-
         ,Su = []
         ,TPos = anbn_bin(all,8,60) % 27
         ,TNeg = not_anbn_bin(all,0,5) % 60
-        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
 
 
 %!      binary_anbn_uo is det.
@@ -166,7 +166,7 @@ binary_anbn_uo:-
         ,Su = []
         ,TPos = anbn_uo_bin(all,5,10) % 342
         ,TNeg = not_anbn_uo_bin(all,0,8) % 412
-        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
 
 %!      binary_anbm is det.
@@ -180,7 +180,7 @@ binary_anbm:-
         ,Su = []
 	,TPos = anbm_bin(all,5,8)
         ,TNeg = not_anbm_bin(all,0,5)
-        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
 
 
 %!      binary_parens is det.
@@ -194,7 +194,7 @@ binary_parens:-
 	,Su = []
 	,TPos = parens_bin(1500,7,20)
 	,TNeg = unbalanced_parens_bin(all,0,10) % 1982
-        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
 
 %!      binary_palindrome is det.
@@ -208,7 +208,7 @@ binary_palindrome:-
 	,Su = []
 	,TPos = palindrome_bin(all,5,15) % 752
 	,TNeg = not_palindrome_bin(all,0,10) % 1922
-        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
 
                 /*******************************
@@ -230,7 +230,7 @@ binary_anbn_uo(N):-
         ,Su = []
         ,TPos = anbn_uo_bin(all,5,10) % 342
         ,TNeg = not_anbn_uo_bin(all,0,8) % 412
-        ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
+        ,setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
 
 
@@ -264,8 +264,8 @@ binary_anbn_ab_star_no_generated(N):-
         ,TPos = anbn_bin(all,13,60) % 24
         ,TNeg = not_anbn_bin(all,0,6) % 124
         ,(   N == 0
-         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
-         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ->  setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
          ).
 
 
@@ -288,8 +288,8 @@ binary_anbn_anbm_no_generated(N):-
         ,TPos = anbn_bin(all,8,60) % 27
         ,TNeg = not_anbn_bin(all,6,10) % 1981
         ,(   N == 0
-         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
-         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ->  setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
          ).
 
 
@@ -315,8 +315,8 @@ binary_anbn_anbm_ab_star_no_generated(N):-
         ,TPos = anbn_bin(all,8,60) % 27
         ,TNeg = not_anbn_bin(all,6,10) % 1981
         ,(   N == 0
-         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
-         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ->  setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
          ).
 
 
@@ -341,8 +341,8 @@ binary_anbm_ab_star_no_generated(N):-
         ,TPos = anbm_bin(all,5,8)
         ,TNeg = not_anbm_bin(all,0,6)
         ,(   N == 0
-         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
-         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ->  setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
          ).
 
 
@@ -367,8 +367,8 @@ binary_parens_ab_star_no_generated(N):-
 	,TPos = parens_bin(1500,7,20)
 	,TNeg = unbalanced_parens_bin(all,0,10) % 1982
         ,(   N == 0
-         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
-         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ->  setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
          ).
 
 
@@ -400,8 +400,8 @@ binary_palindrome_ab_star_no_generated(N):-
 	,TPos = palindrome_bin(all,5,15) % 752
 	,TNeg = not_palindrome_bin(all,0,10) % 1922
         ,(   N == 0
-         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
-         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ->  setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
          ).
 
 
@@ -441,7 +441,7 @@ binary_anbn_range(N,S,P):-
          ->  Pl = plot('a^nb^n',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      binary_anbn_ab_star_range(+N,+Stream,+Plot) is det.
@@ -464,7 +464,7 @@ binary_anbn_ab_star_range(N,S,P):-
          ->  Pl = plot('a^nb^n',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      binary_anbn_uo_range(+N,+Stream,+Plot) is det.
@@ -484,7 +484,7 @@ binary_anbn_uo_range(N,S,P):-
          ->  Pl = plot('a^nb^n unordered',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      binary_anbm_range(+N,+Stream,+Plot) is det.
@@ -505,7 +505,7 @@ binary_anbm_range(N,S,P):-
          ->  Pl = plot('a^nb^m (n >= m >= 0)',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      binary_anbm_ab_star_range(+N,+Stream,+Plot) is det.
@@ -529,7 +529,7 @@ binary_anbm_ab_star_range(N,S,P):-
          ->  Pl = plot('a^nb^m',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      binary_anbm_range_unlabelled(+N,+Stream,+Plot) is det.
@@ -554,7 +554,7 @@ binary_anbm_range_unlabelled(N,S,P):-
          ->  Pl = plot('a^nb^m (n >= m >= 0)',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      binary_parens_range(+N,+Stream,+Plot) is det.
@@ -577,29 +577,10 @@ binary_parens_range(N,S,P):-
          )
         % Needs more tabling RAM
         ,Set = set_table_space(4_294_967_296,TS)
-        ,G = setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl)
+        ,G = setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl)
         % Table space reset to previous setting.
         ,Cl = set_table_space(TS,_)
         ,setup_call_cleanup(Set,G,Cl).
-
-
-%!      set_table_space(+New,-Current) is det.
-%
-%       Set the RAM limit for tabling.
-%
-%       New is the number of bytes, in base-two, in which to set the
-%       tabling RAM limit. This is done by modifying the value of
-%       the Prolog flag table_space.
-%
-%       Current is the current value of the table_space flag. Used to
-%       reset the table RAM to its previous setting later.
-%
-set_table_space(S,TS):-
-        current_prolog_flag(table_space, TS)
-        ,format('Current table space ~D~n',[TS])
-        ,set_prolog_flag(table_space,S)
-        ,current_prolog_flag(table_space, NS)
-        ,format('New table space ~D~n',[NS]).
 
 
 %!      binary_parens_ab_star_range(+N,+Stream,+Plot) is det.
@@ -624,7 +605,7 @@ binary_parens_ab_star_range(N,S,P):-
          )
         % Needs more tabling RAM
         ,Set = set_table_space(4_294_967_296,TS)
-        ,G = setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl)
+        ,G = setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl)
         % Table space reset to previous setting.
         ,Cl = set_table_space(TS,_)
         ,setup_call_cleanup(Set,G,Cl).
@@ -654,7 +635,7 @@ binary_parens_range_unlabelled(N,S,P):-
          ->  Pl = plot('Balanced Parentheses',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      binary_palindrome_range(+N,+Stream,+Plot) is det.
@@ -674,7 +655,7 @@ binary_palindrome_range(N,S,P):-
          ->  Pl = plot('Palindrome',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      binary_palindrome_ab_star_range(+N,+Stream,+Plot) is det.
@@ -697,8 +678,31 @@ binary_palindrome_ab_star_range(N,S,P):-
          ->  Pl = plot('Palindrome',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
+
+                /*******************************
+                *      EXPERIMENT HELPERS      *
+                *******************************/
+
+
+%!      set_table_space(+New,-Current) is det.
+%
+%       Set the RAM limit for tabling.
+%
+%       New is the number of bytes, in base-two, in which to set the
+%       tabling RAM limit. This is done by modifying the value of
+%       the Prolog flag table_space.
+%
+%       Current is the current value of the table_space flag. Used to
+%       reset the table RAM to its previous setting later.
+%
+set_table_space(S,TS):-
+        current_prolog_flag(table_space, TS)
+        ,format('Current table space ~D~n',[TS])
+        ,set_prolog_flag(table_space,S)
+        ,current_prolog_flag(table_space, NS)
+        ,format('New table space ~D~n',[NS]).
 
 
                 /*******************************

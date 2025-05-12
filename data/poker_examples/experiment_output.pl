@@ -1,11 +1,17 @@
-:-module(experiment_output,[setup_and_run_experiment/7
-                           ,setup_and_run_experiments/7
-                           ,setup_and_run_range_experiments/10
-                           ,setup_and_run_range_experiments/11
-                           ,setup_and_run_filter_experiment/9
-                           ,setup_run_filter_experiment_draw/9
-                           ,setup_and_run_filter_experiments/9
-                           ,setup_run_experiment_draw/7
+:-module(experiment_output,[setup_experiment/7
+                           ,setup_experiment/8
+                           ,setup_experiments/7
+                           ,setup_experiments/8
+                           ,setup_range_experiments/11
+                           ,setup_range_experiments/12
+                           ,setup_filter_experiment/9
+                           ,setup_filter_experiment/11
+                           ,setup_filter_experiments/9
+                           ,setup_filter_experiments/11
+                           ,setup_filter_experiment_draw/9
+                           ,setup_filter_experiment_draw/11
+                           ,setup_experiment_draw/7
+                           ,setup_experiment_draw/8
                            ,run_experiment_protocol/3
                            ]).
 
@@ -19,19 +25,22 @@
 
 */
 
-%!      setup_and_run_experiment(+Lang,+Tgt,+Lab,+Unlb,+Tpos,+TNeg,+Print)
+%!      setup_experiment(+Lang,+Tgt,+Lab,+Unlb,+Tpos,+TNeg,+Print)
+%!      is det.
+%!      setup_experiment(+Lang,+Tgt,+Lab,+Unlb,+Tpos,+TNeg,+TGen,+Print)
 %!      is det.
 %
-%       Configure Poker and run an experiment.
+%       Setup configuration and run an experiment.
 %
-%       Lang is the symbol of a DCG in test_harness. Lang is used to
-%       generate labelled training exampls and select clauses of
-%       set_config/1 and setup_safe_example/1 in this file.
+%       Lang is an atomic identifier for one or more experiment scripts
+%       in the current experiment file. Lang is used to generate
+%       labelled training examples and select clauses of set_config/1
+%       and setup_safe_example/1 in the experiment file.
 %
 %       Tgt is the predicate symbol and arity of the examples of Lang,
 %       used to select clauses of background_knowledge/2 and metarules/2
-%       declared in this file. It is possible for multiple target
-%       languages (defined by Lang) to share the same Tgt, in which
+%       declared in the experiment file. It is possible for multiple
+%       experiments (defined by Lang) to share the same Tgt, in which
 %       case they will share the same background_knowledge/2 and
 %       metarules/2 declarations.
 %
@@ -41,6 +50,13 @@
 %       TPos, TNeg are the language specification terms, or lists of
 %       terms, for the positive and negative testing examples.
 %
+%       TGen is the language specification term for experiments running
+%       a learned hypothesis as a generator.
+%
+%       This predicate calls experiment/7 and passes it all arguments.
+%       If TGen is missing as in the 7-arity version, then 'nil' is
+%       passed to experiment/7 in its place.
+%
 %       Print is an atom print_examples(Bool) where Bool is either
 %       "true" or "false", denoting whether the labelling of positive
 %       and negative examples derived during learning will be printed,
@@ -48,66 +64,119 @@
 %       may be undesirable. If so, set this to "false" in the
 %       experiment query calling this predicate.
 %
-setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,P):-
+setup_experiment(Lang,T,Sl,Su,TPos,TNeg,P):-
+        setup_experiment(Lang,T,Sl,Su,TPos,TNeg,nil,P).
+
+setup_experiment(Lang,T,Sl,Su,TPos,TNeg,TGen,P):-
         experiment_file:set_configs(Lang)
         ,experiment_file:cleanup_safe_example
         ,experiment_file:setup_safe_example(Lang)
-        ,test_harness:experiment(T,Sl,Su,TPos,TNeg
-                                ,[Ps,Pos,Neg,Labelling,Program])
-        ,print_results(Ps,Pos,Neg,Labelling,Program,P).
+        ,test_harness:experiment(T,Sl,Su,TPos,TNeg,TGen
+                                ,[Ps,N,Pos,Neg,Labelling,Program,Generator])
+        ,print_results(Ps,N,Pos,Neg,Labelling,Program,Generator,P).
 
 
 %!      print_results(+Clauses,+Pos,+Neg,+Labelling,+Progam) is det.
 %
 %       Pretty-print experiments results.
 %
-print_results(Ps,Pos,Neg,[LAcc,LTPR,LTNR],[PAcc,PTPR,PTNR],print_examples(P)):-
+print_results(Ps,N,Pos,Neg,[LAcc,LTPR,LTNR],[PAcc,PTPR,PTNR],GenAcc,print_examples(P)):-
         auxiliaries:print_clauses('Learned Hypothesis:',Ps)
 	,maplist(length,[Pos,Neg],[Pos_n,Neg_n])
+        ,format('Program Length: ~w~n',[N])
         ,format('Labelled Positive: ~w~n',[Pos_n])
         ,format('Labelled Negative: ~w~n',[Neg_n])
         ,format('Labelling Acc:  ~w TPR: ~w TNR: ~w~n',[LAcc,LTPR,LTNR])
         ,format('Hypothesis Acc: ~w TPR: ~w TNR: ~w~n',[PAcc,PTPR,PTNR])
+        ,format('Generative Acc: ~w~n',[GenAcc])
         ,(   P == true
          ->   maplist(auxiliaries:print_clauses,['Positives:','Negatives:'],[Pos,Neg])
          ;   true
          ).
 
 
-%!      setup_and_run_experiment(+Lang,+N,+Tgt,+Lab,+Unlb,+Tpos,+TNeg)
+
+%!      setup_experiments(+Lang,+N,+Tgt,+Lab,+Unlb,+Tpos,+TNeg,+TGen)
+%!      is det.
+%!      setup_experiments(+Lang,+N,+Tgt,+Lab,+Unlb,+Tpos,+TNeg)
 %!      is det.
 %
 %       Configure Poker and run an experiment.
 %
-%       Like setup_and_run_experiment/7 but runs N experiments and
+%       Like setup_experiment/[7,8] but runs N experiments and
 %       prints out the aggregate results.
 %
-%       Also unlike setup_and_run_experiment/7 this predicate does not
-%       print out a hypothesis and labelling. This predicate calls
-%       experiments/7 (in test_harness.pl) which does not return a
-%       program and labelling.
+%       Unlike setup_experiment/[7,8] this predicate does not print out
+%       a hypothesis and labelling. This predicate calls experiments/7
+%       (in test_harness.pl) which does not return a program and
+%       labelling but only the results of evaluation thereof.
+%
+%       Lang is an atomic identifier for one or more experiment scripts
+%       in the current experiment file. Lang is used to generate
+%       labelled training examples and select clauses of set_config/1
+%       and setup_safe_example/1 in the experiment file.
 %
 %       N is the number of experiments to run.
 %
-%       Remaining rguments are as in setup_and_run_experiment/7 except
-%       for the last argument in setup_and_run_experiment/7, missing
-%       from this predicate.
+%       Tgt is the predicate symbol and arity of the examples of Lang,
+%       used to select clauses of background_knowledge/2 and metarules/2
+%       declared in the experiment file. It is possible for multiple
+%       experiments (defined by Lang) to share the same Tgt, in which
+%       case they will share the same background_knowledge/2 and
+%       metarules/2 declarations.
 %
-setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg):-
+%       Lab, Unlb are the language specification terms, or lists of
+%       terms, for the labelled and unlabelled examples, respectively.
+%
+%       TPos, TNeg are the language specification terms, or lists of
+%       terms, for the positive and negative testing examples.
+%
+%       TGen is the language specification term for experiments running
+%       a learned hypothesis as a generator.
+%
+%       This predicate calls experiment/7 and passes it all arguments.
+%       If TGen is missing as in the 7-arity version, then 'nil' is
+%       passed to experiment/7 in its place.
+%
+setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg):-
+        setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg,nil).
+
+setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg,TGen):-
         experiment_file:set_configs(Lang)
         ,experiment_file:cleanup_safe_example
         ,experiment_file:setup_safe_example(Lang)
-        ,test_harness:experiments(T,N,Sl,Su,TPos,TNeg,Results)
-        ,print_experiments_results(Results).
+        ,test_harness:experiments(T,N,Sl,Su,TPos,TNeg,TGen,Results)
+        ,print_experiments_results_(Results).
 
 
-%!      print_results(+Results) is det.
+%!      print_experiemnts_results_(+Results) is det.
 %
 %       Pretty-print experiments results.
 %
 %       Like print_results/6 but prints out aggregate evaluation results
 %       returned by experiments/7.
 %
+print_experiments_results_([HM
+                           ,HSE
+                           ,[LAccMs,LTPRMs,LTNRMs]
+                           ,[LAccSEs,LTPRSEs,LTNRSEs]
+                           ,[PAccMs,PTPRMs,PTNRMs]
+                           ,[PAccSEs,PTPRSEs,PTNRSEs]
+                           ,GenM
+                           ,GenSE
+                           ]):-
+         format('Hypothesis mean length:     ~w~n',[HM])
+        ,format('Length Standard Error:      ~w~n',[HSE])
+        ,format('Labelling means:            ~w TPR: ~w TNR: ~w~n',[LAccMs,LTPRMs,LTNRMs])
+        ,format('Labelling Standard Errors:  ~w TPR: ~w TNR: ~w~n'
+               ,[LAccSEs,LTPRSEs,LTNRSEs])
+        ,format('Hypothesis Means:           ~w TPR: ~w TNR: ~w~n',[PAccMs,PTPRMs,PTNRMs])
+        ,format('Hypothesis Standard Errors: ~w TPR: ~w TNR: ~w~n'
+               ,[PAccSEs,PTPRSEs,PTNRSEs])
+        ,format('Generation Mean:            ~w~n',[GenM])
+        ,format('Generation Standard Error:  ~w~n',[GenSE]).
+% Vestigial version without generator evaluation for filtering
+% experiments which currently don't evaluate generation.
 print_experiments_results([[LAccMs,LTPRMs,LTNRMs]
                           ,[LAccSEs,LTPRSEs,LTNRSEs]
                           ,[PAccMs,PTPRMs,PTNRMs]
@@ -122,7 +191,9 @@ print_experiments_results([[LAccMs,LTPRMs,LTNRMs]
 
 
 
-%!      setup_and_run_range_experiments(+Stream,+W,+Lang,+Tgt,+N,+Gs,+Lab,+Unl,+TPos,+TNeg)
+%!      setup_range_experiments(+Strm,+L,+Wt,+Tgt,+N,+Gs,+Lab,+Ul,+TPos,+TNeg,+TGen,+Plot)
+%!      is det.
+%!      setup_range_experiments(+Strm,+L,+Wt,+Tgt,+N,+Gs,+Lab,+Ul,+TPos,+TNeg,+Plot)
 %!      is det.
 %
 %       Setup Poker and run an experiment varying inputs over a range.
@@ -131,16 +202,53 @@ print_experiments_results([[LAccMs,LTPRMs,LTNRMs]
 %       to be written. That can be the path of an output file, or the
 %       user output stream, user_output.
 %
-%       Arguments after Stream are passed to experiments_ranges/8.
-%       Consult that predicate's documnetation for the meaning of its
-%       arguments.
+%       Plot is either the atom 'false' or a compound plot(Experiment,
+%       Debug), where Experiment is an atomic identifier for the
+%       experiment whose results are to be plotted, and Debug is a
+%       compound @(false) or @(true) that determines whether the
+%       plotting script will debug itself (if Debug is @(true)).
 %
-setup_and_run_range_experiments(Strm,Lang,W,T,N,Gs,Sl,Su,TPos,TNeg):-
+%       If Plot is 'false' then nothing is plotted. If Plot is a
+%       compound plot(Experiment,Debug) the Python plotting script
+%       plot_experiment_results.py is called and passed Experiment as
+%       the title of the generated plot.
+%
+%       Arguments other than Stream and Plot are passed to
+%       experiments_ranges/8. Consult that predicate's documnetation for
+%       a full explanation of the arguments. A brief listing follows.
+%
+%       What is one of [generated,unlabelled], determining what
+%       parameter will be varied during experiments.
+%
+%       T is a predicate indicator, Functor/Arity of a learning target.
+%
+%       N is the numeber of iterations per experiment set.
+%
+%       Gen, Lab, Unlab are language generation specification terms for
+%       automatically generated, labelled and unlabelled examples,
+%       respectively.
+%
+%       TPos, TNeg are language generation specification terms for the
+%       testing positive and negative examples, respectively, used to
+%       evaluate learned hypotheses as acceptors.
+%
+%       TGen is the specification term used to evaluate learned
+%       hypotheses as generators.
+%
+setup_range_experiments(Strm,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl):-
+        setup_range_experiments(Strm,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,nil,Pl).
+
+setup_range_experiments(Strm,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,TGen,Pl):-
         experiment_file:set_configs(Lang)
         ,experiment_file:cleanup_safe_example
         ,experiment_file:setup_safe_example(Lang)
-        ,test_harness:experiments_ranges(W,T,N,Gs,Sl,Su,TPos,TNeg,Results)
-        ,print_range_experiment_results(Strm,Results).
+        ,experiments_ranges(What,T,N,Gs,Sl,Su,TPos,TNeg,TGen,Results)
+        ,print_range_experiment_results(Strm,Results)
+        ,(   Pl == false
+         ->  true
+         ;   Pl = plot(Exp,D)
+            ,plot_range_experiment_results(Exp,Strm,What,D)
+         ).
 
 
 %!      print_range_experiment_results(+Stream,+Results) is det.
@@ -184,6 +292,8 @@ write_csv_header(S):-
                                ,'Generated'
                                ,'Labelled'
                                ,'Unlabelled'
+                               ,'LengthM'
+                               ,'LengthSE'
                                ,'LabAccM'
                                ,'LabTPRM'
                                ,'LabTNRM'
@@ -195,7 +305,10 @@ write_csv_header(S):-
                                ,'ProgTNRM'
                                ,'ProgAccSE'
                                ,'ProgTPRSE'
-                               ,'ProgTNRSE')],[]).
+                               ,'ProgTNRSE'
+                               ,'GenM'
+                               ,'GenSE'
+                               )],[]).
 
 
 %!      write_csv_rows(+Stream,+Results) is det.
@@ -224,42 +337,28 @@ write_csv_rows(S,Res):-
 %       Subsequent arguments are the output of experiments_ranges/8. See
 %       that predicate for more details.
 %
-print_range_result(Stm,I,G,L,U,[[LAccM,LTPRM,LTNRM]
+print_range_result(Stm,I,G,L,U,[HM
+                               ,HSE
+                               ,[LAccM,LTPRM,LTNRM]
                                ,[LAccSE,LTPRSE,LTNRSE]
                                ,[PAccM,PTPRM,PTNRM]
                                ,[PAccSE,PTPRSE,PTNRSE]
+                               ,GenM
+                               ,GenSE
                                ]):-
         csv_write_stream(Stm
                          ,[row(I,G,L,U
+                              ,HM
+                              ,HSE
                               ,LAccM,LTPRM,LTNRM
                               ,LAccSE,LTPRSE,LTNRSE
                               ,PAccM,PTPRM,PTNRM
                               ,PAccSE,PTPRSE,PTNRSE
+                              ,GenM
+                              ,GenSE
                               )
                           ]
                          ,[]).
-
-
-
-%!      setup_and_run_range_experiments(+Strm,+L,+Wt,+Tgt,+N,+Gs,+Lab,+Ul,+TPos,+TNeg,+Plot)
-%!      is det.
-%
-%       Setup Poker and run an experiment varying inputs over a range.
-%
-%       Like setup_and_run_range_experiments/9 but can also plot
-%       results.
-%
-setup_and_run_range_experiments(Strm,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl):-
-        experiment_file:set_configs(Lang)
-        ,experiment_file:cleanup_safe_example
-        ,experiment_file:setup_safe_example(Lang)
-        ,test_harness:experiments_ranges(What,T,N,Gs,Sl,Su,TPos,TNeg,Results)
-        ,print_range_experiment_results(Strm,Results)
-        ,(   Pl == false
-         ->  true
-         ;   Pl = plot(Exp,D)
-            ,plot_range_experiment_results(Exp,Strm,What,D)
-         ).
 
 
 %!      plot_range_experiment_results(+Experiment,+File,+What,+Debug)
@@ -274,7 +373,9 @@ plot_range_experiment_results(Exp,Fn,W,D):-
 
 
 
-%!      setup_and_run_filter_experiment(+Lang,+Tgt,+Sl,+Su,+TPosL,+TNegL,+TPosU,+TNegU,+Pr)
+%!      setup_filter_experiment(+Lang,+Tgt,+Sl,+Su,+TPosL,+TNegL,+TPosU,+TNegU,+Pr)
+%!      is det.
+%!      setup_filter_experiment(+L,+Tgt,+Sl,+Su,+TPosL,+TNegL,+TGnL,+TPosU,+TNegU,+TGnU,+Pr)
 %!      is det.
 %
 %       Configure Poker and run a filtering experiment.
@@ -300,24 +401,28 @@ plot_range_experiment_results(Exp,Fn,W,D):-
 %       learned from the labelled, and unlabelled, examples,
 %       respectively.
 %
-setup_and_run_filter_experiment(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU
+setup_filter_experiment(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Ps):-
+        setup_filter_experiment(Lang,T,Sl,Su,TPosL,TNegL,nil,TPosU,TNegU,nil,Ps).
+
+setup_filter_experiment(Lang,T,Sl,Su,TPosL,TNegL,TGenL,TPosU,TNegU,TGenU
                                ,[print_labelled(Pl)
                                 ,print_unlabelled(Pu)
                                 ]):-
         experiment_file:set_configs(Lang)
         ,experiment_file:cleanup_safe_example
         ,experiment_file:setup_safe_example(Lang)
-        ,test_harness:experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u)
+        ,experiment_filtering(T,Sl,Su,TPosL,TNegL,TGenL,TPosU,TNegU,TGenU,Res_l,Res_u)
         ,writeln('Results for labelled:')
-        ,Res_l = [PsL,PosL,NegL,LabL,ProgL]
-        ,print_results(PsL,PosL,NegL,LabL,ProgL,print_examples(Pl))
+        ,Res_l = [PsL,NL,PosL,NegL,LabL,ProgL,GsL]
+        ,print_results(PsL,NL,PosL,NegL,LabL,ProgL,GsL,print_examples(Pl))
         ,writeln('Results for unlabelled:')
-        ,Res_u = [PsU,PosU,NegU,LabU,ProgU]
-        ,print_results(PsU,PosU,NegU,LabU,ProgU,print_examples(Pu)).
+        ,Res_u = [PsU,NU,PosU,NegU,LabU,ProgU,GsU]
+        ,print_results(PsU,NU,PosU,NegU,LabU,ProgU,GsU,print_examples(Pu)).
 
 
-
-%!      setup_and_run_filter_experiments(+Lang,+Tgt,+N,+Sl,+Su,+TPosL,+TNegL,+TPosU,+TNegU)
+%!      setup_filter_experiments(+Lang,+Tgt,+N,+Sl,+Su,+TPosL,+TNegL,+TPosU,+TNegU)
+%!      is det.
+%!      setup_filter_experiments(+Lng,+T,+N,+Sl,+Su,+TPosL,+TNegL,+GenL,+TPosU,+TNegU,+GenU)
 %!      is det.
 %
 %       Configure Poker and run N filtering experiments.
@@ -333,19 +438,24 @@ setup_and_run_filter_experiment(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU
 %       the learned hypotheses nor does it draw any L-systems like
 %       setup_run_filter_experiment_draw/9.
 %
-setup_and_run_filter_experiments(Lang,T,N,Sl,Su,TPosL,TNegL,TPosU,TNegU):-
+setup_filter_experiments(Lang,T,N,Sl,Su,TPosL,TNegL,TPosU,TNegU):-
+        setup_filter_experiments(Lang,T,N,Sl,Su,TPosL,TNegL,nil,TPosU,TNegU,nil).
+
+setup_filter_experiments(Lang,T,N,Sl,Su,TPosL,TNegL,TGenL,TPosU,TNegU,TGenU):-
         experiment_file:set_configs(Lang)
         ,experiment_file:cleanup_safe_example
         ,experiment_file:setup_safe_example(Lang)
-        ,test_harness:experiments_filtering(T,N,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u)
+        ,experiments_filtering(T,N,Sl,Su,TPosL,TNegL,TGenL,TPosU,TNegU,TGenU,Res_l,Res_u)
         ,writeln('Results for labelled:')
         ,print_experiments_results(Res_l)
         ,writeln('Results for unlabelled:')
         ,print_experiments_results(Res_u).
 
 
-
 %!      setup_run_filter_experiment_draw(+Lang,+T,+Sl,+Su,+TPL,+TNgL,+TPU,+TNgU,+Os)
+%!      is det.
+%
+%!      setup_run_filter_experiment_draw(+Lang,+T,+Sl,+Su,+TPL,+TNgL,GnL,+TPU,+TNgU,GnU,+Os)
 %!      is det.
 %
 %       Run a filtering experiment on L-Systems and draw the results.
@@ -370,7 +480,10 @@ setup_and_run_filter_experiments(Lang,T,N,Sl,Su,TPosL,TNegL,TPosU,TNegU):-
 %       returned in the output of experiment_filtering/9 called by this
 %       predicate.
 %
-setup_run_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Os):-
+setup_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Os):-
+        setup_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,nil,TPosU,TNegU,nil,Os).
+
+setup_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TGenL,TPosU,TNegU,TGenU,Os):-
         Os = [print_labelled(Pl)
              ,print_unlabelled(Pu)
              ,draw_labelled(DsL)
@@ -379,32 +492,37 @@ setup_run_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Os):-
         ,experiment_file:set_configs(Lang)
         ,experiment_file:cleanup_safe_example
         ,experiment_file:setup_safe_example(Lang)
-        ,test_harness:experiment_filtering(T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Res_l,Res_u)
+        ,experiment_filtering(T,Sl,Su,TPosL,TNegL,TGenL,TPosU,TNegU,TGenU,Res_l,Res_u)
         ,writeln('Results for labelled:')
-        ,Res_l = [PsL,PosL,NegL,LabL,ProgL]
-        ,print_results(PsL,PosL,NegL,LabL,ProgL,print_examples(Pl))
+        ,Res_l = [PsL,NL,PosL,NegL,LabL,ProgL,GenL]
+        ,print_results(PsL,NL,PosL,NegL,LabL,ProgL,GenL,print_examples(Pl))
         ,writeln('Results for unlabelled:')
-        ,Res_u = [PsU,PosU,NegU,LabU,ProgU]
-        ,print_results(PsU,PosU,NegU,LabU,ProgU,print_examples(Pu))
+        ,Res_u = [PsU,NU,PosU,NegU,LabU,ProgU,GenU]
+        ,print_results(PsU,NU,PosU,NegU,LabU,ProgU,GenU,print_examples(Pu))
         ,draw_results(PsL,DsL)
         ,draw_results(PsU,DsU).
 
 
-%!      setup_run_experiment_draw(+Lang,+Tgt,+Lab,+Ulab,+TPos,+TNeg,+Opts)
+%!      setup_experiment_draw(+Lang,+Tgt,+Lab,+Ulab,+TPos,+TNeg,+Opts)
+%!      is det.
+%!      setup_experiment_draw(+Lang,+Tgt,+Lab,+Ulab,+TPos,+TNeg,+TGen,+Opts)
 %!      is det.
 %
 %       Setup & run an L-System experiment and draw the resulting image.
 %
-setup_run_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,Os):-
+setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,Os):-
+        setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,nil,Os).
+
+setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,TGen,Os):-
         Os = [print_labelled(Pl)
              ,draw_labelled(DsL)
              ]
         ,experiment_file:set_configs(Lang)
         ,experiment_file:cleanup_safe_example
         ,experiment_file:setup_safe_example(Lang)
-        ,experiment(T,Sl,Su,TPos,TNeg,Res)
-        ,Res = [Ps,Pos,Neg,Lab,Prog]
-        ,print_results(Ps,Pos,Neg,Lab,Prog,print_examples(Pl))
+        ,experiment(T,Sl,Su,TPos,TNeg,TGen,Res)
+        ,Res = [Ps,N,Pos,Neg,Lab,Prog,Gen]
+        ,print_results(Ps,N,Pos,Neg,Lab,Prog,Gen,print_examples(Pl))
         ,draw_results(Ps,DsL).
 
 

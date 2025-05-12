@@ -105,7 +105,7 @@ algae:-
         ,Su = []
         ,TPos = algae(all,5,20)
         ,TNeg = not_algae(all,0,6)
-        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
 %!      dragon_curve is det.
 %
@@ -124,7 +124,17 @@ dragon_curve:-
         ,Su = []
         ,TPos = dragon_curve(all,5,10)
         ,TNeg = not_dragon_curve(all,0,4)
-        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+
+dragon_curve_generator:-
+        Lang = dragon_curve_ng
+        ,T = s/3
+        ,Sl = dragon_curve(all,0,4)
+        ,Su = []
+        ,TPos = dragon_curve(all,5,10)
+        ,TNeg = not_dragon_curve(all,0,4)
+        ,TGen = dragon_curve(all,0,4)
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,TGen,print_examples(false)).
 
 dragon_curve_ul:-
         Lang = dragon_curve
@@ -137,7 +147,11 @@ dragon_curve_ul:-
               ]
         ,TPos = dragon_curve(2000,7,10)
         ,TNeg = not_dragon_curve(2000,4,5)
-        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+        ,Sup = set_table_space(8_589_934_592,TS)
+        ,Cll = setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false))
+        ,Cup = set_table_space(TS,_)
+        ,setup_call_cleanup(Sup,Cll,Cup).
+
 
 dragon_hilbert_mix:-
         Lang = hilbert_dragon
@@ -153,7 +167,10 @@ dragon_hilbert_mix:-
         ,TNeg = [not_dragon_curve(1000,0,4)
                 ,not_hilbert_curve(1000,0,4)
                 ]
-        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+        ,Sup = set_table_space(8_589_934_592,TS)
+        ,Cll = setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false))
+        ,Cup = set_table_space(TS,_)
+        ,setup_call_cleanup(Sup,Cll,Cup).
 
 
 %!      hilbert_curve is det.
@@ -177,7 +194,10 @@ hilbert_curve:-
         ,Su = []
         ,TPos = hilbert_curve(10000,0,12)
         ,TNeg = not_hilbert_curve(10000,0,4)
-        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+        ,Sup = set_table_space(4_294_967_296,TS)
+        ,Cll = setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false))
+        ,Cup = set_table_space(TS,_)
+        ,setup_call_cleanup(Sup,Cll,Cup).
 
 %!      hilbert_curve is det.
 %
@@ -200,7 +220,7 @@ koch_curve:-
         ,Su = []
         ,TPos = koch_curve(all,0,14)
         ,TNeg = not_koch_curve(all,0,5)
-        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
 %!      sierpinski_triangle is det.
 %
@@ -221,7 +241,7 @@ sierpinski_triangle:-
 	,Su = []
         ,TPos = sierpinski_triangle(1000,0,14)
         ,TNeg = not_sierpinski_triangle(1000,0,5)
-        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
 
                 /*******************************
@@ -257,7 +277,7 @@ dragon_curve_draw:-
         ,PL = print_labelled(false)
         ,DL = draw_labelled([T,16,[f],90,90,2,-(-280,50),850,550
                             ,'output/dragon_curve_1.eps'])
-        ,setup_run_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
+        ,setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
 
 
 %!      hilbert_curve_draw is det.
@@ -279,7 +299,7 @@ hilbert_curve_draw:-
         ,PL = print_labelled(false)
         ,DL = draw_labelled([T,7,[x],90,90,8,'top_left',850,550,'output/hilbert_curve.eps'])
         ,Set = set_table_space(8_589_934_592,TS)
-        ,G = setup_run_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL])
+        ,G = setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL])
         ,Cln = set_table_space(TS,_)
         ,setup_call_cleanup(Set,G,Cln).
 
@@ -305,7 +325,7 @@ koch_curve_draw:-
         ,PL = print_labelled(false)
         ,DL = draw_labelled([T,6,[f,-,-,f,-,-,f],60,60,1,-(-450,-250),780,880
                             ,'output/koch_curve.eps'])
-        ,setup_run_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
+        ,setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
 
 
 %!      sierpinski_triangle_draw is det.
@@ -327,7 +347,7 @@ sierpinski_triangle_draw:-
         ,PL = print_labelled(false)
         ,DL = draw_labelled([T,6,[f,-,g,-,g],120,200,6,-(-480,65),400,350
                             ,'output/sierpinski_triangle.eps'])
-        ,setup_run_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
+        ,setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
 
 
                 /*******************************
@@ -358,7 +378,7 @@ algae(N):-
         ,Su = []
         ,TPos = algae(all,5,20)
         ,TNeg = not_algae(all,0,6)
-        ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
+        ,setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
 %!      dragon_curve(+N) is det.
 %
@@ -380,7 +400,7 @@ dragon_curve(N):-
         ,Su = []
         ,TPos = dragon_curve(all,5,10)
         ,TNeg = not_dragon_curve(all,0,4)
-        ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
+        ,setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
 %!      hilbert_curve(+N) is det.
 %
@@ -406,7 +426,7 @@ hilbert_curve(N):-
         ,Su = []
         ,TPos = hilbert_curve(1500,0,12)
         ,TNeg = not_hilbert_curve(1500,0,4)
-        ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
+        ,setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
 %!      koch_curve(+N) is det.
 %
@@ -432,7 +452,7 @@ koch_curve(N):-
         ,Su = []
         ,TPos = koch_curve(all,0,14)
         ,TNeg = not_koch_curve(all,0,5)
-        ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
+        ,setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
 %!      sierpinski_triangle(+N) is det.
 %
@@ -458,7 +478,7 @@ sierpinski_triangle(N):-
 	,Su = []
         ,TPos = sierpinski_triangle(1000,0,14)
         ,TNeg = not_sierpinski_triangle(1000,0,5)
-        ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
+        ,setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
 
                 /*******************************
@@ -492,8 +512,8 @@ dragon_curve_no_generated(N):-
         ,TPos = dragon_curve(all,5,10)
         ,TNeg = not_dragon_curve(all,0,4)
         ,(   N == 0
-         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
-         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ->  setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
          ).
 
 
@@ -518,7 +538,7 @@ dragon_curve_no_generated_draw:-
         ,PL = print_labelled(false)
         ,DL = draw_labelled([T,16,[f],90,90,2,-(-280,50),850,550
                             ,'output/dragon_curve_1.eps'])
-        ,experiment_output:setup_run_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
+        ,setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
 
 
 %!      hilbert_curve_no_generated(+N) is det.
@@ -545,8 +565,8 @@ hilbert_curve_no_generated(N):-
         ,TPos = hilbert_curve(1500,4,12)
         ,TNeg = not_hilbert_curve(1500,0,4)
         ,(   N == 0
-         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
-         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ->  setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
          ).
 
 
@@ -568,7 +588,7 @@ hilbert_curve_no_generated_draw:-
         ,TNeg = not_hilbert_curve(1500,0,4)
         ,PL = print_labelled(false)
         ,DL = draw_labelled([T,7,[x],90,90,8,'top_left',850,550,'output/hilbert_curve.eps'])
-        ,experiment_output:setup_run_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
+        ,setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
 
 
 %!      koch_curve_no_generated(+N) is det.
@@ -595,8 +615,8 @@ koch_curve_no_generated(N):-
         ,TPos = koch_curve(all,0,14)
         ,TNeg = not_koch_curve(all,0,5)
         ,(   N == 0
-         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
-         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ->  setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
          ).
 
 
@@ -621,7 +641,7 @@ koch_curve_no_generated_draw:-
         ,PL = print_labelled(false)
         ,DL = draw_labelled([T,6,[f,-,-,f,-,-,f],60,60,1,-(-450,-250),780,880
                             ,'output/koch_curve.eps'])
-        ,experiment_output:setup_run_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
+        ,setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
 
 
 
@@ -649,8 +669,8 @@ sierpinski_triangle_no_generated(N):-
         ,TPos = sierpinski_triangle(1000,0,14)
         ,TNeg = not_sierpinski_triangle(1000,0,5)
         ,(   N == 0
-         ->  setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
-         ;   setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
+         ->  setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true))
+         ;   setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg)
          ).
 
 
@@ -699,7 +719,7 @@ dragon_curve_range(N,S,P):-
          ->  Pl = plot('Dragon Curve',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      hilbert_curve_range(+N,+Stream,+Plot) is det.
@@ -725,7 +745,7 @@ hilbert_curve_range(N,S,P):-
          ->  Pl = plot('Hilbert Curve',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      koch_curve_range(+N,+Stream,+Plot) is det.
@@ -754,7 +774,7 @@ koch_curve_range(N,S,P):-
          )
         % Increased number of examples needs more table RAM
         ,Sup = set_table_space(33_554_432_000,TS)
-        ,G = setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl)
+        ,G = setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl)
         ,Cup = set_table_space(TS,_)
         ,setup_call_cleanup(Sup,G,Cup).
 
@@ -783,7 +803,7 @@ sierpinski_triangle_range(N,S,P):-
          ->  Pl = plot('Sierpinski Triangle',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      dragon_to_hilbert_curve_range(+N,+Stream,+Plot) is det.
@@ -826,7 +846,7 @@ dragon_to_hilbert_curve_range(N,S,P):-
          ->  Pl = plot('Dragon to Hilbert Curve',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      hilbert_to_dragon_curve_range(+N,+Stream,+Plot) is det.
@@ -838,7 +858,7 @@ dragon_to_hilbert_curve_range(N,S,P):-
 %       L-System, all mixed up.
 %
 hilbert_to_dragon_curve_range(N,S,P):-
-        Lang = hilbert_curve
+        Lang = hilbert_curve_no_tabling
         ,T = s/3
         ,Gs = 0:1500/250
         ,Sl = [hilbert_curve(20:20/10,0,4) % all is 121
@@ -854,7 +874,7 @@ hilbert_to_dragon_curve_range(N,S,P):-
          ->  Pl = plot('Hilbert to Dragon Curve',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      koch_to_dragon_curve_range(+N,+Stream,+Plot) is det.
@@ -882,7 +902,10 @@ koch_to_dragon_curve_range(N,S,P):-
          ->  Pl = plot('Koch to Dragon Curve',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,Sup = set_table_space(17_179_869_184,TS)
+        ,Cll = setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl)
+        ,Cup = set_table_space(TS,_)
+        ,setup_call_cleanup(Sup,Cll,Cup).
 
 
 %!      koch_to_hilbert_curve_range(+N,+Stream,+Plot) is det.
@@ -911,7 +934,10 @@ koch_to_hilbert_curve_range(N,S,P):-
          ->  Pl = plot('Koch to Hilbert Curve',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,Sup = set_table_space(17_179_869_184,TS)
+        ,Cll = setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl)
+        ,Cup = set_table_space(TS,_)
+        ,setup_call_cleanup(Sup,Cll,Cup).
 
 
 %!      dragon_to_koch_range(+N,+Stream,+Plot) is det.
@@ -939,7 +965,7 @@ dragon_to_koch_curve_range(N,S,P):-
          ->  Pl = plot('Dragon to Koch Curve',@(true))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
                 /*******************************
@@ -989,7 +1015,7 @@ hilbert_dragon_filtering:-
         ,set_prolog_flag(table_space, 17_179_869_184)
         ,current_prolog_flag(table_space, C)
         ,format('Table space ~D~n',[C])
-        ,setup_run_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Os)
+        ,setup_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Os)
         ,set_prolog_flag(table_space, V).
 
 %!      koch_dragon_filtering is det.
@@ -1027,7 +1053,7 @@ koch_dragon_filtering:-
         ,DU = draw_unlabelled(false)
         %,DU = draw_unlabelled([T,16,[f],90,90,2,-(-280,50),850,550,'dragon_curve_2.eps'])
         ,Os = [PL,PU,DL,DU]
-        ,setup_run_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Os).
+        ,setup_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Os).
 
 
                 /*******************************
@@ -1060,14 +1086,14 @@ hilbert_dragon_filtering(N):-
         ,T = s/3
         ,Sl = dragon_curve(20,0,4)
         ,Su = [hilbert_curve(20,0,3)
-              ,hilbert_curve_with_vars(4,11,11)
+              ,hilbert_curve_with_vars(2,11,11)
               ,dragon_curve(50,5,7) % all is 500
               ]
         ,TPosL = dragon_curve(1500,5,10)
         ,TNegL = not_dragon_curve(1500,0,4)
         ,TPosU = hilbert_curve(1500,0,12)
         ,TNegU = not_hilbert_curve(1500,0,4)
-        ,setup_and_run_filter_experiments(Lang,T,N,Sl,Su,TPosL,TNegL,TPosU,TNegU).
+        ,setup_filter_experiments(Lang,T,N,Sl,Su,TPosL,TNegL,TPosU,TNegU).
 
 %!      koch_dragon_filtering(+N) is det.
 %
@@ -1089,14 +1115,14 @@ koch_dragon_filtering(N):-
         Lang = koch_dragon
         ,T = s/3
         ,Sl = [koch_curve(7,0,3)
-	      ,koch_curve_with_vars(10,8,9)
+	      ,koch_curve_with_vars(all,8,9)
               ]
         ,Su = dragon_curve(20,0,4)
         ,TPosL = koch_curve(all,0,14)
         ,TNegL = not_koch_curve(all,0,5)
         ,TPosU = dragon_curve(1500,5,10)
         ,TNegU = not_dragon_curve(1500,0,4)
-        ,setup_and_run_filter_experiments(Lang,T,N,Sl,Su,TPosL,TNegL,TPosU,TNegU).
+        ,setup_filter_experiments(Lang,T,N,Sl,Su,TPosL,TNegL,TPosU,TNegU).
 
 
                 /*******************************

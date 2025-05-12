@@ -74,7 +74,7 @@ parity:-
         ,Su = []
         ,TPos = even(all,4,8)
         ,TNeg = odd(all,0,4)
-        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
 
 anbn:-
         Lang = anbn
@@ -83,7 +83,7 @@ anbn:-
         ,Su = []
         ,TPos = anbn(all,8,20)
         ,TNeg = not_anbn(all,0,3)
-        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
 
 anbm:-
         Lang = anbm
@@ -92,7 +92,7 @@ anbm:-
         ,Su = []
 	,TPos = anbm(all,5,8)
         ,TNeg = not_anbm(all,0,4)
-        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(true)).
 
 parens:-
         Lang = parens
@@ -101,7 +101,7 @@ parens:-
 	,Su = []
 	,TPos = parens(all,0,20)
 	,TNeg = unbalanced_parens(all,0,15)
-        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
 palindrome:-
 	Lang = palindrome
@@ -110,7 +110,7 @@ palindrome:-
 	,Su = []
 	,TPos = palindrome(all,5,8)
 	,TNeg = not_palindrome(all,0,8)
-        ,setup_and_run_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
 
                 /*******************************
@@ -132,7 +132,7 @@ parity(N):-
         ,Su = []
         ,TPos = even(all,4,8)
         ,TNeg = odd(all,0,4)
-        ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
+        ,setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
 %!      anbn(+N) is det.
 %
@@ -145,7 +145,7 @@ anbn(N):-
         ,Su = []
         ,TPos = anbn(all,8,20)
         ,TNeg = not_anbn(all,0,3)
-        ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
+        ,setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
 %!      anbm(+N) is det.
 %
@@ -158,7 +158,7 @@ anbm(N):-
         ,Su = []
 	,TPos = anbm(all,5,8)
         ,TNeg = not_anbm(all,0,4)
-        ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
+        ,setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
 %!      parens(+N) is det.
 %
@@ -171,7 +171,7 @@ parens(N):-
 	,Su = []
 	,TPos = parens(all,0,20)
 	,TNeg = unbalanced_parens(all,0,15)
-        ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
+        ,setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
 %!      palindrome(+N) is det.
 %
@@ -184,7 +184,7 @@ palindrome(N):-
 	,Su = []
 	,TPos = palindrome(all,5,8)
 	,TNeg = not_palindrome(all,0,8)
-        ,setup_and_run_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
+        ,setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
 
                 /*******************************
@@ -223,7 +223,7 @@ anbn_range(N,S,P):-
          ->  Pl = plot('a^nb^n',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      anbm_range(+N,+Stream,+Plot) is det.
@@ -243,7 +243,7 @@ anbm_range(N,S,P):-
          ->  Pl = plot('a^nb^m (n >= m >= 0)',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      anbm_range_unlabelled(+N,+Stream,+Plot) is det.
@@ -267,7 +267,7 @@ anbm_range_unlabelled(N,S,P):-
          ->  Pl = plot('a^nb^m (n >= m >= 0)',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
 
 
 %!      parens_range(+N,+Stream,+Plot) is det.
@@ -287,7 +287,10 @@ parens_range(N,S,P):-
          ->  Pl = plot('Balanced Parentheses',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,Sup = set_table_space(4_294_967_296,TS)
+        ,Cll = setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl)
+        ,Cup = set_table_space(TS,_)
+        ,setup_call_cleanup(Sup,Cll,Cup).
 
 
 %!      parens_range_unlabelled(+N,+Stream,+Plot) is det.
@@ -313,7 +316,10 @@ parens_range_unlabelled(N,S,P):-
          ->  Pl = plot('Balanced Parentheses',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,Sup = set_table_space(4_294_967_296,TS)
+        ,Cll = setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl)
+        ,Cup = set_table_space(TS,_)
+        ,setup_call_cleanup(Sup,Cll,Cup).
 
 
 %!      palindrome_range(+N,+Stream,+Plot) is det.
@@ -333,7 +339,31 @@ palindrome_range(N,S,P):-
          ->  Pl = plot('Palindrome',@(false))
          ;   Pl = false
          )
-        ,setup_and_run_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
+
+                /*******************************
+                *      EXPERIMENT HELPERS      *
+                *******************************/
+
+
+%!      set_table_space(+New,-Current) is det.
+%
+%       Set the RAM limit for tabling.
+%
+%       New is the number of bytes, in base-two, in which to set the
+%       tabling RAM limit. This is done by modifying the value of
+%       the Prolog flag table_space.
+%
+%       Current is the current value of the table_space flag. Used to
+%       reset the table RAM to its previous setting later.
+%
+set_table_space(S,TS):-
+        current_prolog_flag(table_space, TS)
+        ,format('Current table space ~D~n',[TS])
+        ,set_prolog_flag(table_space,S)
+        ,current_prolog_flag(table_space, NS)
+        ,format('New table space ~D~n',[NS]).
 
 
                 /*******************************
