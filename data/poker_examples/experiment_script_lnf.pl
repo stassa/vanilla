@@ -32,6 +32,10 @@
                          ,koch_dragon_filtering/0
                          ,hilbert_dragon_filtering/1
                          ,koch_dragon_filtering/1
+                         ,dragon_curve_generator/3
+                         ,hilbert_curve_generator/3
+                         ,koch_curve_generator/3
+                         ,sierpinski_triangle_generator/3
                          ,set_configs/1
                          ,cleanup_safe_example/0
                          ,setup_safe_example/1
@@ -1123,6 +1127,95 @@ koch_dragon_filtering(N):-
         ,TPosU = dragon_curve(1500,5,10)
         ,TNegU = not_dragon_curve(1500,0,4)
         ,setup_filter_experiments(Lang,T,N,Sl,Su,TPosL,TNegL,TPosU,TNegU).
+
+
+
+                /*******************************
+                *    GENERATION EXPERIMENTS    *
+                *******************************/
+
+% Experiments testing learned hypotheses as generators. Modelled after
+% experiments in the Range Experiments section, varying the numbers of
+% generated or unlabelled examples.
+
+dragon_curve_generator(N,S,P):-
+        Lang = dragon_curve
+        ,T = s/3
+        ,Gs = 0:1500/250 % 5 experiment sets
+        ,Sl = dragon_curve(1:41/10,0,4) % all is 41
+        ,Su = []
+        ,TPos = dragon_curve(all,5,10)/hilbert_curve
+        ,TNeg = not_dragon_curve(all,0,4)
+        ,TGen = dragon_curve(all,0,4)
+        ,What = 'generated'
+        ,(   P == true
+         ->  Pl = plot('Dragon Curve',@(false))
+         ;   Pl = false
+         )
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,TGen,Pl).
+
+
+hilbert_curve_generator(N,S,P):-
+        % Don't know why but this experiment sucks up all the table RAM
+        Lang = hilbert_curve_no_tabling
+        ,T = s/3
+        ,Gs = 0:1500/250 % 5 experiment sets
+        ,Sl = [hilbert_curve(1:21/5,0,4) % all is 121
+              ,hilbert_curve_with_vars(1:21/5,11,13) % all is 68
+              ]
+        ,Su = []
+        ,TPos = hilbert_curve(1500,0,12)
+        ,TNeg = not_hilbert_curve(1500,0,4)
+        ,TGen = hilbert_curve(all,0,4)
+        ,What = 'generated'
+        ,(   P == true
+         ->  Pl = plot('Hilbert Curve',@(false))
+         ;   Pl = false
+         )
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,TGen,Pl).
+
+
+koch_curve_generator(N,S,P):-
+        Lang = koch_curve
+        ,T = s/3
+        ,Gs = 0:1500/250 % 5 experiment sets
+        ,Sl = [koch_curve(0:20/5,0,4) % all is 20
+              ,koch_curve_with_vars(1:5/1,8,9) % all is 5
+	      ]
+        ,Su = []
+        ,TPos = koch_curve(1500,10,14)
+        ,TNeg = not_koch_curve(1500,0,5)
+        ,TGen = koch_curve(all,0,4)
+        ,What = 'generated'
+        ,(   P == true
+         ->  Pl = plot('Koch Curve',@(false))
+         ;   Pl = false
+         )
+        % Increased number of examples needs more table RAM
+        ,Sup = set_table_space(33_554_432_000,TS)
+        ,G = setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,TGen,Pl)
+        ,Cup = set_table_space(TS,_)
+        ,setup_call_cleanup(Sup,G,Cup).
+
+
+sierpinski_triangle_generator(N,S,P):-
+        Lang = sierpinski_triangle
+        ,T = s/3
+        ,Gs = 0:1500/250 % 5 experiment sets
+        ,Sl = [sierpinski_triangle(1:31/6,0,8) % all is 1681
+              ,sierpinski_triangle_with_vars(1:126/25,9,10) % all is 128
+              ]
+        ,Su = []
+        ,TPos = sierpinski_triangle(1000,0,14)
+        ,TNeg = not_sierpinski_triangle(1000,0,5)
+        ,TGen = sierpinski_triangle(all,0,4)
+        ,What = 'generated'
+        ,(   P == true
+         ->  Pl = plot('Sierpinski Triangle',@(false))
+         ;   Pl = false
+         )
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,TGen,Pl).
+
 
 
                 /*******************************
