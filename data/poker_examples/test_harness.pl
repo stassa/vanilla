@@ -1209,6 +1209,9 @@ generate_examples(Sign,Ts,S,Es):-
 %       according to Spec, then passing the generator atoms to Language
 %       to test if they are accepted.
 %
+test_generated(_,_S,_,[],0.0):-
+% The empty hypothesis generates nothing.
+        !.
 test_generated(_,_S,nil,_Cs,0.0):-
         !.
 test_generated(Lang,S/A,Spec,Cs,TPR):-
