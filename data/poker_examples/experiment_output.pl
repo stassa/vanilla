@@ -452,6 +452,7 @@ setup_filter_experiments(Lang,T,N,Sl,Su,TPosL,TNegL,TGenL,TPosU,TNegU,TGenU):-
         ,print_experiments_results(Res_u).
 
 
+
 %!      setup_run_filter_experiment_draw(+Lang,+T,+Sl,+Su,+TPL,+TNgL,+TPU,+TNgU,+Os)
 %!      is det.
 %
@@ -499,8 +500,9 @@ setup_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TGenL,TPosU,TNegU,TGenU,Os
         ,writeln('Results for unlabelled:')
         ,Res_u = [PsU,NU,PosU,NegU,LabU,ProgU,GenU]
         ,print_results(PsU,NU,PosU,NegU,LabU,ProgU,GenU,print_examples(Pu))
-        ,draw_results(PsL,DsL)
-        ,draw_results(PsU,DsU).
+        ,draw_results(T,PsL,DsL)
+        ,draw_results(T,PsU,DsU).
+
 
 
 %!      setup_experiment_draw(+Lang,+Tgt,+Lab,+Ulab,+TPos,+TNeg,+Opts)
@@ -523,33 +525,27 @@ setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,TGen,Os):-
         ,experiment(T,Sl,Su,TPos,TNeg,TGen,Res)
         ,Res = [Ps,N,Pos,Neg,Lab,Prog,Gen]
         ,print_results(Ps,N,Pos,Neg,Lab,Prog,Gen,print_examples(Pl))
-        ,draw_results(Ps,DsL).
+        ,draw_results(T,Ps,DsL).
 
 
-%!      draw_results(+Program,+Params) is det.
+%!      draw_results(+Target,+Program,+Params) is det.
 %
 %       Draw the results of a filtering experiments.
 %
 %       Only for L-Systems.
+%
+%       Target is the predicate indicatory, symbol/arity, of a learning
+%       target.
 %
 %       Program is a program learned from a filtering experiment.
 %
 %       Params are the parameters passed to test_draw/8 together with
 %       Program to draw the output of Program with turtle graphics.
 %
-draw_results(_,false):-
+draw_results(_,_,false):-
         !.
-draw_results(Ps,[T,I,Ax,RA,LA,D,St]):-
-% Default width, height and filename.
-        test_draw(T,Ps,I,Ax,RA,LA,D,St,nil,nil,nil)
-        ,!.
-draw_results(Ps,[T,I,Ax,RA,LA,D,St,W,H]):-
-% Default filename.
-        test_draw(T,Ps,I,Ax,RA,LA,D,St,W,H,nil)
-        ,!.
-draw_results(Ps,[T,I,Ax,RA,LA,D,St,W,H,F]):-
-        test_draw(T,Ps,I,Ax,RA,LA,D,St,W,H,F)
-        ,!.
+draw_results(T,Ps,[generations(I),axiom(Ax)|Args]):-
+        test_draw(T,Ps,I,Ax,Args).
 
 
 

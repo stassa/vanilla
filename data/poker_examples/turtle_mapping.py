@@ -2,10 +2,11 @@ import turtle
 
 # insructions: an L-system string
 # langle: left angle, angle: right angle, distance: duh.
+# tilt: left tilt angle
 # start: either a string or a tuple of (width, height) for the starting position
-# file: name of file to save eps of image
 # width, height: width and height of the screen drawing area.
-def draw(instructions, langle, rangle, distance, start, width=960, height=810, file='turtle.eps'):
+# file: name of file to save eps of image
+def draw(instructions, langle, rangle, distance, tilt=0, start='center', width=960, height=810, file='output/turtle.eps'):
 
     screen = turtle.getscreen()
     # Controls animation speed.
@@ -39,8 +40,7 @@ def draw(instructions, langle, rangle, distance, start, width=960, height=810, f
     turtle.pendown()
 
     # Tilts the turtle by angle.
-    # Not really useful.
-    #turtle.left(langle)
+    turtle.left(tilt)
     
     stack = []
 

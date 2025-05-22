@@ -276,11 +276,11 @@ dragon_curve_draw:-
         ,T = s/3
         ,Sl = dragon_curve(all,0,4)
         ,Su = []
-        ,TPos = dragon_curve(all,5,10)
-        ,TNeg = not_dragon_curve(all,0,4)
+        ,TPos = dragon_curve(1000,5,10)
+        ,TNeg = not_dragon_curve(1000,0,4)
         ,PL = print_labelled(false)
-        ,DL = draw_labelled([T,16,[f],90,90,2,-(-280,50),850,550
-                            ,'output/dragon_curve_1.eps'])
+        ,drawing_args(dragon_curve,Args)
+        ,DL = draw_labelled(Args)
         ,setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
 
 
@@ -301,7 +301,8 @@ hilbert_curve_draw:-
         ,TPos = hilbert_curve(10000,0,12)
         ,TNeg = not_hilbert_curve(10000,0,4)
         ,PL = print_labelled(false)
-        ,DL = draw_labelled([T,7,[x],90,90,8,'top_left',850,550,'output/hilbert_curve.eps'])
+        ,drawing_args(hilbert_curve,Args)
+        ,DL = draw_labelled(Args)
         ,Set = set_table_space(8_589_934_592,TS)
         ,G = setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL])
         ,Cln = set_table_space(TS,_)
@@ -327,8 +328,8 @@ koch_curve_draw:-
         ,TPos = koch_curve(all,0,14)
         ,TNeg = not_koch_curve(all,0,5)
         ,PL = print_labelled(false)
-        ,DL = draw_labelled([T,6,[f,-,-,f,-,-,f],60,60,1,-(-450,-250),780,880
-                            ,'output/koch_curve.eps'])
+        ,drawing_args(koch_curve,Args)
+        ,DL = draw_labelled(Args)
         ,setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
 
 
@@ -349,8 +350,8 @@ sierpinski_triangle_draw:-
         ,TPos = sierpinski_triangle(1000,0,14)
         ,TNeg = not_sierpinski_triangle(1000,0,5)
         ,PL = print_labelled(false)
-        ,DL = draw_labelled([T,6,[f,-,g,-,g],120,200,6,-(-480,65),400,350
-                            ,'output/sierpinski_triangle.eps'])
+        ,drawing_args(sierpinski_triangle,Args)
+        ,DL = draw_labelled(Args)
         ,setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
 
 
@@ -540,8 +541,8 @@ dragon_curve_no_generated_draw:-
         ,TPos = dragon_curve(100,5,10)
         ,TNeg = not_dragon_curve(100,0,4)
         ,PL = print_labelled(false)
-        ,DL = draw_labelled([T,16,[f],90,90,2,-(-280,50),850,550
-                            ,'output/dragon_curve_1.eps'])
+        ,drawing_args(dragon_curve,Args)
+        ,DL = draw_labelled(Args)
         ,setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
 
 
@@ -591,7 +592,8 @@ hilbert_curve_no_generated_draw:-
         ,TPos = hilbert_curve(1500,4,12)
         ,TNeg = not_hilbert_curve(1500,0,4)
         ,PL = print_labelled(false)
-        ,DL = draw_labelled([T,7,[x],90,90,8,'top_left',850,550,'output/hilbert_curve.eps'])
+        ,drawing_args(hilbert_curve,Args)
+        ,DL = draw_labelled(Args)
         ,setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
 
 
@@ -643,8 +645,8 @@ koch_curve_no_generated_draw:-
         ,TPos = koch_curve(1500,0,14)
         ,TNeg = not_koch_curve(1500,0,5)
         ,PL = print_labelled(false)
-        ,DL = draw_labelled([T,6,[f,-,-,f,-,-,f],60,60,1,-(-450,-250),780,880
-                            ,'output/koch_curve.eps'])
+        ,drawing_args(koch_curve,Args)
+        ,DL = draw_labelled(Args)
         ,setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
 
 
@@ -1011,9 +1013,11 @@ hilbert_dragon_filtering:-
         ,PL = print_labelled(false)
         ,PU = print_unlabelled(false)
         %,DL = draw_labelled(false)
-        ,DL = draw_labelled([T,16,[f],90,90,2,-(-280,50),850,550,'dragon_curve_1.eps'])
+        ,drawing_args(dragon_curve,ArgsD)
+        ,DL = draw_labelled(ArgsD)
         ,DU = draw_unlabelled(false)
-        %,DU = draw_unlabelled([T,7,[x],90,90,8,'top_left',850,550,'hilbert_curve.eps'])
+        %,drawing_args(hilbert_curve,ArgsH)
+        %,DU = draw_unlabelled(ArgsH)
         ,Os = [PL,PU,DL,DU]
         ,current_prolog_flag(table_space, V)
         ,set_prolog_flag(table_space, 17_179_869_184)
@@ -1052,10 +1056,11 @@ koch_dragon_filtering:-
         ,PL = print_labelled(false)
         ,PU = print_unlabelled(false)
         %,DL = draw_labelled(false)
-        ,DL = draw_labelled([T,6,[f,-,-,f,-,-,f],60,60,1,-(-450,-250),780,880
-                            ,'koch_curve.eps'])
+        ,drawing_args(koch_curve,ArgsL)
+        ,DL = draw_labelled(ArgsL)
         ,DU = draw_unlabelled(false)
-        %,DU = draw_unlabelled([T,16,[f],90,90,2,-(-280,50),850,550,'dragon_curve_2.eps'])
+        %,drawing_args(koch_curve,ArgsU)
+        %,DU = draw_unlabelled(ArgsU)
         ,Os = [PL,PU,DL,DU]
         ,setup_filter_experiment_draw(Lang,T,Sl,Su,TPosL,TNegL,TPosU,TNegU,Os).
 
@@ -1242,8 +1247,60 @@ set_table_space(S,TS):-
         ,format('New table space ~D~n',[NS]).
 
 
+
                 /*******************************
-                *        CONFIGURATION         *
+                *         DRAWING ARGS         *
+                *******************************/
+
+%!      drawing_args(?L_system,?Args) is semidet.
+%
+%       Drawing script arguments for an L-System.
+%
+drawing_args(dragon_curve,[generations(16)
+                          ,axiom([f])
+                          ,langle(90)
+                          ,rangle(90)
+                          ,distance(2)
+                          ,start(-(-280,50))
+                          ,width(850)
+                          ,height(550)
+                            ,file('output/dragon_curve.eps')
+                          ]).
+drawing_args(hilbert_curve,[generations(7)
+                           ,axiom([x])
+                           ,langle(90)
+                           ,rangle(90)
+                           ,distance(8)
+                           ,start('top_left')
+                           ,width(850)
+                           ,height(550)
+                           ,file('output/hilbert_curve.eps')
+                           ]).
+drawing_args(koch_curve,[generations(6)
+                        ,axiom([f,-,-,f,-,-,f])
+                        ,langle(60)
+                        ,rangle(60)
+                        ,distance(1)
+                        ,start(-(-450,-250))
+                        ,width(780)
+                        ,height(880)
+                        ,file('output/koch_curve.eps')
+                        ]).
+drawing_args(sierpinski_triangle,[generations(6)
+                                 ,axiom([f,-,g,-,g])
+                                 ,langle(120)
+                                 ,rangle(120)
+                                 ,distance(6)
+                                 ,start(-(-480,65))
+                                 ,width(400)
+                                 ,height(350)
+                                 ,file('output/sierpinski_triangle.eps')
+                                 ]).
+
+
+
+                /*******************************
+                *        Configuration         *
                 *******************************/
 
 
