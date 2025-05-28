@@ -11,6 +11,7 @@
                       ,binary_anbm_ab_star_no_generated/1
                       ,binary_parens_ab_star_no_generated/1
                       ,binary_palindrome_ab_star_no_generated/1
+                      ,binary_parity_range/3
                       ,binary_anbn_range/3
                       ,binary_anbn_ab_star_range/3
                       ,binary_anbn_uo_range/3
@@ -415,7 +416,7 @@ binary_palindrome_ab_star_no_generated(N):-
 % Results can be optionally plotted with matplotlib.
 
 
-%!      binary_anbn_range(+N,+Stream,+Plot) is det.
+%!      binary_parity_range(+N,+Stream,+Plot) is det.
 %
 %       Run N experiments varying inputs and print evaluation results.
 %
@@ -428,10 +429,31 @@ binary_palindrome_ab_star_no_generated(N):-
 %       results' CSV file will be saved, and read from, to create the
 %       plot.
 %
+binary_parity_range(N,S,P):-
+        Lang = even_bin
+        ,T = s/2
+        ,Gs = 0:5/1
+        ,Sl = even_bin(1:21/5,0,5) % all is 32
+        ,Su = []
+        ,TPos = even_bin(all,6,10) % 992
+        ,TNeg = odd_bin(all,0,5) % same length as labelled.
+        ,What = 'generated'
+        ,(   P == true
+         ->  Pl = plot('Even parity',@(false))
+         ;   Pl = false
+         )
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
+
+%!      binary_anbn_range(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying inputs and print evaluation results.
+%
 binary_anbn_range(N,S,P):-
         Lang = anbn_bin
         ,T = s/2
-        ,Gs = 0:25/5
+        %,Gs = 0:25/5
+        ,Gs = 0:5/1
         ,Sl = anbn_bin(1:21/5,0,45) % all is 22
         ,Su = []
         ,TPos = anbn_bin(all,46,80)
@@ -494,7 +516,8 @@ binary_anbn_uo_range(N,S,P):-
 binary_anbm_range(N,S,P):-
         Lang = anbm_bin
         ,T = s/2
-        ,Gs = 0:25/5
+        %,Gs = 0:25/5
+        ,Gs = 0:5/1
         %,Sl = anbm_bin(1:61/10,0,9) % all is 88
         ,Sl = anbm_bin(1:41/10,0,9) % all is 88
         ,Su = []
@@ -564,7 +587,8 @@ binary_anbm_range_unlabelled(N,S,P):-
 binary_parens_range(N,S,P):-
         Lang = parens_bin
         ,T = s/2
-        ,Gs = 0:100/20
+        %,Gs = 0:5/1
+        ,Gs = 0:10/2
         %,Sl = parens_bin(1:61/10,0,10) % all is 65
         ,Sl = parens_bin(1:21/5,0,10) % all is 65
         ,Su = []
@@ -645,6 +669,7 @@ binary_parens_range_unlabelled(N,S,P):-
 binary_palindrome_range(N,S,P):-
         Lang = palindrome_bin
         ,T = p/2
+        %,Gs = 0:10/2
         ,Gs = 0:250/50
         ,Sl = palindrome_bin(1:21/4,0,5) % all is 54
         ,Su = []
@@ -793,7 +818,7 @@ set_configs(parens_bin):-
         ,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
         ,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
         ,poker_auxiliaries:set_poker_configuration_option(respecialise,[true])
-        ,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[generalised])
+        ,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100])
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
                                                          ,[random]).
@@ -805,7 +830,7 @@ set_configs(parens_bin_ng):-
         ,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
         ,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
         ,poker_auxiliaries:set_poker_configuration_option(respecialise,[true])
-        ,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[generalised])
+        ,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[0])
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
                                                          ,[random]).
@@ -892,79 +917,36 @@ cleanup_safe_example.
 %       results. In truth, they ain't. It's probably possible to
 %       optimise them for efficiency x accuracy.
 %
-setup_safe_example(even_bin):-
-        !
-        ,cleanup_safe_example
-        ,G = (poker_configuration:safe_example(m(s,Ls,[])):-
-             between(0,4,L)
-             ,length(Ls,L))
-        ,assert(G).
-setup_safe_example(anbn_bin):-
-        !
-        ,cleanup_safe_example
-        ,G = (poker_configuration:safe_example(m(s,Ls,[])):-
-             between(0,9,L)
-             ,length(Ls,L))
-        ,assert(G).
-setup_safe_example(anbn_bin_ng):-
-        !
-        ,cleanup_safe_example
-        ,G = (poker_configuration:safe_example(m(s,Ls,[])):-
-             between(0,9,L)
-             ,length(Ls,L))
-        ,assert(G).
-setup_safe_example(anbn_uo_bin):-
-        !
-        ,cleanup_safe_example
-        ,G = (poker_configuration:safe_example(m(s,Ls,[])):-
-             between(0,9,L)
-             ,length(Ls,L))
-        ,assert(G).
-setup_safe_example(anbm_bin):-
-        !
-        ,cleanup_safe_example
-        ,G = (poker_configuration:safe_example(m(s,Ls,[])):-
-             between(0,9,L)
-             ,length(Ls,L))
-        ,assert(G).
-setup_safe_example(anbm_bin_ng):-
-        !
-        ,cleanup_safe_example
-        ,G = (poker_configuration:safe_example(m(s,Ls,[])):-
-             between(0,9,L)
-             ,length(Ls,L))
-        ,assert(G).
-setup_safe_example(parens_bin):-
-        !
-        ,cleanup_safe_example
-        ,G = (poker_configuration:safe_example(m(s,Ls,[])):-
-             between(0,10,L)
-             ,length(Ls,L))
-        ,assert(G).
-setup_safe_example(parens_bin_ng):-
-        !
-        ,cleanup_safe_example
-        ,G = (poker_configuration:safe_example(m(s,Ls,[])):-
-             between(0,10,L)
-             ,length(Ls,L))
-        ,assert(G).
-setup_safe_example(palindrome_bin):-
-        !
+setup_safe_example(Lang):-
+        memberchk(Lang,[palindrome_bin
+                        ,palindrome_bin_ng
+                        ]
+                  )
+        ,!
         ,cleanup_safe_example
         ,G = (poker_configuration:safe_example(m(p,Ls,[])):-
-             between(0,8,L)
-             ,length(Ls,L))
-        ,assert(G).
-setup_safe_example(palindrome_bin_ng):-
-        !
-        ,cleanup_safe_example
-        ,G = (poker_configuration:safe_example(m(p,Ls,[])):-
-             between(0,8,L)
+              between(0,10,L)
              ,length(Ls,L))
         ,assert(G).
 setup_safe_example(Lang):-
-        throw('setup_save_example/: Unknown Language':Lang).
-
+        !
+        ,must_be(oneof([even_bin
+                       ,anbn_bin
+                       ,anbn_bin_ng
+                       ,anbn_uo_bin
+                       ,anbm_bin
+                       ,anbm_bin_ng
+                       ,parens_bin
+                       ,parens_bin_ng
+                       ]
+                      )
+                ,Lang
+                )
+        ,cleanup_safe_example
+        ,G = (poker_configuration:safe_example(m(s,Ls,[])):-
+              between(0,10,L)
+             ,length(Ls,L))
+        ,assert(G).
 
 % Palindrome
 background_knowledge(p/2,[one/2,zero/2,empty/2]).
