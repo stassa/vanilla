@@ -496,10 +496,12 @@ binary_anbn_ab_star_range(N,S,P):-
 binary_anbn_uo_range(N,S,P):-
         Lang = anbn_uo_bin
         ,T = s/2
-        ,Gs = 0:25/5
+        %,Gs = 0:25/5
+        ,Gs = 0:250/50
+        %,Gs = 0:500/100
         ,Sl = anbn_uo_bin(1:21/5,0,6) % all is 29
         ,Su = []
-        ,TPos = anbn_uo_bin(all,5,10)
+        ,TPos = anbn_uo_bin(all,7,10)
         ,TNeg = not_anbn_uo_bin(all,0,8)
         ,What = 'generated'
         ,(   P == true
@@ -521,7 +523,7 @@ binary_anbm_range(N,S,P):-
         %,Sl = anbm_bin(1:61/10,0,9) % all is 88
         ,Sl = anbm_bin(1:41/10,0,9) % all is 88
         ,Su = []
-        ,TPos = anbm_bin(all,9,18)
+        ,TPos = anbm_bin(all,10,18)
         ,TNeg = not_anbm_bin(all,0,13)
         ,What = 'generated'
         ,(   P == true
