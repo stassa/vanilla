@@ -3,7 +3,7 @@
 		      ,metarules/2
 		      ,positive_example/2
 		      ,negative_example/2
-		      ,ancestor/2
+		      ,real_ancestor/2
 		      ,parent/2
 		      ]).
 
@@ -77,15 +77,14 @@ metarules(ancestor/2,[identity,tailrec]).
 %	Generator of positive Examples for a learning Target.
 %
 positive_example(ancestor/2,ancestor(A,B)):-
-	ancestor(A,B).
+	real_ancestor(A,B).
 %positive_example(ancestor/2,ancestor(stathis,stassa)).
 
 %!	negative_example(+Target,-Examples) is nondet.
 %
 %	Generator of negative Examples for a learning Target.
-%
 negative_example(ancestor/2,ancestor(A,B)):-
-	ancestor(B,A).
+	real_ancestor(B,A).
 
 parent(stathis,kostas).
 parent(stefanos,dora).
@@ -94,13 +93,13 @@ parent(alexandra,kostas).
 parent(paraskevi,dora).
 parent(dora,stassa).
 
-ancestor(stathis,kostas).
-ancestor(stefanos,dora).
-ancestor(kostas,stassa).
-ancestor(alexandra,kostas).
-ancestor(paraskevi,dora).
-ancestor(dora,stassa).
-ancestor(stathis,stassa).
-ancestor(stefanos,stassa).
-ancestor(alexandra,stassa).
-ancestor(paraskevi,stassa).
+real_ancestor(stathis,kostas).
+real_ancestor(stefanos,dora).
+real_ancestor(kostas,stassa).
+real_ancestor(alexandra,kostas).
+real_ancestor(paraskevi,dora).
+real_ancestor(dora,stassa).
+real_ancestor(stathis,stassa).
+real_ancestor(stefanos,stassa).
+real_ancestor(alexandra,stassa).
+real_ancestor(paraskevi,stassa).
