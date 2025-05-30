@@ -486,36 +486,6 @@ respecialise(Ss_Neg,[E0|Pos],MS,Ss_Neg_):-
 	,C = cleanup_negatives(Fs,T,U)
 	,setup_call_cleanup(S,G,C)
 	,debug_length(respecialise,'Kept ~w sub-hypotheses',Ss_Neg_).
-respecialise(Ss_Neg,_,_MS,Ss_Neg):-
-	poker_configuration:respecialise(false)
-	,!.
-respecialise(Ss_Neg,[E0|Pos],MS,Ss_Neg_):-
-	poker_configuration:respecialise(true)
-	,poker_configuration:multithreading(respecialise)
-	,poker_configuration:clause_limit(K)
-	,signature(E0,Ss)
-	,debug_length(respecialise,'Respecialising ~w sub-hypotheses',Ss_Neg)
-	,S = setup_negatives(Fs,T,U)
-	,G = findall(Subs
-		    ,(member(Subs, Ss_Neg)
-		     ,findall(Sub
-			     ,member(Sub-_M,Subs)
-			     ,Subs_)
-		     ,debug_metasubs(respecialise_full
-				    ,'Proving metasubstitutions:',Subs,[E0|Pos],MS)
-		     ,concurrent_forall(member(Ep,[E0|Pos])
-				       ,(debug(examples,'Positive example: ~w',[Ep])
-					,vanilla:prove(Ep,K,MS,Ss,Subs_,Subs_)
-					,debug(examples,'Proved positive example: ~w',[Ep])
-					)
-				       )
-		     ,debug_metasubs(respecialise_full
-				    ,'Proved metasubstitutions:',Subs,[E0|Pos],MS)
-		     )
-		    ,Ss_Neg_)
-	,C = cleanup_negatives(Fs,T,U)
-	,setup_call_cleanup(S,G,C)
-	,debug_length(respecialise,'Kept ~w sub-hypotheses',Ss_Neg_).
 
 
 %!	metasubstitutions(+Example,+Limit,+Metarules,-Metasubstitutions)
