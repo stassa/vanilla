@@ -14,6 +14,10 @@
 			     ,edit_experiment_file/0
 			     % Configuration auxiliaries
 			     ,debug_length/3
+			     ,list_louise_options/1
+			     ,debug_louise_config/1
+			     ,list_louise_config/0
+			     ,print_louise_config/3
 			     ,set_configuration_option/2
 			     % Program auxiliaries
 			     ,unifiable_compare/3
@@ -583,6 +587,141 @@ edit_experiment_file:-
 debug_length(T,M,Ls):-
 	length(Ls,N)
 	,debug(T,M,[N]).
+
+
+
+%!	list_louise_options(+Options) is det.
+%
+%	List a set of configuration Options for Louise.
+%
+%	Options is a list of predicate indicators, Symbol/Arity, of
+%	configuration options defined in louise_configuration.pl.
+%
+%	This predicate prints to the top-level the configuration options
+%	given in Options.
+%
+%	This predicate can be used in place of list_config/0 to list the
+%	values of only a desired subset of configuration options.
+%
+%	@tbd Shameless copy/pasta from auxiliaries.pl modified for use
+%	by Louise because we don't want Vanilla to know anything about
+%	the learning systems using it.
+%
+list_louise_options(Os):-
+	\+ is_list(Os)
+	,!
+	,list_louise_options([Os]).
+list_louise_options(Os):-
+        forall(member(S/A,Os)
+              ,(functor(O,S,A)
+               ,louise_configuration:O
+               ,format('~w~n',[O])
+               )
+              ).
+
+
+
+%!	debug_louise_config(+Subject) is det.
+%
+%	Log Louise configuration options to the debug stream for Subject.
+%
+%	Alias for print_config(print,user_output,configuration).
+%
+%	Only configuration options actually defined in the
+%	louise_configuration module (i.e. not re-exported from other
+%	configuration files) are printed.
+%
+%	@tbd Shameless copy/pasta from auxiliaries.pl modified for use
+%	by Louise because we don't want Vanilla to know anything about
+%	the learning systems using it.
+%
+debug_louise_config(S):-
+	print_louise_config(debug,S,main).
+
+
+%!	list_louise_config is det.
+%
+%	Print Louise configuration options to the console.
+%
+%	Alias for print_config(print,user_output,configuration).
+%
+%	Only configuration options actually defined in the
+%	louise_configuration module (i.e. not re-exported from other
+%	configuration files) are printed.
+%
+%	@tbd Shameless copy/pasta from auxiliaries.pl modified for use
+%	by Louise because we don't want Vanilla to know anything about
+%	the learning systems using it.
+%
+list_louise_config:-
+	print_louise_config(print,user_output,main).
+
+
+%!	print_louise_config(+Print_or_Debug,+Stream_or_Subject,+Scope) is det.
+%
+%	Print or debug current configuration options for Louise.
+%
+%	Print_or_Debug is one of [print,debug] which should be
+%	self-explanatory.
+%
+%	Stream_or_Subject is either a stream alias or a debug subject,
+%	depending on the value of Print_or_Debug.
+%
+%	Scope is one of [main,all]. If Scope is "main", only
+%	configuration options whose implementation module is
+%	"louise_configuration" are printed. If Scope is "all", all
+%	configuration options re-exported by louise_configuration.pl are
+%	printed, which includes options defined elsewhere, e.g.
+%	configuration files of libraries that are re-exported by
+%	louise_configuration.pl to avoid cluttering it etc.
+%
+%	If Scope is "all" configuration options are prepended by the
+%	name of their implementation module, to help identification.
+%
+%	If Scope is something other than "main" or "all", print_louise_config/3
+%	raised an existence error.
+%
+%	Configuration options are printed in alphabetical order, which
+%	includes the alphabetical order of their implementation modules'
+%	names.
+%
+%	@tbd Shameless copy/pasta from auxiliaries.pl modified for use
+%	by Louise because we don't want Vanilla to know anything about
+%	the learning systems using it.
+%
+print_louise_config(T,S,Sc):-
+	must_be(oneof([main,all]), Sc)
+	,module_property(louise_configuration, exports(Es))
+	,findall(M:Opt_
+		,(member(F/A,Es)
+		 % No need to print those out and they're too verbose.
+		 ,\+ memberchk(F/A, [tautology/1
+				    ,safe_example/1
+				    ])
+		 ,functor(Opt,F,A)
+		 ,predicate_property(Opt, implementation_module(M))
+		 ,call(louise_configuration:Opt)
+		 % Convert to list to sort by functor only.
+		 % Standard order of terms also sorts by arity.
+		 ,Opt =.. Opt_
+		 )
+		,Opts)
+	% Sort alphabetically
+	,sort(Opts, Opts_)
+	,(   Sc = all
+	 ->  true
+	 ;   Sc = main
+	 ->  Mod = louise_configuration
+	 )
+	,forall(member(Mod:Opt, Opts_)
+	       ,(Opt_ =.. Opt
+		,(   Sc = all
+		 ->  print_or_debug(T,S,Mod:Opt_)
+		 ;   Sc = main
+		 ->  print_or_debug(T,S,Opt_)
+		 )
+		)
+	       ).
 
 
 
