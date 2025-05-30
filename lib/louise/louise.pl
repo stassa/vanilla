@@ -203,23 +203,173 @@ generalise(Pos,MS,Ss_Pos):-
 %	sub-hypotheses derived by generalise/3.
 %
 specialise(Ss_Pos,_MS,[],Ss_Pos):-
-	!.
+	!
+       ,debug(examples,'No negative examples. Can\'t specialise',[]).
 specialise(Ss_Pos,MS,Neg,Ss_Neg):-
-	louise_configuration:clause_limit(K)
-	,findall(Subs
-	       ,(member(Subs,Ss_Pos)
-		,findall(Sub
-			,member(Sub-_M,Subs)
-			,Subs_)
-		,debug_clauses(metasubstitutions,'Ground metasubstitutions:',[Subs_])
-		,\+((member(En,Neg)
-		    ,debug_clauses(examples,'Negative example:',En)
-		    ,once(metasubstitutions(En,K,MS,Subs_))
-		    ,debug_clauses(examples,'Proved negative example:',En)
+	debug_length(specialise,'Specialising with ~w negative examples.',Neg)
+	,verify_metasubs(fail,one,Ss_Pos,Neg,MS,Ss_Neg)
+	,debug_length(specialise,'Kept ~w sub-hypotheses',Ss_Neg)
+	,debug_clauses(specialise_full,'Kept metasubstitutions:',Ss_Neg).
+
+
+%!	verify_metasubs(+How,+What,+Metasubs,+Examples,+Metarules,-Verfied)
+%!	is det.
+%
+%	Verify metasubstitutions with respect to Examples.
+%
+%	Use variant to prove or disprove a set of Metasubstitutions and
+%	collect those that succeed or fail the proof.
+%
+%	How is one of: [succeed, fail], and determines whether
+%	metasubstitutions are "verified" when they succeed, or fail,
+%	respectively, for all examples in Examples.
+%
+%	What is one of [all, one], passed to verify_program/3 to denote
+%	whether verification should be existentially or universally
+%	quantified. See verify_program/3 for details.
+%
+%	Metasubs is a list-of-lists where each sublist is a list of
+%	key-value pairs S-M, where M is a metasubstitution and M its
+%	corresponding metarule, in expanded form.
+%
+%	Metarules is a list of metarules in expanded form.
+%
+%	Verified is the list of metaubstutitoin lists in
+%	Metasubs that either succeeded or failed, for all Examples,
+%	depending to How.
+%
+verify_metasubs(succeed,W,Subs,Es,MS,Subs_v):-
+	!
+	,un_negate(Es,Es_)
+	,examples_targets(Es_, Ss)
+	,excapsulated_clauses(Ss,Es_,Es_e)
+	,findall(Subs_i
+	       ,(member(Subs_i, Subs)
+		,applied_metarules(Subs_i,MS,Cs)
+		,excapsulated_clauses(Ss,Cs,Cs_e)
+		,debug_clauses(verify_metasubs,'Proveing metasubs:',Cs_e)
+		,verify_program(W,Cs_e,Es_e)
+		,debug_clauses(verify_metasubs,'Proved metasubs:',Cs_e)
+		)
+	       ,Subs_v).
+verify_metasubs(fail,W,Subs,Es,MS,Subs_v):-
+	un_negate(Es,Es_)
+	,examples_targets(Es_, Ss)
+	,excapsulated_clauses(Ss,Es_,Es_e)
+	,findall(Subs_i
+	       ,(member(Subs_i, Subs)
+		,applied_metarules(Subs_i,MS,Cs)
+		,excapsulated_clauses(Ss,Cs,Cs_e)
+		,debug_clauses(verify_metasubs,'Refuting metasubs:',Cs_e)
+		,\+ verify_program(W,Cs_e,Es_e)
+		,debug_clauses(verify_metasubs,'Refuted metasubs:',Cs_e)
+		)
+	       ,Subs_v).
+
+
+%!	un_negate(+Negated,-NoMore) is det.
+%
+%	Remove the negation from a set of literals.
+%
+un_negate([E|Es],[E|Es]):-
+	E \= (:-_)
+	,!.
+un_negate([:-E|Es],[E|Es_]):-
+	findall(Ei
+	       ,member(:-Ei,Es)
+	       ,Es_).
+
+
+%!	verify_program(+What,+Clauses,+Examples) is det.
+%
+%	Verify a program against a set of examples.
+%
+%	What is one of [all, one], denoting verification is
+%	existentially or universally quantified. In practice what
+%	this means is that Examples are proved with a call to forall/2
+%	so that verification fails for all examples if it fails for one,
+%	or with a call to member/2, so that verification fails for all
+%	examples if it fails for one. No, think about it.
+%
+%	Clauses it the program to verify, as a list of definite clauses
+%	(the result of applying and excapsulating a set of
+%	metasubstitutions).
+%
+verify_program(all,Cs,Es):-
+	!
+	,PM = experiment_file
+	,debug_clauses(verify_program_full,'Verifying program:',Cs)
+	,S = (assert_program(PM,Cs,Rs)
+	     ,table_untable_predicates(table,PM,Cs)
+	     )
+	,G = forall(member(E,Es)
+		   ,(debug(examples,'Verifying Example: ~w', [E])
+		    ,call(PM:E)
 		    )
 		   )
-		)
-	       ,Ss_Neg).
+	,C = (erase_program_clauses(Rs)
+	     ,table_untable_predicates(untable,PM,Cs)
+	     )
+	,setup_call_cleanup(S,G,C)
+	,debug(verify_program,'Verified program accepts all examples',[]).
+verify_program(one,Cs,Es):-
+	PM = experiment_file
+	,debug_clauses(verify_program_full,'Verifying program:',Cs)
+	,S = (assert_program(PM,Cs,Rs)
+	     ,table_untable_predicates(table,PM,Cs)
+	     )
+	,G = (member(E,Es)
+		  ,(debug(examples,'Verifying Example: ~w', [E])
+		   ,(   call(PM:E)
+		    ->  debug(examples,'Verified Example: ~w', [E])
+		    ;   debug(examples,'Failed to verify Example: ~w', [E])
+		       ,fail
+		    )
+		   )
+		  )
+	,C = (erase_program_clauses(Rs)
+	     ,table_untable_predicates(untable,PM,Cs)
+	     )
+	,setup_call_cleanup(S,G,C)
+	,debug(verify_program,'Verified program accepts all examples',[]).
+
+
+%!	table_untable_predicates(+What,+Module,+Clauses) is det.
+%
+%	Table or untable the predicates defined in a set of Clauses.
+%
+%	What is one of: [table, untable].
+%
+%	Module is the module where the programs that are to be tabled or
+%	untabled are defined.
+%
+%	Clauses is a list of clauses that potentially use the predicates
+%	to table or untable in their body literals.
+%
+table_untable_predicates(W,M,Cs):-
+	program_symbols(Cs,Ss)
+	,forall(member(S,Ss)
+	       ,table_untable(W,M,S)
+	       ).
+
+
+%!	table_untable(+What,+Module,+Symbol) is det.
+%
+%	Table or untable a predicate Symbol.
+%
+table_untable(_,_M,F/A):-
+% Attempt to identify BK predicates. Those are already defined with
+% their own properties, and trying to table them raises a permission
+% error.
+	functor(T,F,A)
+	,louise_configuration:experiment_file(_P,M)
+	,predicate_property(M:T,static)
+	,!.
+table_untable(table,M,S):-
+	M:table(S)
+	,!.
+table_untable(untable,M,S):-
+	M:untable(S).
 
 
 
