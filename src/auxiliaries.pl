@@ -14,6 +14,8 @@
 		      ,debug_config/1
 		      ,list_config/0
 		      ,print_config/3
+		      ,set_multi_configuration_option/2
+		      ,set_configuration_option/2
 		       % Debugging auxiliaries
 		      ,print_or_debug/3
 		      ,debug_clauses/3

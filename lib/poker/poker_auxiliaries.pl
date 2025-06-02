@@ -21,7 +21,6 @@
 			     ,debug_poker_config/1
 			     ,list_poker_config/0
 			     ,print_poker_config/3
-			     ,set_configuration_option/2
 			     ,set_poker_configuration_option/2
 			     % Program auxiliaries
 			     ,unifiable_compare/3
@@ -748,78 +747,6 @@ print_poker_config(T,S,Sc):-
 		)
 	       ).
 
-
-
-%!	set_configuration_option(+Option,+Value) is det.
-%
-%	Change the Value of a configuration Option.
-%
-%	Option is an atom, the name of a configuration option defined in
-%	(or exported to) module configuration.
-%
-%	Value is the set of the arguments of Option. Iff Option has a
-%	single argument, Value can be a single atomic constant.
-%	Otherwise, it must be a list.
-%
-%	set_configuration_option/2 first retracts _all_ clauses of the
-%	named Option, then asserts a new clause with the given Value.
-%
-%	Only configuration options declared as dynamic can be changed
-%	using set_configuration_option/2. Attempting to change a static
-%	configuration option will raise a permission error.
-%
-%	@tbd This predicate cannot change configuration options with
-%	multiple clauses (or at least can't change any but their first
-%	clause). Such functionality may or may not be necessary to add.
-%
-%	@bug Sorta bug, but if set_configuration_option/2 is used as
-%	intended, at the start of an experiment file, to set a necessary
-%	configuration option, the configuration option thus changed will
-%	remain changed until the option is changed with
-%	set_configuration_option/2 or by editing the configuration file.
-%	And note that just reloading the configuration file will not
-%	reset the option- it will just add an extra clause of it in the
-%	database, which will often cause unepxected backtracking. This
-%	may cause some confusion, for example when setting the value of
-%	extend_metarules/1 to something other than false for one
-%	experiment, which then of course affects subsequent experiments.
-%	It happened to me, it could happen to you.
-%
-set_configuration_option(N, V):-
-	atomic(V)
-	,!
-	,set_configuration_option(N,[V]).
-set_configuration_option(N, [V]):-
-	is_list(V)
-	,N \== fetch_clauses
-	,!
-	,set_configuration_option(N,V).
-set_configuration_option(fetch_clauses, V):-
-	!
-	 % V is the atom 'all'
-	,(   V = all
-	 ->  Vs = [all]
-	 % V is the atom 'all' in a list
-	 ;   V = [all]
-	 ->  Vs = [all]
-	 % V is the atom 'all' in a list in a list
-	 % Perpetrated by set_multi_configuration_option/2
-	 ;   V = [[all]]
-	 ->  Vs = [all]
-	 ;   V = [Vs_]
-	    ,is_list(Vs_)
-	 ->  Vs = [Vs_]
-	 )
-	,functor(T,fetch_clauses,1)
-	,T_ =.. [fetch_clauses|Vs]
-	,retractall(configuration:T)
-	,assert(configuration:T_).
-set_configuration_option(N, Vs):-
-	length(Vs, A)
-	,functor(T,N,A)
-	,T_ =.. [N|Vs]
-	,retractall(configuration:T)
-	,assert(configuration:T_).
 
 
 %!	set_poker_configuration_option(+Name,+Value) is det.
