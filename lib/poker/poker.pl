@@ -440,54 +440,6 @@ generalise(Pos,MS,Ss_Pos):-
 */
 
 
-
-%!	respecialise(+Metasubs,+Pos,+MS,-Specialised) is det.
-%
-%	Strongly specialise the Top Program against positive examples.
-%
-%	Second step of specialisation that specialises the
-%	already-specialised Top Program further by removing each
-%	sub-hypothesis that does not entail all the positive examples.
-%
-%	This is useful when the Top Program contains many over-special
-%	sub-hypotheses and only a few ones that are sufficiently general
-%	to cover all the positive examples.
-%
-%	This specialisation operation is applied only if the
-%	poker_configuration option respecialise/1 is set to "true".
-%
-respecialise(Ss_Neg,_,_MS,Ss_Neg):-
-	poker_configuration:respecialise(false)
-	,!.
-respecialise(Ss_Neg,[E0|Pos],MS,Ss_Neg_):-
-	poker_configuration:respecialise(true)
-	,\+ poker_configuration:multithreading(respecialise)
-	,poker_configuration:clause_limit(K)
-	,signature(E0,Ss)
-	,debug_length(respecialise,'Respecialising ~w sub-hypotheses',Ss_Neg)
-	,S = setup_negatives(Fs,T,U)
-	,G = findall(Subs
-		    ,(member(Subs, Ss_Neg)
-		     ,findall(Sub
-			     ,member(Sub-_M,Subs)
-			     ,Subs_)
-		     ,debug_metasubs(respecialise_full
-				    ,'Proving metasubstitutions:',Subs,[E0|Pos],MS)
-		     ,forall(member(Ep,[E0|Pos])
-			    ,(debug(examples,'Positive example: ~w',[Ep])
-			     ,vanilla:prove(Ep,K,MS,Ss,Subs_,Subs_)
-			     ,debug(examples,'Proved positive example: ~w',[Ep])
-			     )
-			    )
-		     ,debug_metasubs(respecialise_full
-				    ,'Proved metasubstitutions:',Subs,[E0|Pos],MS)
-		     )
-		    ,Ss_Neg_)
-	,C = cleanup_negatives(Fs,T,U)
-	,setup_call_cleanup(S,G,C)
-	,debug_length(respecialise,'Kept ~w sub-hypotheses',Ss_Neg_).
-
-
 %!	metasubstitutions(+Example,+Limit,+Metarules,-Metasubstitutions)
 %!	is nondet.
 %
@@ -831,6 +783,40 @@ metasub_metarule(Sub,MS,Sub_:-M):-
 	,length(As_,N)
 	,Sub_ =.. [E,Id|As_]
 	,free_member(Sub_:-M,MS).
+
+
+
+%!	respecialise(+Metasubs,+Pos,+MS,-Specialised) is det.
+%
+%	Strongly specialise the Top Program against positive examples.
+%
+%	First step of specialisation that specialises the
+%	already-specialised Top Program further by removing each
+%	sub-hypothesis that does not entail all the positive examples.
+%
+%	This is useful when the Top Program contains many over-special
+%	sub-hypotheses and only a few ones that are sufficiently general
+%	to cover all the positive examples.
+%
+%	This specialisation operation is applied only if the
+%	poker_configuration option respecialise/1 is set to "true".
+%
+%	@tbd This is really "prespecialisation". It used to be called
+%	after specialise/4, but no more. Now it's called after
+%	generalise/3, so it's a "pre" specialisation step.
+%
+respecialise(Ss_Pos,_,_MS,Ss_Pos):-
+	poker_configuration:respecialise(false)
+	,!.
+respecialise(Ss_Pos,Pos,MS,Ss_Pos_):-
+	poker_configuration:respecialise(true)
+	,debug_length(respecialise,'Respecialising ~w sub-hypotheses',Ss_Pos)
+	,S = setup_negatives(Fs,T,U)
+	,G = verify_metasubs(succeed,respecialise,Ss_Pos,Pos,MS,Ss_Pos_)
+	,C = cleanup_negatives(Fs,T,U)
+	,setup_call_cleanup(S,G,C)
+	,debug_length(respecialise,'Kept ~w sub-hypotheses',Ss_Pos_).
+
 
 
 %!	generate(+N,+Atoms,+Limit,+MS,+Sig,+Subs,-Neg) is det.
