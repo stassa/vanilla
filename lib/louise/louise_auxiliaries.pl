@@ -18,6 +18,7 @@
 			     ,debug_louise_config/1
 			     ,list_louise_config/0
 			     ,print_louise_config/3
+			     ,set_louise_configuration_option/2
 			     % Program auxiliaries
 			     ,unifiable_compare/3
 			     ,skolem_sort/2
@@ -721,6 +722,26 @@ print_louise_config(T,S,Sc):-
 		 )
 		)
 	       ).
+
+
+
+%!	set_louise_configuration_option(+Name,+Value) is det.
+%
+%	Change the Value of a Louise configuration Option.
+%
+%	As set_configuration_option/2 but Name must be defined in
+%	louise_configuration module.
+%
+%	@tbd currently calling this and set_configuration_option/2 as a
+%	directive from an experiment file raises an existence error.
+%	Why?
+%
+set_louise_configuration_option(N, Vs):-
+	length(Vs, A)
+	,functor(T,N,A)
+	,T_ =.. [N|Vs]
+	,retractall(louise_configuration:T)
+	,assert(louise_configuration:T_).
 
 
 
