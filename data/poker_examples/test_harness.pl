@@ -32,9 +32,6 @@ labelled by Poker, or the programs it learns to label them.
 
 */
 
-% To draw L-Systems with Python's turtle library, via Janus.
-:- py_add_lib_dir(data(poker_examples)).
-
 %!      experiments_filtering(+T,+N,+Ls,+Us,+LPos,+LNeg,+UPos,+UNeg,+LRes,+URes)
 %!      is det.
 %!      experiments_filtering(+T,+N,+Ls,+Us,+LPos,+LNeg,+LGen,+UPos,+UNeg,+UGen,+LRes,+URes)

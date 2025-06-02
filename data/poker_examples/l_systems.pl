@@ -27,8 +27,10 @@
 :-use_module(src(auxiliaries)).
 :-reexport(data(poker_examples/l_systems_long)).
 
-/** <module> L-System grammars
+% To draw L-Systems with Python's turtle library, via Janus.
+:- py_add_lib_dir(data(poker_examples)).
 
+/** <module> L-System grammars
 
 */
 
