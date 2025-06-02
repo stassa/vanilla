@@ -303,7 +303,7 @@ verify_program(all,Cs,Es):-
 	     ,table_untable_predicates(table,PM,Cs)
 	     )
 	,G = forall(member(E,Es)
-		   ,(debug(examples,'Verifying Example: ~w', [E])
+		   ,(debug(verify_program,'Verifying Example: ~w', [E])
 		    ,call(PM:E)
 		    )
 		   )
@@ -319,10 +319,10 @@ verify_program(one,Cs,Es):-
 	     ,table_untable_predicates(table,PM,Cs)
 	     )
 	,G = (member(E,Es)
-		  ,(debug(examples,'Verifying Example: ~w', [E])
+		  ,(debug(verify_program,'Verifying Example: ~w', [E])
 		   ,(   call(PM:E)
-		    ->  debug(examples,'Verified Example: ~w', [E])
-		    ;   debug(examples,'Failed to verify Example: ~w', [E])
+		    ->  debug(verify_program,'Verified Example: ~w', [E])
+		    ;   debug(verify_program,'Failed to verify Example: ~w', [E])
 		       ,fail
 		    )
 		   )
@@ -388,34 +388,17 @@ table_untable(untable,M,S):-
 %	This specialisation operation is applied only if the
 %	louise_configuration option respecialise/1 is set to "true".
 %
-respecialise(Ss_Neg,_,_MS,Ss_Neg):-
+respecialise(Ss_Pos,_,_MS,Ss_Pos):-
 	louise_configuration:respecialise(false)
 	,!.
-respecialise(Ss_Neg,[E0|Pos],MS,Ss_Neg_):-
+respecialise(Ss_Pos,Pos,MS,Ss_Pos_):-
 	louise_configuration:respecialise(true)
-	,louise_configuration:clause_limit(K)
-	,signature(E0,Ss)
-	,debug(respecialise,'Respecialising specialised Top Program',[])
+	,debug_length(respecialise,'Respecialising ~w sub-hypotheses',Ss_Pos)
 	,S = setup_negatives(Fs,T,U)
-	,G = findall(Subs
-		    ,(member(Subs, Ss_Neg)
-		     ,findall(Sub
-			     ,member(Sub-_M,Subs)
-			     ,Subs_)
-		     ,debug_clauses(respecialise,'Ground metasubstitutions:',Subs_)
-		     ,forall(member(Ep,[E0|Pos])
-			    ,(debug_clauses(respecialise,'Positive example:',Ep)
-			     ,vanilla:prove(Ep,K,MS,Ss,Subs_,Subs_)
-			     ,debug_clauses(respecialise,'Proved positive example:',Ep)
-			     )
-			    )
-		     ,debug_clauses(respecialise,'Proved metasubstitutions:',Subs_)
-		     )
-		    ,Ss_Neg_)
+	,G = verify_metasubs(succeed,all,Ss_Pos,Pos,MS,Ss_Pos_)
 	,C = cleanup_negatives(Fs,T,U)
 	,setup_call_cleanup(S,G,C)
-	,debug_length(respecialise,'Kept ~w sub-hypotheses',Ss_Neg_).
-
+	,debug_length(respecialise,'Kept ~w sub-hypotheses',Ss_Pos_).
 
 
 %!	metasubstitutions(+Example,+Limit,+Metarules,-Metasubstitutions)
