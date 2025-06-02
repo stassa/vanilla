@@ -19,6 +19,19 @@
 
 */
 
+% Dynamic options can be modified with a call to
+% set_louise_configuration_option/2.
+%
+:- dynamic clause_limit/1
+          ,gestalt/1
+          ,max_invented/1
+          ,max_error/2
+          ,recursive_reduction/1
+          ,reduction/1
+          ,resolutions/1
+          ,respecialise/1.
+
+
 %!      clause_limit(?Limit) is semidet.
 %
 %       Limit the number of resolving clauses learned from each example.
@@ -26,7 +39,7 @@
 %       Limit should be a natural number, including 0, or the atom 'inf'
 %       representing positive infinity if a limit is not required.
 %
-clause_limit(1).
+clause_limit(2).
 
 
 %!	experiment_file(?Path,?Module) is semidet.
@@ -34,8 +47,9 @@ clause_limit(1).
 %	The Path and Module name of an experiment file.
 %
 experiment_file(data('examples/hello_world.pl'),hello_world).
-%experiment_file(data('examples/anbn.pl'),anbn).
-%experiment_file(data('examples/even_odd.pl'),even_odd).
+%experiment_file(data('louise_examples/anbn.pl'),anbn).
+%experiment_file(data('louise_examples/even_odd.pl'),even_odd).
+%experiment_file(data('louise_examples/parity.pl'),parity).
 %experiment_file(data('benchmarks/robots.pl'),robots).
 
 
@@ -104,8 +118,8 @@ experiment_file(data('examples/hello_world.pl'),hello_world).
 %       is used to describe how the Top Program can be more general than
 %       the sum of its parts, i.e. its component sub-hypotheses.
 %
-gestalt(true).
-%gestalt(false).
+gestalt(false).
+%gestalt(true).
 
 
 %!      listing_limit(?Limit) is semidet.
@@ -121,7 +135,7 @@ gestalt(true).
 %       'inf' representing positive infinity. If Limit is 'inf', then no
 %       limit is imposed on the printed information.
 %
-listing_limit(10).
+listing_limit(20).
 
 
 %!	max_invented(?Number) is semidet.
@@ -241,6 +255,7 @@ resolutions(5000).
 %       unwieldy.
 %
 respecialise(false).
+%respecialise(true).
 
 
 %!      tautology(+Clause) is det.

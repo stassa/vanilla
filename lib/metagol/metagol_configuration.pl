@@ -11,6 +11,9 @@
 
 */
 
+:-dynamic depth_limits/2
+         ,max_invented/1.
+
 :-multifile order_constraints/5.
 
 %!      clause_limit(?Min,?Max) is semidet.
@@ -28,9 +31,9 @@ depth_limits(0,2).
 %	The Path and Module name of an experiment file.
 %
 experiment_file(data('examples/hello_world.pl'),hello_world).
-%experiment_file(data('examples/anbn.pl'),anbn).
-%experiment_file(data('examples/even_odd.pl'),even_odd).
-%experiment_file(data('examples/parity.pl'),parity).
+%experiment_file(data('metagol_examples/anbn.pl'),anbn).
+%experiment_file(data('metagol_examples/even_odd.pl'),even_odd).
+%experiment_file(data('benchmarks/robots.pl'),robots).
 
 
 %!	max_invented(?Number) is semidet.
@@ -137,6 +140,10 @@ order_constraints(tailrec,[P,Q],[_X,_Y,_Z],[P>Q],[]).
 order_constraints(precon,[P,Q,R],_Fs,[P>Q,P>R],[]).
 order_constraints(postcon,[P,Q,R],_Fs,[P>Q,P>R],[]).
 order_constraints(switch,[P,Q,R],_Fs,[P>Q,P>R],[]).
+
+order_constraints(tri_chain_1,[P,Q,R],_Fs,[P>Q,P>R],[]).
+order_constraints(tri_chain_2,[P,Q,R],_Fs,[P>Q,P>R],[]).
+order_constraints(tri_chain_3,[P,Q,R],_Fs,[P>Q,P>R],[]).
 
 
 %!      metasubstitution_atoms(?What) is semidet.

@@ -10,6 +10,10 @@
 
 */
 
+% Dynamic options can be set with set_simpleton_configuration_option/2.
+:-dynamic clause_limit/1
+         ,max_invented/1.
+
 %!      clause_limit(?Limit) is semidet.
 %
 %       Limit the number of resolving clauses learned from each example.
@@ -25,9 +29,8 @@ clause_limit(2).
 %	The Path and Module name of an experiment file.
 %
 experiment_file(data('examples/hello_world.pl'),hello_world).
-%experiment_file(data('examples/anbn.pl'),anbn).
-%experiment_file(data('examples/even_odd.pl'),even_odd).
-%experiment_file(data('examples/parity.pl'),parity).
+%experiment_file(data('simpleton_examples/anbn.pl'),anbn).
+%experiment_file(data('simpleton_examples/even_odd.pl'),even_odd).
 
 
 %!	max_invented(?Number) is semidet.
