@@ -255,55 +255,12 @@ experiment_filtering(T,Sl,Su,TPosL,TNegL,TGenL,TPosU,TNegU,TGenU,Res_l,Res_u):-
 %       iteration, G is the number of internally generated examples, L
 %       and U are the numbers of labelled and unlabelled examples
 %       respectively and Rs is a list-of-lists of results lists as
-%       returned by experiments/7.
+%       returned by experiments/[7,8]. See that predicate for details of
+%       the composition of Results.
 %
-%       Example query [TODO: needs update]:
-%       ==
-%       test_harness:experiments_ranges(
-%       s/2
-%       ,10
-%       ,0:5/1
-%       ,anbn(1:5/1,0,12)
-%       ,[]
-%       ,anbn(all,13,18)
-%       ,not_anbn(all,0,3)
-%       ,_Rs
-%       )
-%       , maplist(writeln,_Rs).
-%       ==
-%
-%       The query above runs an experiment with anbn as the target
-%       language, used to generate labelled examples, and no unlabelled
-%       examples, iterating over the number of internally generated,
-%       and labelled examples. Parameters are as follows:
-%
-%       * s/2: The symbol and arity of a learning target defined in the
-%       current experiment file.
-%
-%       * 10: The number of experiments to run in each iteration.
-%
-%       * 0:5/1: The range of values for internally generated examples.
-%       Defines the range of integers in [0,5] increasing by 1.
-%
-%       * anbn(1:5/1,0,12): Language generation specification for
-%       labelled examples. 1:5/1 defines the numbers of examples of anbn
-%       that will be generated in successive iterations: from 1 to 5,
-%       increasing by 1, therefore for 5 total iterations. 0 and 12 are
-%       the maximum and minimum lengths of strings in examples.
-%
-%       * []: No unlabelled examples will be generated.
-%
-%       * anbn(all,13,18): language generation specification for
-%       positive testing examples. All examples of anbn of length
-%       between 13 and 18 will be generated and used to test the
-%       hypothesis learned at each iteration.
-%
-%       * not_anbn(all,0,3): language generation specification term for
-%       negative testing examples. All exampls of anbm of length between
-%       0 and 3 will be generated and used to test the hypothesis
-%       learned at each iteration.
-%
-%       * _Rs: List of results.
+%       experiment_ranges/[9,10] queries can get pretty complicated. See
+%       experiment scripts in data/poker_experiments for examples of
+%       such queries.
 %
 %       @tbd: this predicate really needs some error checking to make
 %       sure we're not giving as arguments totally bogus ranges, or ones
@@ -725,37 +682,30 @@ range_helper(I:J/K,N):-
 %       Alternatively, TestGen can be the atom 'nil', in which case
 %       generation accuracy will not be tested.
 %
-%       Results is a list [Length, Labelling, Program, Generation], with
-%       the same meaning as in experiments/6. Copying from that
-%       predicate's documentation:
+%       Results is a list [Ps,N,Pos,Neg,Rs_L,Rs_R,Rs_G], where:
 %
-%       Results is a list of four sub-lists [Ms_L, SEs_L, Ms_P, SEs_P],
-%       each of which is a list [Acc,TPR,TNR], where Acc is the
-%       accuracy, TPR true positive rate and TNR true negative rate of
-%       the N labellings returned, or hypotheses learned from the sets
-%       of N examples generated in the N steps of the experiment. The
-%       values of the three metrics in the four sub-lists are as
-%       follows:
+%       * Ps is the learned hypothesis
+%       * N is the length of Ps
+%       * Pos is the list of positive examples identified
+%       * Neg is the list of negative examples identified
+%       * Rs_L is the list of labelling results
+%       * Rs_P is the list of program results.
+%       * Rs_G is the accuracy of Ps executed as a geneator.
 %
-%       * Ms_L: [Acc,TPR,TNR] are the means of accuracy, TPR and TNR
-%         over all N labellings.
-%       * SEs_L: [Acc,TPR,TNR] are the standard errors of accuracy, TPR,
-%         and TNR over all N labellings, according to the means in MS_L.
-%       * Ms_P: [Acc,TPR,TNR] are the means of accuracy, TPR, and TNR,
-%         over all N programs learned.
-%       * SEs_P: [Acc,TPR,TNR] are the standard errors of accuracy, TPR,
-%         and TNR over all N programs learned.
+%       Each of Rs_L and Rs_R [Acc,Err,TPR,TNR,FPR,FNR,PRE,REC,FSC] with
+%       elements as follows:
 %
-%       Example query:
-%       ==
-%       _T = s/2
-%       , _Sl = anbn(all,0,6)
-%       , _Su = [anbm(all,0,8),anbn(all,7,18)]
-%       , _TPos = anbn(all,19,40)
-%       , _TNeg = [anbm(all,0,4),not_anbn(all,4,8)]
-%       , experiment(_T,_Sl,_Su,_TPos,_TNeg,[_Ps,_Pos,_Neg,LabellingMeans,ProgramMeans])
-%       , maplist(print_clauses,['Hypothesis:','Positives:','Negatives:'],[_Ps,_Pos,_Neg]).
-%       ==
+%       Acc: Accuracy
+%       Err: Error
+%       TPR: True Positive Rate
+%       TNR: True Negative Rate
+%       FPR: False Positive Rate
+%       FNR: Fale Negative Rate
+%       PRE: Precision
+%       REC: Recall (TPR)
+%       FSC: F1 Score
+%
+%       Acc, Err, etc are floating point numbers.
 %
 experiments(T,N,Sl,Su,TPos,TNeg,Res):-
         experiments(T,N,Sl,Su,TPos,TNeg,nil,Res).
@@ -791,6 +741,11 @@ experiments(T,N,Sl,Su,TPos,TNeg,TestGen,[Ms_h,SE_h,Ms_l,SEs_l,Ms_p,SEs_p,Ms_g,SE
 results_parts(Rs,Hs,Rs_l,Rs_p,Rs_g):-
         results_parts(Rs,Hs,[],Rs_l,[],Rs_p,[],Rs_g,[]).
 
+%!      results_parts(+Rs,-Hs,+HsAcc,-RsL,+RsLAcc,-RsP,+RsPAcc,-RsG,+RsGAcc)
+%!      is det.
+%
+%       Business end of results_parts/5.
+%
 results_parts([],Hs,Hs,Rs_l,Rs_l,Rs_p,Rs_p,Rs_g,Rs_g):-
         !.
 results_parts([[H,L,P,G]|Rs],[H|AccHs],Hs,[L|AccL],Rs_l,[P|AccP],Rs_p,[G|AccG],Rs_g):-
@@ -801,21 +756,19 @@ results_parts([[H,L,P,G]|Rs],[H|AccHs],Hs,[L|AccL],Rs_l,[P|AccP],Rs_p,[G|AccG],R
 %
 %       Calculate the standard error of metrics in Results.
 %
-%       Results is a list of lists [Acc,TPR,TNR], where Acc, TPR and TNR
-%       are numbers representing the Accuracy, True Positive Rate and
-%       True Negative Rate calculated of each of a number of
-%       experiments, in experiments/6.
+%       Results is a list of lists [Acc,TPR,TNR,FPR,FNR,PRE,REC,FSC],
+%       of numbers, the labelling or hypothesis evaluation metrics
+%       calculated for each of a number of experiments, in
+%       experiments/6.
 %
-%       Means is a list of numbers: [M_Acc,M_TPR,M_TNR], the means of
-%       Acc, TPR, and TNR, respectively, in the list Results, as
-%       returned by result_means/2.
+%       Means is a list of numbers, the means of each evaluation result
+%       in the list Results.
 %
-%       StandardErrors is a list of numbers [Acc_SE,TPR_SE,TNR_SE], the
-%       standard error of Acc, TPR and TNR in Results, calculated with
-%       respect to Means.
+%       StandardErrors is a list of numbers, the standard error of each
+%       sublist in Results, calculated with respect to Means.
 %
 result_SEs(Rs,Ms,SEs):-
-        % Ouch.
+        % Gulp.
         transpose(Rs,Rs_T)
         ,maplist(standard_deviation,Rs_T,Ms,SDs)
         ,maplist(standard_error,Rs_T,SDs,SEs_)
@@ -827,13 +780,12 @@ result_SEs(Rs,Ms,SEs):-
 %
 %       Calculate the means of a list of metrics in Results.
 %
-%       Results is a list of lists [Acc,TPR,TNR], where Acc, TPR and TNR
-%       are numbers representing the Accuracy, True Positive Rate and
-%       True Negative Rate calculated of each of a number of
-%       experiments, in experiments/6.
+%       Results is a list of lists [Acc,TPR,TNR,FPR,FNR,PRE,REC,FSC],
+%       of labelling or learned program evaluation results calculated of
+%       each of a number of experiments, in experiments/6.
 %
-%       Means is a list of numbers: [M_Acc,M_TPR,M_TNR], the means of
-%       Acc, TPR, and TNR, respectively, in the list Results.
+%       Means is a list of numbers, the means of each evaluation result
+%       in the list Results.
 %
 result_means(Res,Ms):-
         %writeln(Res)
@@ -850,10 +802,11 @@ result_means(Res,Ms):-
 %
 %       Business end of result_means/2.
 %
-%       Results is a list of lists [Acc,TPR,TNR], received from
-%       result_means/2.
+%       Results is a list of lists [Acc,TPR,TNR,FPR,FNR,PRE,REC,FSC],
+%       received from result_means/2.
 %
-%       Acc is the accumulator of means, initially a list [0,0,0].
+%       Acc is the accumulator of means, initially a list of 0's of
+%       length 9 (one for each metric in Results).
 %
 %       Means is the list in Acc with means of the three metrics updated
 %       according to the contents of Results.
@@ -892,7 +845,7 @@ sum(A,B,C):-
 
 
 
-%!      experiment(+Target,+Labelled,+Unlabelled,+TestPos,+TestNeg,-Results)
+%!      experiment(+Trgt,+Labelled,+Unlabelled,+TestPos,+TestNeg,-Results)
 %!      is det.
 %!      experiment(+Trgt,+Labelled,+Unlabelled,+TestPos,+TestNeg,TestGen,-Results)
 %!      is det.
@@ -946,8 +899,7 @@ sum(A,B,C):-
 %       be a list, i.e. it is not currently possible to compose two
 %       grammars to create a set of labelled examples.
 %
-%       Results is as in experiment/5, a list
-%       [Ps,N,Pos,Neg,Rs_L,Rs_R,Rs_G], where:
+%       Results is a list [Ps,N,Pos,Neg,Rs_L,Rs_R,Rs_G], where:
 %
 %       * Ps is the learned hypothesis
 %       * N is the length of Ps
@@ -957,18 +909,30 @@ sum(A,B,C):-
 %       * Rs_R is the list of program results.
 %       * Rs_G is the accuracy of Ps executed as a geneator.
 %
-%       Each of Rs_L and Rs_R is a list [Acc,TPR,TNR], where:
+%       Each of Rs_L and Rs_R is a pair Counts-Results, where:
 %
-%       In Ms_L
-%       * Acc is the accuracy of the labelling of atoms in Pos and Neg.
-%       * TPR is the True Positive Rate of the labelling in Pos and Neg.
-%       * TNR is the True Negative Rate of the labelling in Pos and Neg.
+%       Counts is a list: [TP,TN,FP,FN], with elements as follows:
+%       TP: number of true positives.
+%       TN: number of true negatives.
+%       FP: number of false positives.
+%       FN: number of false negatives.
 %
-%       In Ms_P
-%       * Acc is the accuracy of the program learned from N examples
-%         measured against the ground truth of Language.
-%       * TPR is the True Positive Rate of the program.
-%       * TNR is the True Negative Rate of the program.
+%       Results is a list [Acc,Err,TPR,TNR,FPR,FNR,PRE,REC,FSC] with
+%       elements as follows:
+%       Acc: Accuracy
+%       Err: Error
+%       TPR: True Positive Rate
+%       TNR: True Negative Rate
+%       FPR: False Positive Rate
+%       FNR: Fale Negative Rate
+%       PRE: Precision
+%       REC: Recall (TPR)
+%       FSC: F1 Score
+%
+%       Results in Rs_L are the results of evaluation of Poker's
+%       labelling and results in Ps_R are the results of evaluation of
+%       the program learned by Poker. See test_labelling/4 and
+%       test_program/6 for details of these evaluations.
 %
 experiment(T,Sl,Su,TPos,TNeg,Res):-
         experiment(T,Sl,Su,TPos,TNeg,nil,Res).
@@ -1100,10 +1064,29 @@ test_target(T,F):-
 %       identified by a program learned by Poker from some initial
 %       observations.
 %
-%       Results is a list [Acc,TPR,TNR], the accuracy, True Positive
-%       Rate and True Negative Rate of the labelling of the positive and
-%       negative examples in Pos and Neg, compared to the true labelling
-%       by Language.
+%       Results is a pair Counts-Results, where:
+%
+%       Counts is a list: [TP,TN,FP,FN], with elements as follows:
+%       TP: number of true positives.
+%       TN: number of true negatives.
+%       FP: number of false positives.
+%       FN: number of false negatives.
+%
+%       Results is a list [Acc,Err,TPR,TNR,FPR,FNR,PRE,REC,FSC] with
+%       elements as follows:
+%       Acc: Accuracy
+%       Err: Error
+%       TPR: True Positive Rate
+%       TNR: True Negative Rate
+%       FPR: False Positive Rate
+%       FNR: Fale Negative Rate
+%       PRE: Precision
+%       REC: Recall (TPR)
+%       FSC: F1 Score
+%
+%       Counts and Results are calculated over the labelling of Pos and
+%       Neg, by Poker and with respect to the ground theory provided by
+%       Language.
 %
 test_labelling(S,Pos,Neg,Cs-Res):-
         debug(test_labelling,'Testing labelling for target: ~w',[S])
@@ -1135,9 +1118,28 @@ test_labelling(S,Pos,Neg,Cs-Res):-
 %       the generation of the positive and negative testing examples,
 %       respectively.
 %
-%       Results is a list [Acc, TPR, TNR], the accuracy, True Positive
-%       Rate and True Negative Rate, respectively, of the Program's
-%       labelling of examples generated by Language.
+%       Results is a pair Counts-Results, where:
+%
+%       Counts is a list: [TP,TN,FP,FN], with elements as follows:
+%       TP: number of true positives.
+%       TN: number of true negatives.
+%       FP: number of false positives.
+%       FN: number of false negatives.
+%
+%       Results is a list [Acc,Err,TPR,TNR,FPR,FNR,PRE,REC,FSC] with
+%       elements as follows:
+%       Acc: Accuracy
+%       Err: Error
+%       TPR: True Positive Rate
+%       TNR: True Negative Rate
+%       FPR: False Positive Rate
+%       FNR: Fale Negative Rate
+%       PRE: Precision
+%       REC: Recall (TPR)
+%       FSC: F1 Score
+%
+%       Counts and Results are calculated over the labelling of the
+%       ground truth examples in Pos and Neg by Program.
 %
 test_program(_,_,[],Test_Pos,Test_Neg,[0,FN,0,TN]-[0.5,0.5,0.0,1.0,0.0,1.0,0.0,0.0,0.0]):-
                                   % TP,FN,FP,TN Acc Err TPR TNR FPR FNR PRE REC FSC
