@@ -11,6 +11,8 @@
                       ,experiment/6
                       ,test_labelling/4
                       ,test_program/6
+                      ,print_confusion_matrix/5
+                      ,debug_confusion_matrix/6
                       ]).
 
 :-use_module(lib(poker/poker)).
@@ -1095,7 +1097,9 @@ test_labelling(S,Pos,Neg,[Acc,TPR,TNR]):-
         ,accuracy(language_generation,S,Pos,Neg,Acc)
         ,tpr(language_generation,S,Pos,TPR)
         ,tnr(language_generation,S,Neg,TNR)
-        ,debug(test_labelling,'Labelling: Measured Acc: ~w TPR: ~w TNR: ~w',[Acc,TPR,TNR]).
+        ,debug(test_labelling,'Labelling: Measured Acc: ~w TPR: ~w TNR: ~w',[Acc,TPR,TNR])
+        ,debug_confusion_matrix(test_labelling_full,labelling,language_generation
+                               ,S,Pos,Neg).
 
 
 %!      test_program(+Language,+Symbol,+Program,+TestPos,+TestNeg,-Results)
@@ -1150,7 +1154,8 @@ test_program(T,S/A,Cs,Test_Pos,Test_Neg,[Acc,TPR,TNR]):-
              ,poker:table_untable_predicates(table,Program_module,Cs)
              )
         ,setup_call_cleanup(Set,G,C)
-        ,debug(test_program,'Program: Measured Acc: ~w TPR: ~w TNR: ~w',[Acc,TPR,TNR]).
+        ,debug(test_program,'Program: Measured Acc: ~w TPR: ~w TNR: ~w',[Acc,TPR,TNR])
+        ,debug_confusion_matrix(test_program_full,hypothesis,Program_module,S,Pos,Neg).
 
 
 %!      generate_positives(+Sign,+Spec,+Symbol,-Examples) is det.
@@ -1270,34 +1275,329 @@ generate_example_test(M,S/3,N,E):-
                 *******************************/
 
 
-%!      accuracy(+Module,+Target,+Pos,+Neg,-Accuracy) is det.
+%!	print_confusion_matrix(+Evaluation,+Module,+Language,+Pos,+Neg)
+%!      is det.
+%
+%	Print a confusion matrix of current evaluation results.
+%
+%       Evaluation is one of: [labelling, hypothesis], indicating how
+%       positive and negative examples are treated when counting false
+%       positives and false negatives. See false_positives/6 and
+%       false_negatives/6 for details.
+%
+%       Module is the name of the module where Language is defined as a
+%       DCG.
+%
+%       Language is the symbol, but not arity of a language used to test
+%       the given positive and negative examples.
+%
+%       Pos and Neg are lists of examples used in evaluation.
+%
+%       Note: A meaningful confusion matrix can be printed for labelling
+%       and hypothesis results, but not when evaluating a hypothesis as
+%       a generator, with test_generated/5, because in the latter
+%       evaluation, no negative examples are given, or generated. Hence
+%       the absence of an Evaluation option for generative accuracy.
+%
+print_confusion_matrix(E,M,S,Pos,Neg):-
+        maplist(length,[Pos,Neg],[P,N])
+        ,evaluation(E,M,S,Pos,Neg,[TP,TN,FP,FN],[ACC,ERR,_TPR,_TNR,FPR,FNR,PRE,REC,FSC])
+        ,TPFP is TP + FP
+        ,FNTN is FN + TN
+        ,TPFN is TP + FN
+        ,FPTN is FP + TN
+        ,T is P + N
+        ,format_confusion_matrix([TP,FN,FP,TN]
+                                ,[TPFN,FPTN,TPFP,FNTN,T]
+                                ,[ACC,ERR,FPR,FNR,PRE,REC,FSC]
+                                ).
+
+
+
+%!	debug_confusion_matrix(+Subject,+Evaluation,+Module,+Language,+Pos,+Neg)
+%!      is det.
+%
+%	Log current evaluation results as a confusion matrix.
+%
+%       As print_confusion_matrix/5 but prints the confusion matrix to
+%       the debug output rather than main output.
+%
+%       Subject is the debug subject given as a first argument to
+%       logging predicates such as debug/3.
+%
+debug_confusion_matrix(Sub,E,M,S,Pos,Neg):-
+        maplist(length,[Pos,Neg],[P,N])
+        ,evaluation(E,M,S,Pos,Neg,[TP,TN,FP,FN],[ACC,ERR,TPR,TNR,FPR,FNR,PRE,REC,FSC])
+        ,TPFP is TP + FP
+        ,FNTN is FN + TN
+        ,TPFN is TP + FN
+        ,FPTN is FP + TN
+        ,T is P + N
+        ,debug_confusion_matrix(Sub
+                               ,[TP,FN,FP,TN]
+                               ,[TPFN,FPTN,TPFP,FNTN,T]
+                               ,[ACC,ERR,TPR,TNR,FPR,FNR,PRE,REC,FSC]
+                               ).
+
+
+%!      evaluation(+Eval,+Mod,+Lang,+Pos,+Neg,-Counts,-Results) is det.
+%
+%       Calculate evaluation metrics for a confusion matrix.
+%
+%       Eval is one of: [labelling, hypothesis], indicating how
+%       positive and negative examples are treated when counting false
+%       positives and false negatives. See false_positives/6 and
+%       false_negatives/6 for details.
+%
+%       Module is the name of the module where Language is defined as a
+%       DCG.
+%
+%       Language is the symbol, but not arity of a language used to test
+%       the given positive and negative examples.
+%
+%       Pos and Neg are lists of examples used in evaluation.
+%
+%       Counts is a list: [TP,TN,FP,FN], with elements as follows:
+%       TP: number of true positives.
+%       TN: number of true negatives.
+%       FP: number of false positives.
+%       FN: number of false negatives.
+%
+%       Results is a list [Acc,Err,TPR,TNR,FPR,FNR,PRE,REC,FSC] with
+%       elements as follows:
+%       Acc: Accuracy
+%       Err: Error
+%       TPR: True Positive Rate
+%       TNR: True Negative Rate
+%       FPR: False Positive Rate
+%       FNR: Fale Negative Rate
+%       PRE: Precision
+%       REC: Recall (TPR)
+%       FSC: F1 Score
+%
+%       Counts and Results are passed to format_confusion_matrix/3 and
+%       debug_confusion_matrix/4 for pretty-printing.
+%
+evaluation(E,M,S,Pos,Neg,[TP,TN,FP,FN],[Acc,Err,TPR,TNR,FPR,FNR,PRE,REC,FSC]):-
+        true_positives(M,S,Pos,TP_)
+        ,debug_clauses(evaluation_full,'True Positives:',TP_)
+        ,true_negatives(M,S,Neg,TN_)
+        ,debug_clauses(evaluation_full,'True Negatives:',TN_)
+        ,false_positives(E,M,S,Pos,Neg,FP_)
+        ,debug_clauses(evaluation_full,'False Positives:',FP_)
+        ,false_negatives(E,M,S,Pos,Neg,FN_)
+        ,debug_clauses(evaluation_full,'False Negatives:',FN_)
+        ,maplist(length,[TP_,TN_,FP_,FN_],[TP,TN,FP,FN])
+        ,accuracy(M,S,Pos,Neg,Acc)
+        ,error(M,S,Pos,Neg,Err)
+        ,tpr(M,S,Pos,TPR)
+        ,tnr(M,S,Neg,TNR)
+        ,fpr(E,M,S,Pos,Neg,FPR)
+        ,fnr(E,M,S,Pos,Neg,FNR)
+        ,pre(E,M,S,Pos,Neg,PRE)
+        ,rec(M,S,Pos,REC)
+        ,Num is PRE * REC
+        ,Den is PRE + REC
+        ,safe_division(Num,Den,Pil)
+        ,FSC is 2 * Pil
+        ,debug(evaluation,'Acc: ~w',[Acc])
+        ,debug(evaluation,'Err: ~w',[Err])
+        ,debug(evaluation,'TPR: ~w',[TPR])
+        ,debug(evaluation,'TNR: ~w',[TNR])
+        ,debug(evaluation,'FPR: ~w',[FPR])
+        ,debug(evaluation,'FNR: ~w',[FNR])
+        ,debug(evaluation,'PRE: ~w',[PRE])
+        ,debug(evaluation,'REC: ~w',[REC])
+        ,debug(evaluation,'FSC: ~w',[FSC]).
+
+
+%!	format_confusion_matrix(+Counts,+Totals,+Metrics) is det.
+%
+%	Pretty-prints a confusion matrix to standard output.
+%
+%	Counts is a list of numbers [PP,PN,NP,NN,T], where:
+%	* PP: positive instances predicted as positive
+%	* PN: positive instances predicted as negative
+%	* NP: negative instances predicted as positive
+%	* NN: negative instances predicted as negative
+%	* T:  total positive and negatives predicted
+%
+%	Totals is a list of numbers [TP,TN,PPNP,PNNN,T], where:
+%	* TP: the total number of positive instances
+%	* TN: the total number of negative instances
+%	* PPNP: the sum of PP + NP
+%	* PNNN: the sum of PN + NN
+%
+%	Metrics is a list of numbers [Acr,Err,FPR,FNR,PRE,REC,FSC],
+%	where:
+%	* Acr: Accuracy, calculated as  PP + NN / T
+%	* Err: Error, calculated as NP + PN / T
+%	* FPR: False Positive Rate, NP / TN
+%	* FNR: False Negative Rate, PN / TP
+%	* PRE: Precision, calculated as PP / PPNP
+%	* REC: Recall, calculated as PP / TP (i.e. TPR)
+%	* FSC: F-Score, PRE * REC / PRE + REC
+%
+%	Given the above lists of numbers, format_confusion_matrix/3 will
+%	print approximately the following table (with some differences
+%	in formatting):
+%
+%			Predicted +	Predicted -	Total
+%	Actual +	PP		PN		TP
+%	Actual -	NP		NN		TN
+%	-----------------------------------------------------
+%	Total		PPNP		PNNN		T
+%
+%	Accuracy:		PP + NN / T
+%	Error:			NP + PN / T
+%	False Positive Rate:	NP / TN
+%	False Negative Rate:	PN / TP
+%	Precision:		PP / PPNP
+%	Recall(TPR):		PP / TP
+%	F-Score:                Precision * Recall / Precision + Recall
+%
+format_confusion_matrix([PP,PN,NP,NN]
+		       ,[TP,TN,PPNP,PNNN,T]
+		       ,[ACC,ERR,TPR,TNR,FPR,FNR,PRE,REC,FSC]):-
+	%decimal_places(D)
+        D = 4
+	,atom_chars('Actual + Predicted + Predicted - Total', Hs)
+	% Length of an entire header line
+	,length(Hs, L1)
+	,atom_chars('Actual + ', Act)
+	% Length of second line's first column
+	,length(Act, L21)
+	,atom_chars('Predicted + ', Pred_p)
+	,length(Pred_p, L22)
+	,atom_chars('Predicted - ', Pred_n)
+	,length(Pred_n, L23)
+	% Printing header line
+	,format('~*+~w ~*+~w ~*+~w~*+~n'
+	       ,[L21,'Predicted +',L22,'Predicted -',L23,'Total',L1])
+	,format('~w ~*+~w ~*+~w ~*+~w~n'
+	       ,['Actual +',L21,PP,L22,PN,L23,TP])
+	,format('~w ~*+~w ~*+~w ~*+~w~n'
+	       ,['Actual -',L21,NP,L22,NN,L23,TN])
+	,format('-------------------------------------~n',[])
+	,format('~w ~*+~w ~*+~w ~*+~w~n'
+	       ,['Total',L21,PPNP,L22,PNNN,L23,T])
+	% Longest left column
+	,atom_chars('False Positive Rate: ',TPR_cs)
+	,length(TPR_cs, TPR_cs_L)
+	,nl
+	,format('Accuracy: ~*+~*f~n', [TPR_cs_L,D,ACC])
+	,format('Error: ~*+~*f~n', [TPR_cs_L,D,ERR])
+        ,format('True Positive Rate: ~*+~*f', [TPR_cs_L,D,TPR])
+	,format('True Negative Rate: ~*+~*f', [TPR_cs_L,D,TNR])
+	,format('False Positive Rate: ~*+~*f~n', [TPR_cs_L,D,FPR])
+	,format('False Negative Rate: ~*+~*f~n', [TPR_cs_L,D,FNR])
+	,format('Precision: ~*+~*f~n', [TPR_cs_L,D,PRE])
+	,format('Recall (TPR): ~*+~*f~n', [TPR_cs_L,D,REC])
+	,format('F-Score: ~*+~*f~n', [TPR_cs_L,D,FSC]).
+
+
+%!      debug_confusion_matrix(+Subject,+Counts,+Totals,+Metrics) is
+%!      det.
+%
+%       Pretty-print a confusion matrix to the current debug stream.
+%
+%       As format_confusion_matrix/3 but prints the confusion matrix to
+%       the debug output.
+%
+%       @tbd Copy/pasta from format_confusion_matrix/3 with slight
+%       changes. Can this be abstracted a bit?
+%
+debug_confusion_matrix(Sub
+                      ,[PP,PN,NP,NN]
+                      ,[TP,TN,PPNP,PNNN,T]
+                      ,[ACC,ERR,TPR,TNR,FPR,FNR,PRE,REC,FSC]):-
+	%decimal_places(D)
+        D = 4
+	,atom_chars('Actual + Predicted + Predicted - Total', Hs)
+	% Length of an entire header line
+	,length(Hs, L1_)
+	,atom_chars('Actual + ', Act)
+	% Length of second line's first column
+	,length(Act, L21_)
+	,atom_chars('Predicted + ', Pred_p)
+	,length(Pred_p, L22_)
+	,atom_chars('Predicted - ', Pred_n)
+	,length(Pred_n, L23_)
+	,atom_chars('False Positive Rate: ',TPR_cs)
+	,length(TPR_cs, TPR_cs_L_)
+        ,findall(L_
+                ,(member(L,[L1_,L21_,L22_,L23_,TPR_cs_L_])
+                 % One for the mon... for the "%" and one for the space
+                 % added by debug/3 at the start of a line.
+                 ,L_ is L + 2
+                 )
+                ,[L1,L21,L22,L23,TPR_cs_L])
+	% Printing header line
+	,debug(Sub,'',[])
+	,debug(Sub,'~*+~w ~*+~w ~*+~w~*+'
+	       ,[L21,'Predicted +',L22,'Predicted -',L23,'Total',L1])
+	,debug(Sub,'~w ~*+~w ~*+~w ~*+~w'
+	       ,['Actual +',L21,PP,L22,PN,L23,TP])
+	,debug(Sub,'~w ~*+~w ~*+~w ~*+~w'
+	       ,['Actual -',L21,NP,L22,NN,L23,TN])
+	,debug(Sub,'----------------------------------------',[])
+	,debug(Sub,'~w ~*+~w ~*+~w ~*+~w'
+	       ,['Total',L21,PPNP,L22,PNNN,L23,T])
+	% Longest left column
+	,debug(Sub,'',[])
+	,debug(Sub,'Accuracy: ~*+~*f', [TPR_cs_L,D,ACC])
+	,debug(Sub,'Error: ~*+~*f', [TPR_cs_L,D,ERR])
+        ,debug(Sub,'True Positive Rate: ~*+~*f', [TPR_cs_L,D,TPR])
+	,debug(Sub,'True Negative Rate: ~*+~*f', [TPR_cs_L,D,TNR])
+	,debug(Sub,'False Positive Rate: ~*+~*f', [TPR_cs_L,D,FPR])
+	,debug(Sub,'False Negative Rate: ~*+~*f', [TPR_cs_L,D,FNR])
+	,debug(Sub,'Precision: ~*+~*f', [TPR_cs_L,D,PRE])
+	,debug(Sub,'Recall (TPR): ~*+~*f', [TPR_cs_L,D,REC])
+	,debug(Sub,'F-Score: ~*+~*f', [TPR_cs_L,D,FSC])
+        ,debug(Sub,'',[]).
+
+
+
+%!      accuracy(+Module,+Language,+Pos,+Neg,-Accuracy) is det.
 %
 %       Calculate the Accuracy of labelling a set of atoms.
 %
-accuracy(M,S,[],Neg,Acc):-
-        !
-        ,tnr(M,S,Neg,Acc).
-accuracy(M,S,Pos,[],Acc):-
-        !
-        ,tpr(M,S,Pos,Acc).
+%       Module is the name of the module where Language is defined as a
+%       DCG.
+%
+%       Language is the symbol, but not the arity, of a language used to
+%       test the given positive and negative examples in Pos, Neg.
+%
+%       Pos, Neg, are lists of positive and negative examples used to
+%       calculate Accuracy.
+%
+%       Accuracy is a float, the Accuracy of Pos and Neg with respect to
+%       Language.
+%
 accuracy(PM,S,Pos,Neg,Acc):-
         true_positives(PM,S,Pos,TP)
         ,true_negatives(PM,S,Neg,TN)
-        ,maplist(length,[Pos,Neg],[N,M])
-        ,Acc_ is (TP + TN) / (N + M)
+        ,maplist(total,[Pos,TP],[Neg,TN],[L,T])
+        ,safe_division(T,L,Acc_)
         ,atomize(Acc_,Acc).
+
+
+%!      error(+Module,+Language,+Pos,+Neg,-Error) is det.
+%
+%       Calculate the Error of labelling a set of atoms.
+%
+error(M,S,Pos,Neg,Err):-
+        accuracy(M,S,Pos,Neg,Acc)
+        ,Err is 1 - Acc.
 
 
 %!      tpr(+Module,+Target,+Pos,-TPR) is det.
 %
 %       Calculate the True Positive Rate of labelling a set of atoms.
 %
-tpr(_M,_S,[],0):-
-        !.
 tpr(M,S,Pos,TPR):-
         true_positives(M,S,Pos,TP)
-        ,length(Pos,N)
-        ,TPR_ is TP / N
+        ,ratio(TP,Pos,TPR_)
         ,atomize(TPR_,TPR).
 
 
@@ -1305,45 +1605,204 @@ tpr(M,S,Pos,TPR):-
 %
 %       Calculate the True Negative Rate of labelling a set of atoms.
 %
-tnr(_M,_S,[],0):-
-        !.
 tnr(M,S,Neg,TNR):-
         true_negatives(M,S,Neg,TN)
-        ,length(Neg,N)
-        ,TNR_ is TN / N
+        ,ratio(TN,Neg,TNR_)
         ,atomize(TNR_,TNR).
+
+
+%!      fpr(+Module,+Language,+Pos,+Neg,-FPR) is det.
+%
+%       Calculate the False Positive Rate of labelling a set of atoms.
+%
+fpr(_,M,S,_Pos,Neg,FPR):-
+        !
+        ,tnr(M,S,Neg,TNR)
+        ,FPR is 1 - TNR.
+
+
+%!      fnr(+Module,+Language,+Pos,+Neg,-FNR) is det.
+%
+%       Calculate the False Negative Rate of labelling a set of atoms.
+%
+fnr(_,M,S,Pos,_Neg,FNR):-
+        !
+        ,tpr(M,S,Pos,TPR)
+        ,FNR is 1 - TPR.
+
+
+%!      pre(+Module,+Lang,+Pos,+Neg,-Precision) is det.
+%
+%       Calculate the Precision of labelling a set of atoms.
+%
+pre(E,M,S,Pos,Neg,PRE):-
+        true_positives(M,S,Pos,TP)
+        ,false_positives(E,M,S,Pos,Neg,FP)
+        ,append(TP,FP,Ps)
+        ,ratio(TP,Ps,PRE_)
+        ,atomize(PRE_,PRE).
+
+
+%!      rec(+Module,+Language,+Pos,-Recall) is det.
+%
+%       Calculate the Recall of labelling a set of atoms.
+%
+rec(M,S,Pos,REC):-
+        tpr(M,S,Pos,REC).
 
 
 %!      true_positives(+Module,+Target,+Pos,-True) is det.
 %
 %       Collect all True positives in a set of atoms labelled positive.
 %
-true_positives(_M,_S,[],0):-
-        !.
 true_positives(M,S,Pos,TP):-
-        aggregate_all(count
-                     ,(member(Ep,Pos)
-                      ,Ep =.. [_S|As]
-                      ,Ep_ =.. [S|As]
-                      ,once( call(M:Ep_) )
-                      )
-                     ,TP).
+        test_examples(succeed,M,S,Pos,TP).
 
 
 %!      true_negatives(+Module,+Target,+Neg,-True) is det.
 %
-%       Collect all True positives in a set of atoms labelled negative.
+%       Collect all True negatives in a set of atoms labelled negative.
 %
-true_negatives(_M,_,[],0):-
-        !.
 true_negatives(M,S,Neg,TN):-
-        aggregate_all(count
-                     ,(member(En,Neg)
-                      ,En =.. [_S|As]
-                      ,En_ =.. [S|As]
-                      ,\+ once( M:call(En_) )
-                      )
-                     ,TN).
+        test_examples(fail,M,S,Neg,TN).
+
+
+%!      false_positives(+Eval,+Module,+Language,+Pos,+Neg,-False) is
+%!      det.
+%
+%       Collect all False positives in a a labelling or by a hypothesis.
+%
+%       Eval is one of: [labelling, hypothesis], denoting what is
+%       evaluating, and changing the meaning of Pos and Neg.
+%
+%       If Eval is "labelling", then Pos and Neg are atoms labelled true
+%       and false, respectively, by Poker. Accordingly, Pos and Neg must
+%       be evaluated according to the true definition of the target
+%       Language.
+%
+%       If Eval is "hypothesis", then Pos and Neg are ground truth atoms
+%       that we know are true and false, respectively. Then Pos and Neg
+%       must be evaluated according to a learned hypothesis of the
+%       definition of Language.
+%
+%       Eval is used to select clause sof false_positives/6 according to
+%       how Pos and Neg are interpreted.
+%
+%       False is the set of atoms that are false positives according to
+%       the interpretation of Pos and Neg.
+%
+false_positives(labelling,M,S,Pos,_Neg,FP):-
+	!
+	,test_examples(fail,M,S,Pos,FP).
+false_positives(hypothesis,M,S,_Pos,Neg,FP):-
+	test_examples(succeed,M,S,Neg,FP).
+
+
+%!      false_negatives(+Eval,+Module,+Language,+Pos,+Neg,-False) is
+%!      det.
+%
+%       Collect all False Negatives in a labelling or by a hypothesis.
+%
+%       Eval is one of: [labelling, hypothesis], denoting what is
+%       evaluating, and changing the meaning of Pos and Neg.
+%
+%       If Eval is "labelling", then Pos and Neg are atoms labelled true
+%       and false, respectively, by Poker. Accordingly, Pos and Neg must
+%       be evaluated according to the true definition of the target
+%       Language.
+%
+%       If Eval is "hypothesis", then Pos and Neg are ground truth atoms
+%       that we know are true and false, respectively. Then Pos and Neg
+%       must be evaluated according to a learned hypothesis of the
+%       definition of Language.
+%
+%       Eval is used to select clause sof false_positives/6 according to
+%       how Pos and Neg are interpreted.
+%
+%       False is the set of atoms that are false negatives according to
+%       the interpretation of Pos and Neg.
+%
+false_negatives(labelling,M,S,_Pos,Neg,FN):-
+	!
+	,test_examples(succeed,M,S,Neg,FN).
+false_negatives(hypothesis,M,S,Pos,_Neg,FN):-
+	test_examples(fail,M,S,Pos,FN).
+
+
+%!      test_examples(+How,+Module,+Language,+Exampls,-Passed) is det.
+%
+%       Test a set of Examples and report those that Passed the test.
+%
+%       How is one of: [succeed,fail], denoting whether an atom in
+%       Examples should be accepted, or rejected, by agrammar denoted by
+%       the given Language.
+%
+%       Module is the module where Language is defined as a DCG.
+%
+%       Language is the symbol, but not arity, of a language used to
+%       test the given Examples.
+%
+%       Examples is a list of atoms to be tested for membership in (in
+%       the sense of acceptance by a grammar of) Language.
+%
+%       Passed is the list of atoms accepted, or rejected, by Language,
+%       depending on the value of How.
+%
+%       @tbd Consider replacing succeed --> accepts, fail -- rejects
+%       for a bit more nuance.
+%
+test_examples(succeed,M,S,Es,Ts):-
+        !
+        ,findall(E_
+               ,(member(E,Es)
+                ,E =.. [_S|As]
+                ,E_ =.. [S|As]
+                ,once( M:call(E_) )
+                )
+               ,Ts).
+test_examples(fail,M,S,Es,Ts):-
+        findall(E_
+               ,(member(E,Es)
+                ,E =.. [_S|As]
+                ,E_ =.. [S|As]
+                ,\+ once( M:call(E_) )
+                )
+               ,Ts).
+
+
+%!	total(+Xs,+Ys,-Sum) is det.
+%
+%	Sum of the lengths of two lists.
+%
+total(Xs,Ys,S):-
+	length(Xs,N)
+	,length(Ys,M)
+	,S is N + M.
+
+
+%!	ratio(+Xs,+Ys,-Ratio) is det.
+%
+%	Ratio of the lengths of two lists.
+%
+ratio(Xs,Ys,R):-
+	length(Xs,N)
+	,length(Ys,M)
+	,safe_division(N,M,R).
+
+
+%!	safe_division(+A,+B,-C) is det.
+%
+%	Avoid dividing by zero.
+%
+%	If the denominator of a division is 0, return A, else divide
+%	A/B and return the result in C.
+%
+safe_division(A,0,A):-
+	!.
+safe_division(A,0.0,A):-
+	!.
+safe_division(A,B,C):-
+	C is A / B.
 
 
 %!      atomize(+Number,-Formatted) is det.
