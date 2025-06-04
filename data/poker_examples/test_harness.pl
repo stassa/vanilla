@@ -13,6 +13,9 @@
                       ,test_program/6
                       ,print_confusion_matrix/5
                       ,debug_confusion_matrix/6
+                      ,confusion_matrix_totals/4
+                      ,format_confusion_matrix/3
+                      ,debug_confusion_matrix/4
                       ]).
 
 :-use_module(lib(poker/poker)).
@@ -21,6 +24,7 @@
 :-use_module(lib(mathemancy/mathemancy)).
 :-use_module(lib(poker/sampling/sampling)).
 :-use_module(data(poker_examples/language_generation)).
+:-use_module(library(clpfd),[transpose/2]).
 
 /** <module> A test harness for Poker.
 
@@ -760,7 +764,8 @@ experiments(T,N,Sl,Su,TPos,TNeg,TestGen,[Ms_h,SE_h,Ms_l,SEs_l,Ms_p,SEs_p,Ms_g,SE
         findall([H,Res_l,Res_p,Res_g]
                ,(between(1,N,I)
                 ,debug(experiments,'Experiment ~w of ~w',[I,N])
-                ,experiment(T,Sl,Su,TPos,TNeg,TestGen,[_Ps,H,_Pos,_Neg,Res_l,Res_p,Res_g])
+                ,experiment(T,Sl,Su,TPos,TNeg,TestGen
+                           ,[_Ps,H,_Pos,_Neg,_Counts_l-Res_l,_Counts_p-Res_p,Res_g])
                 )
                ,Rs)
         ,results_parts(Rs,Rs_h,Rs_l,Rs_p,Rs_g)
@@ -772,10 +777,10 @@ experiments(T,N,Sl,Su,TPos,TNeg,TestGen,[Ms_h,SE_h,Ms_l,SEs_l,Ms_p,SEs_p,Ms_g,SE
         ,maplist(standard_deviation,[Rs_h,Rs_g],[Ms_h_,Ms_g_],SDs)
         ,maplist(standard_error,[Rs_h,Rs_g],SDs,[SE_h_,SE_g_])
         ,maplist(atomize,[Ms_h_,Ms_g_,SE_h_,SE_g_],[Ms_h,Ms_g,SE_h,SE_g])
-        ,debug(experiments,'Labelling means: ~w, standard errors: ~w',[Ms_l,SEs_l])
-        ,debug(experiments,'Program means: ~w, standard errors: ~w',[Ms_p,SEs_p])
-        ,debug(experiments,'Program length mean: ~w, standard error: ~w',[Ms_h,SE_h])
-        ,debug(experiments,'Generation mean: ~w, standard error: ~w',[Ms_g,SE_g]).
+        ,debug(experiments,'Labelling means: ~w~n% Standard Errors: ~w',[Ms_l,SEs_l])
+        ,debug(experiments,'Program means:   ~w~n% Standard Errors: ~w',[Ms_p,SEs_p])
+        ,debug(experiments,'Program length mean: ~w, Standard Error: ~w',[Ms_h,SE_h])
+        ,debug(experiments,'Generation mean:     ~w, Standard Error: ~w',[Ms_g,SE_g]).
 
 
 %!      results_parts(+Res,-Length,-Labelling,-Proggram,-Generated) is
@@ -810,14 +815,12 @@ results_parts([[H,L,P,G]|Rs],[H|AccHs],Hs,[L|AccL],Rs_l,[P|AccP],Rs_p,[G|AccG],R
 %       respect to Means.
 %
 result_SEs(Rs,Ms,SEs):-
-        findall(Acc-TPR-TNR
-               ,member([Acc,TPR,TNR],Rs)
-               ,Vs)
-        ,pairs_keys_values(Vs,Accs_Tprs,TNRs)
-        ,pairs_keys_values(Accs_Tprs,Accs,TPRs)
-        ,maplist(standard_deviation,[Accs,TPRs,TNRs],Ms,SDs)
-        ,maplist(standard_error,[Accs,TPRs,TNRs],SDs,SEs_)
+        % Ouch.
+        transpose(Rs,Rs_T)
+        ,maplist(standard_deviation,Rs_T,Ms,SDs)
+        ,maplist(standard_error,Rs_T,SDs,SEs_)
         ,maplist(atomize,SEs_,SEs).
+
 
 
 %!      result_means(+Results,-Means) is det.
@@ -832,12 +835,16 @@ result_SEs(Rs,Ms,SEs):-
 %       Means is a list of numbers: [M_Acc,M_TPR,M_TNR], the means of
 %       Acc, TPR, and TNR, respectively, in the list Results.
 %
-result_means(Rs,Ms):-
-        result_means(Rs,[0,0,0],Ss)
-        ,length(Rs,L)
+result_means(Res,Ms):-
+        %writeln(Res)
+        % 9 metrics in Res.
+        findall(0
+               ,between(1,9,_)
+               ,Zs)
+        ,length(Res,L)
+        ,result_means(Res,Zs,Ss)
         ,maplist(mean(L),Ss,Ms_)
         ,maplist(atomize,Ms_,Ms).
-
 
 %!      result_means(+Results,+Acc,-Means) is det.
 %
@@ -853,9 +860,15 @@ result_means(Rs,Ms):-
 %
 result_means([],Ms,Ms):-
         !.
-result_means([[Acc1,TPR1,TNR1]|Rs],[Acc0,TPR0,TNR0],Ms):-
-        maplist(sum,[Acc0,TPR0,TNR0],[Acc1,TPR1,TNR1],[Acc,TPR,TNR])
-        ,result_means(Rs,[Acc,TPR,TNR],Ms).
+% Is there no better way to pass around an ordered list like this one?
+result_means([[Acc1,Err1,TPR1,TNR1,FPR1,FNR1,PRE1,REC1,FSC1]|Rs]
+            ,[Acc0,Err0,TPR0,TNR0,FPR0,FNR0,PRE0,REC0,FSC0]
+            ,Ms):-
+        maplist(sum
+               ,[Acc0,Err0,TPR0,TNR0,FPR0,FNR0,PRE0,REC0,FSC0]
+               ,[Acc1,Err1,TPR1,TNR1,FPR1,FNR1,PRE1,REC1,FSC1]
+               ,[Acc,Err,TPR,TNR,FPR,FNR,PRE,REC,FSC])
+        ,result_means(Rs,[Acc,Err,TPR,TNR,FPR,FNR,PRE,REC,FSC],Ms).
 
 
 %!      mean(+Length,+Sum,-Mean) is det.
@@ -1092,14 +1105,13 @@ test_target(T,F):-
 %       negative examples in Pos and Neg, compared to the true labelling
 %       by Language.
 %
-test_labelling(S,Pos,Neg,[Acc,TPR,TNR]):-
+test_labelling(S,Pos,Neg,Cs-Res):-
         debug(test_labelling,'Testing labelling for target: ~w',[S])
-        ,accuracy(language_generation,S,Pos,Neg,Acc)
-        ,tpr(language_generation,S,Pos,TPR)
-        ,tnr(language_generation,S,Neg,TNR)
+        ,Program_module = language_generation
+        ,evaluation(labelling,Program_module,S,Pos,Neg,Cs,Res)
+        ,Res = [Acc,_Err,TPR,TNR,_FPR,_FNR,_PRE,_REC,_FSC]
         ,debug(test_labelling,'Labelling: Measured Acc: ~w TPR: ~w TNR: ~w',[Acc,TPR,TNR])
-        ,debug_confusion_matrix(test_labelling_full,labelling,language_generation
-                               ,S,Pos,Neg).
+        ,debug_confusion_matrix(test_labelling_full,labelling,Program_module,S,Pos,Neg).
 
 
 %!      test_program(+Language,+Symbol,+Program,+TestPos,+TestNeg,-Results)
@@ -1127,15 +1139,17 @@ test_labelling(S,Pos,Neg,[Acc,TPR,TNR]):-
 %       Rate and True Negative Rate, respectively, of the Program's
 %       labelling of examples generated by Language.
 %
-test_program(_,_,[],_,_,[0.5,0.0,1.0]):-
+test_program(_,_,[],Test_Pos,Test_Neg,[0,FN,0,TN]-[0.5,0.5,0.0,1.0,0.0,1.0,0.0,0.0,0.0]):-
+                                  % TP,FN,FP,TN Acc Err TPR TNR FPR FNR PRE REC FSC
 % The empty hypothesis rejects all.
-        !.
-test_program(T/_,S,Cs,TPs,TNs,[Acc,TPR,TNR]):-
+        !
+        ,maplist(length,[Test_Pos,Test_Neg],[FN,TN]).
+test_program(T/_,S,Cs,TPs,TNs,Res):-
 % Allow the target to be a predicate indicator.
 % TODO: wait, why?
-        test_program(T,S,Cs,TPs,TNs,[Acc,TPR,TNR])
+        test_program(T,S,Cs,TPs,TNs,Res)
         ,!.
-test_program(T,S/A,Cs,Test_Pos,Test_Neg,[Acc,TPR,TNR]):-
+test_program(T,S/A,Cs,Test_Pos,Test_Neg,Counts-Res):-
         debug(test_program,'Testing learned program for target: ~w',[T])
         ,debug_clauses_length(test_program_full,'Testing ~w-clause learned program:',Cs)
         ,Program_module = experiment_file
@@ -1146,14 +1160,13 @@ test_program(T,S/A,Cs,Test_Pos,Test_Neg,[Acc,TPR,TNR]):-
              ,generate_examples(pos,Test_Pos,S/A,Pos)
              ,debug(test_program_full,'Generating negative testing examples.',[])
              ,generate_examples(neg,Test_Neg,S/A,Neg)
-             ,accuracy(Program_module,S,Pos,Neg,Acc)
-             ,tpr(Program_module,S,Pos,TPR)
-             ,tnr(Program_module,S,Neg,TNR)
+             ,evaluation(hypothesis,Program_module,S,Pos,Neg,Counts,Res)
              )
         ,C = (erase_program_clauses(Rs)
              ,poker:table_untable_predicates(table,Program_module,Cs)
              )
         ,setup_call_cleanup(Set,G,C)
+        ,Res = [Acc,_Err,TPR,TNR,_FPR,_FNR,_PRE,_REC,_FSC]
         ,debug(test_program,'Program: Measured Acc: ~w TPR: ~w TNR: ~w',[Acc,TPR,TNR])
         ,debug_confusion_matrix(test_program_full,hypothesis,Program_module,S,Pos,Neg).
 
@@ -1300,13 +1313,8 @@ generate_example_test(M,S/3,N,E):-
 %       the absence of an Evaluation option for generative accuracy.
 %
 print_confusion_matrix(E,M,S,Pos,Neg):-
-        maplist(length,[Pos,Neg],[P,N])
-        ,evaluation(E,M,S,Pos,Neg,[TP,TN,FP,FN],[ACC,ERR,_TPR,_TNR,FPR,FNR,PRE,REC,FSC])
-        ,TPFP is TP + FP
-        ,FNTN is FN + TN
-        ,TPFN is TP + FN
-        ,FPTN is FP + TN
-        ,T is P + N
+        evaluation(E,M,S,Pos,Neg,[TP,FN,FP,TN],[ACC,ERR,_TPR,_TNR,FPR,FNR,PRE,REC,FSC])
+        ,confusion_matrix_totals(Pos,Neg,[TP,FN,FP,TN],[TPFN,FPTN,TPFP,FNTN,T])
         ,format_confusion_matrix([TP,FN,FP,TN]
                                 ,[TPFN,FPTN,TPFP,FNTN,T]
                                 ,[ACC,ERR,FPR,FNR,PRE,REC,FSC]
@@ -1326,13 +1334,8 @@ print_confusion_matrix(E,M,S,Pos,Neg):-
 %       logging predicates such as debug/3.
 %
 debug_confusion_matrix(Sub,E,M,S,Pos,Neg):-
-        maplist(length,[Pos,Neg],[P,N])
-        ,evaluation(E,M,S,Pos,Neg,[TP,TN,FP,FN],[ACC,ERR,TPR,TNR,FPR,FNR,PRE,REC,FSC])
-        ,TPFP is TP + FP
-        ,FNTN is FN + TN
-        ,TPFN is TP + FN
-        ,FPTN is FP + TN
-        ,T is P + N
+        evaluation(E,M,S,Pos,Neg,[TP,FN,FP,TN],[ACC,ERR,TPR,TNR,FPR,FNR,PRE,REC,FSC])
+        ,confusion_matrix_totals(Pos,Neg,[TP,FN,FP,TN],[TPFN,FPTN,TPFP,FNTN,T])
         ,debug_confusion_matrix(Sub
                                ,[TP,FN,FP,TN]
                                ,[TPFN,FPTN,TPFP,FNTN,T]
@@ -1378,7 +1381,7 @@ debug_confusion_matrix(Sub,E,M,S,Pos,Neg):-
 %       Counts and Results are passed to format_confusion_matrix/3 and
 %       debug_confusion_matrix/4 for pretty-printing.
 %
-evaluation(E,M,S,Pos,Neg,[TP,TN,FP,FN],[Acc,Err,TPR,TNR,FPR,FNR,PRE,REC,FSC]):-
+evaluation(E,M,S,Pos,Neg,[TP,FN,FP,TN],[Acc,Err,TPR,TNR,FPR,FNR,PRE,REC,FSC]):-
         true_positives(M,S,Pos,TP_)
         ,debug_clauses(evaluation_full,'True Positives:',TP_)
         ,true_negatives(M,S,Neg,TN_)
@@ -1409,6 +1412,40 @@ evaluation(E,M,S,Pos,Neg,[TP,TN,FP,FN],[Acc,Err,TPR,TNR,FPR,FNR,PRE,REC,FSC]):-
         ,debug(evaluation,'PRE: ~w',[PRE])
         ,debug(evaluation,'REC: ~w',[REC])
         ,debug(evaluation,'FSC: ~w',[FSC]).
+
+
+
+%!      confusion_matrix_totals(+Pos,+Neg,+Counts,-Totals) is det.
+%
+%       Calculate Totals for a confusion matrix.
+%
+%       Pos, Neg are sets of positive examples.
+%
+%       Counts is a list [TP,FN,FP,TN] with:
+%       TP: count of true positives.
+%       FN: count of false negatives.
+%       FP: count of false positives.
+%       TN: duke of true negatives.
+%
+%       Totals is a list [TPFN,FPTN,TPFP,FNTN,T] with:
+%       TPFN: TP + FN
+%       FPTN: FP + TN
+%       TPFP: TP + FP
+%       FNTN: FN + TN
+%       T: |Pos| + |Neg|
+%
+%       Totals can be passed to format_confusion_matrix/3 and
+%       debug_confusion_matrix/4 along with Counts and evaluation
+%       results to pretty-print a confusion matrix.
+%
+confusion_matrix_totals(Pos,Neg,[TP,FN,FP,TN],[TPFN,FPTN,TPFP,FNTN,T]):-
+        maplist(length,[Pos,Neg],[P,N])
+        ,TPFP is TP + FP
+        ,FNTN is FN + TN
+        ,TPFN is TP + FN
+        ,FPTN is FP + TN
+        ,T is P + N.
+
 
 
 %!	format_confusion_matrix(+Counts,+Totals,+Metrics) is det.
@@ -1484,16 +1521,16 @@ format_confusion_matrix([PP,PN,NP,NN]
 	% Longest left column
 	,atom_chars('False Positive Rate: ',TPR_cs)
 	,length(TPR_cs, TPR_cs_L)
-	,nl
 	,format('Accuracy: ~*+~*f~n', [TPR_cs_L,D,ACC])
 	,format('Error: ~*+~*f~n', [TPR_cs_L,D,ERR])
-        ,format('True Positive Rate: ~*+~*f', [TPR_cs_L,D,TPR])
-	,format('True Negative Rate: ~*+~*f', [TPR_cs_L,D,TNR])
+        ,format('True Positive Rate: ~*+~*f~n', [TPR_cs_L,D,TPR])
+	,format('True Negative Rate: ~*+~*f~n', [TPR_cs_L,D,TNR])
 	,format('False Positive Rate: ~*+~*f~n', [TPR_cs_L,D,FPR])
 	,format('False Negative Rate: ~*+~*f~n', [TPR_cs_L,D,FNR])
 	,format('Precision: ~*+~*f~n', [TPR_cs_L,D,PRE])
 	,format('Recall (TPR): ~*+~*f~n', [TPR_cs_L,D,REC])
 	,format('F-Score: ~*+~*f~n', [TPR_cs_L,D,FSC]).
+
 
 
 %!      debug_confusion_matrix(+Subject,+Counts,+Totals,+Metrics) is

@@ -25,6 +25,15 @@
 
 */
 
+%!      decimal_points(?Number) is semidet.
+%
+%       Number of decimal points in format/2 output.
+%
+%       @tbd Move to configuration.
+%
+decimal_points(2).
+
+
 %!      setup_experiment(+Lang,+Tgt,+Lab,+Unlb,+Tpos,+TNeg,+Print)
 %!      is det.
 %!      setup_experiment(+Lang,+Tgt,+Lab,+Unlb,+Tpos,+TNeg,+TGen,+Print)
@@ -80,14 +89,21 @@ setup_experiment(Lang,T,Sl,Su,TPos,TNeg,TGen,P):-
 %
 %       Pretty-print experiments results.
 %
-print_results(Ps,N,Pos,Neg,[LAcc,LTPR,LTNR],[PAcc,PTPR,PTNR],GenAcc,print_examples(P)):-
+print_results(Ps,N,Pos,Neg,CsL-ResL,CsP-ResP,GenAcc,print_examples(P)):-
         auxiliaries:print_clauses('Learned Hypothesis:',Ps)
 	,maplist(length,[Pos,Neg],[Pos_n,Neg_n])
         ,format('Program Length: ~w~n',[N])
         ,format('Labelled Positive: ~w~n',[Pos_n])
         ,format('Labelled Negative: ~w~n',[Neg_n])
-        ,format('Labelling Acc:  ~w TPR: ~w TNR: ~w~n',[LAcc,LTPR,LTNR])
-        ,format('Hypothesis Acc: ~w TPR: ~w TNR: ~w~n',[PAcc,PTPR,PTNR])
+        % Shorter version. May want to configure selecting this or confmat.
+        %,format('Labelling Acc:  ~w TPR: ~w TNR: ~w~n',[LAcc,LTPR,LTNR])
+        ,format('~nLabelling Results:~n',[])
+        ,confusion_matrix_totals(Pos,Neg,CsL,TsL)
+        ,format_confusion_matrix(CsL,TsL,ResL)
+        %,format('Hypothesis Acc: ~w TPR: ~w TNR: ~w~n',[PAcc,PTPR,PTNR])
+        ,format('~nHypothesis Results:~n',[])
+        ,confusion_matrix_totals(Pos,Neg,CsP,TsP)
+        ,format_confusion_matrix(CsP,TsP,ResP)
         ,format('Generative Acc: ~w~n',[GenAcc])
         ,(   P == true
          ->   maplist(auxiliaries:print_clauses,['Positives:','Negatives:'],[Pos,Neg])
@@ -142,11 +158,12 @@ setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg):-
         setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg,nil).
 
 setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg,TGen):-
-        experiment_file:set_configs(Lang)
+        decimal_points(D)
+        ,experiment_file:set_configs(Lang)
         ,experiment_file:cleanup_safe_example
         ,experiment_file:setup_safe_example(Lang)
         ,test_harness:experiments(T,N,Sl,Su,TPos,TNeg,TGen,Results)
-        ,print_experiments_results_(Results).
+        ,print_experiments_results_(D,Results).
 
 
 %!      print_experiemnts_results_(+Results) is det.
@@ -156,25 +173,15 @@ setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg,TGen):-
 %       Like print_results/6 but prints out aggregate evaluation results
 %       returned by experiments/7.
 %
-print_experiments_results_([HM
-                           ,HSE
-                           ,[LAccMs,LTPRMs,LTNRMs]
-                           ,[LAccSEs,LTPRSEs,LTNRSEs]
-                           ,[PAccMs,PTPRMs,PTNRMs]
-                           ,[PAccSEs,PTPRSEs,PTNRSEs]
-                           ,GenM
-                           ,GenSE
-                           ]):-
-         format('Hypothesis mean length:     ~w~n',[HM])
-        ,format('Length Standard Error:      ~w~n',[HSE])
-        ,format('Labelling means:            ~w TPR: ~w TNR: ~w~n',[LAccMs,LTPRMs,LTNRMs])
-        ,format('Labelling Standard Errors:  ~w TPR: ~w TNR: ~w~n'
-               ,[LAccSEs,LTPRSEs,LTNRSEs])
-        ,format('Hypothesis Means:           ~w TPR: ~w TNR: ~w~n',[PAccMs,PTPRMs,PTNRMs])
-        ,format('Hypothesis Standard Errors: ~w TPR: ~w TNR: ~w~n'
-               ,[PAccSEs,PTPRSEs,PTNRSEs])
-        ,format('Generation Mean:            ~w~n',[GenM])
-        ,format('Generation Standard Error:  ~w~n',[GenSE]).
+print_experiments_results_(D,[HM,HSE,MsL,SEsL,MsP,SEsP,GenM,GenSE]):-
+         format('Labelling Results:          ~n',[])
+        ,format_results(D,MsL,SEsL)
+        ,format('Hypothesis Results:          ~n',[])
+        ,format_results(D,MsP,SEsP)
+        ,format('Hypothesis mean length:     ~*f~n',[D,HM])
+        ,format('Length Standard Error:      ~*f~n',[D,HSE])
+        ,format('Generation Mean:            ~*f~n',[D,GenM])
+        ,format('Generation Standard Error:  ~*f~n',[D,GenSE]).
 % Vestigial version without generator evaluation for filtering
 % experiments which currently don't evaluate generation.
 print_experiments_results([[LAccMs,LTPRMs,LTNRMs]
@@ -189,6 +196,50 @@ print_experiments_results([[LAccMs,LTPRMs,LTNRMs]
         ,format('Hypothesis Standard Errors: ~w TPR: ~w TNR: ~w~n'
                ,[PAccSEs,PTPRSEs,PTNRSEs]).
 
+
+%!      format_results(+Digits,+Means,+SEs) is det.
+%
+%       Pretty-print results in a nice little table.
+%
+%       Digits is an integer, the number of decimal digits to print out
+%       for each result.
+%
+%       Means, SEs are lists of results of the form:
+%       [ACC,ERR,TPR,TNR,FPR,FNR,PRE,REC,FSC] with:
+%       ACC: Accuracy
+%       ERR: Error
+%       TPR: True Positive Rate
+%       TNR: True Negative Rate
+%       FPR: False Positive Rate
+%       FNR: False Negatie Rate
+%       PRE: Precision
+%       REC: Recall (TPR)
+%       FSC: F1 Score
+%
+%       Means is the list of means, and SES of standard errors, of each
+%       result.
+%
+format_results(D,
+               [ACC_M,ERR_M,TPR_M,TNR_M,FPR_M,FNR_M,PRE_M,REC_M,FSC_M]
+              ,[ACC_SE,ERR_SE,TPR_SE,TNR_SE,FPR_SE,FNR_SE,PRE_SE,REC_SE,FSC_SE]
+              ):-
+        % +2 for integer part and floating point
+        % Another + 1 for spacing.
+        D_ is D + 3
+        ,format(atom(A)
+                % 7 chars is the length of "Means: " in the first line of results.
+               ,'~t~7+ACC~t~*+ERR~t~*+TPR~t~*+TNR~t~*+FPR~t~*+FNR~t~*+PRE~t~*+REC~t~*+FSC~t~*+'
+               ,[D_,D_,D_,D_,D_,D_,D_,D_,D_])
+        ,atom_length(A,L)
+        ,format('~`-t~*|~n',[L])
+        ,format('~w~n',A)
+        ,format('~`-t~*|~n',[L])
+        ,format('Means: ~*f~t ~*f~t ~*f~t ~*f~t ~*f~t ~*f~t ~*f~t ~*f~t ~*f~t~n'
+               ,[D,ACC_M,D,ERR_M,D,TPR_M,D,TNR_M,D,FPR_M,D,FNR_M,D,PRE_M,D,REC_M,D,FSC_M])
+        ,format('SEs:   ~*f~t ~*f~t ~*f~t ~*f~t ~*f~t ~*f~t ~*f~t ~*f~t ~*f~t~n'
+               ,[D,ACC_SE,D,ERR_SE,D,TPR_SE,D,TNR_SE,D,FPR_SE,D,FNR_SE,D,PRE_SE
+                ,D,REC_SE,D,FSC_SE])
+        ,format('~`-t~*|~n',[L]).
 
 
 %!      setup_range_experiments(+Strm,+L,+Wt,+Tgt,+N,+Gs,+Lab,+Ul,+TPos,+TNeg,+TGen,+Plot)
@@ -294,21 +345,47 @@ write_csv_header(S):-
                                ,'Unlabelled'
                                ,'LengthM'
                                ,'LengthSE'
+                               ,'GenM'
+                               ,'GenSE'
+                                % Labelling means
                                ,'LabAccM'
+                               ,'LabErrM'
                                ,'LabTPRM'
                                ,'LabTNRM'
+                               ,'LabFPRM'
+                               ,'LabFNRM'
+                               ,'LabPREM'
+                               ,'LabRECM'
+                               ,'LabFSCM'
+                                % Labelling SEs
                                ,'LabAccSE'
                                ,'LabTPRSE'
                                ,'LabTNRSE'
+                               ,'LabFPRSE'
+                               ,'LabFNRSE'
+                               ,'LabPRESE'
+                               ,'LabRECSE'
+                               ,'LabFSCSE'
+                                % Program means
                                ,'ProgAccM'
                                ,'ProgTPRM'
                                ,'ProgTNRM'
+                               ,'ProgFPRM'
+                               ,'ProgFNRM'
+                               ,'ProgPREM'
+                               ,'ProgRECM'
+                               ,'ProgFSCM'
+                                % Program SEs
                                ,'ProgAccSE'
                                ,'ProgTPRSE'
                                ,'ProgTNRSE'
-                               ,'GenM'
-                               ,'GenSE'
-                               )],[]).
+                               ,'ProgFPRSE'
+                               ,'ProgFNRSE'
+                               ,'ProgPRESE'
+                               ,'ProgRECSE'
+                               ,'ProgFSCSE'
+                               )]
+                        ,[]).
 
 
 %!      write_csv_rows(+Stream,+Results) is det.
@@ -339,10 +416,12 @@ write_csv_rows(S,Res):-
 %
 print_range_result(Stm,I,G,L,U,[HM
                                ,HSE
-                               ,[LAccM,LTPRM,LTNRM]
-                               ,[LAccSE,LTPRSE,LTNRSE]
-                               ,[PAccM,PTPRM,PTNRM]
-                               ,[PAccSE,PTPRSE,PTNRSE]
+                               ,[LAccM,LErrM,LTPRM,LTNRM,LFPRM,LFNRM,LPREM,LRECM,LFSCM]
+                               ,[LAccSE,LErrSE,LTPRSE,LTNRSE,LFPRSE,LFNRSE,LPRESE
+                                ,LRECSE,LFSCRE]
+                               ,[PAccM,PErrM,PTPRM,PTNRM,PFPRM,PFNRM,PPREM,PRECM,PFSCM]
+                               ,[PAccSE,PErrSE,PTPRSE,PTNRSE,PFPRSE,PFNRSE,PPRESE
+                                ,PRECSE,PFSCRE]
                                ,GenM
                                ,GenSE
                                ]):-
@@ -350,12 +429,14 @@ print_range_result(Stm,I,G,L,U,[HM
                          ,[row(I,G,L,U
                               ,HM
                               ,HSE
-                              ,LAccM,LTPRM,LTNRM
-                              ,LAccSE,LTPRSE,LTNRSE
-                              ,PAccM,PTPRM,PTNRM
-                              ,PAccSE,PTPRSE,PTNRSE
                               ,GenM
                               ,GenSE
+                              ,LAccM,LErrM,LTPRM,LTNRM,LFPRM,LFNRM,LPREM,LRECM,LFSCM
+                              ,LAccSE,LErrSE,LTPRSE,LTNRSE,LFPRSE,LFNRSE,LPRESE
+                              ,LRECSE,LFSCRE
+                              ,PAccM,PErrM,PTPRM,PTNRM,PFPRM,PFNRM,PPREM,PRECM,PFSCM
+                              ,PAccSE,PErrSE,PTPRSE,PTNRSE,PFPRSE,PFNRSE,PPRESE
+                              ,PRECSE,PFSCRE
                               )
                           ]
                          ,[]).
