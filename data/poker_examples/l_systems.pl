@@ -13,6 +13,7 @@
                    ,sierpinski_arrowhead/3
                    ,fractal_plant/3
                    ,abop_plant_a/3
+                   ,not_abop_plant_a/3
                    ,abop_plant_b/3
                    ,abop_plant_c/3
                    ,abop_plant_d/3
@@ -502,6 +503,28 @@ abop_plant_a(['['|Ss]) --> lsb,  abop_plant_a(Ss).
 abop_plant_a([']'|Ss]) --> rsb,  abop_plant_a(Ss).
 abop_plant_a([f,'[',+,f,']',f,'[',-,f,']',f|Ss]) --> f,  abop_plant_a(Ss).
 abop_plant_a([]) --> [].
+
+
+%!      not_abop_plant_a(?String) is semidet.
+%
+%       Not a dragon curve. Honest.
+%
+not_abop_plant_a(Ss) -->
+        plant_a_string(Ss)
+        ,{  \+ phrase(abop_plant_a(Ss),_,[])
+            ,maplist(length,[Ss,Xs],[N,N])
+            ,phrase(plant_a_string(Xs),_)
+         }
+        ,Xs.
+
+plant_a_string([C]) --> plant_a_char(C).
+plant_a_string([C|Ss]) --> plant_a_char(C), plant_a_string(Ss).
+
+plant_a_char(+) --> plus.
+plant_a_char(-) --> minus.
+plant_a_char('[') --> lsb.
+plant_a_char(']') --> rsb.
+plant_a_char(f) --> f.
 
 
 
