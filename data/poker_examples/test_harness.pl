@@ -1141,11 +1141,11 @@ test_labelling(S,Pos,Neg,Cs-Res):-
 %       Counts and Results are calculated over the labelling of the
 %       ground truth examples in Pos and Neg by Program.
 %
-test_program(_,_,[],Test_Pos,Test_Neg,[0,FN,0,TN]-[0.5,0.5,0.0,1.0,0.0,1.0,0.0,0.0,0.0]):-
-                                  % TP,FN,FP,TN Acc Err TPR TNR FPR FNR PRE REC FSC
-% The empty hypothesis rejects all.
+test_program(_T,S,[],Test_Pos,Test_Neg,[0,FN,0,TN]-[0.5,0.5,0.0,1.0,0.0,1.0,0.0,0.0,0.0]):-
+% The empty hypothesis rejects all.  % TP,FN,FP,TN Acc Err TPR TNR FPR FNR PRE REC FSC
         !
-        ,maplist(length,[Test_Pos,Test_Neg],[FN,TN]).
+        ,count_initial(Test_Pos,S,FN)
+        ,count_initial(Test_Neg,S,TN).
 test_program(T/_,S,Cs,TPs,TNs,Res):-
 % Allow the target to be a predicate indicator.
 % TODO: wait, why?
@@ -1230,12 +1230,16 @@ test_generated(_,_S,_,[],0.0):-
 test_generated(_,_S,nil,_Cs,0.0):-
         !.
 test_generated(Lang,S/A,Spec,Cs,TPR):-
-        Spec =.. [Lang,N,J,K]
+        debug(test_generator,'Testing learned program as generator for target: ~w',[S/A])
+        ,debug_clauses_length(test_generator_full,'Testing ~w-clause learned program:',Cs)
+        ,Spec =.. [Lang,N,J,K]
         ,M = experiment_file
         ,Set = (assert_program(M,Cs,Rs)
                ,poker:table_untable_predicates(table,M,Cs)
                )
-        ,G = (generate_test(M,S/A,N,J,K,Es)
+        ,G = (debug(test_generator_full,'Generating examples of learned program.',[])
+             ,generate_test(M,S/A,N,J,K,Es)
+             ,debug(test_generator_full,'Testing generated examples against target.',[])
              ,accuracy(language_generation,Lang,Es,[],TPR)
              )
         ,C = (erase_program_clauses(Rs)
@@ -1259,6 +1263,7 @@ generate_test(M,S,N,J,K,Es):-
                 ,generate_example_test(M,S,I,E)
                 )
                ,Es_)
+        ,debug(generate_test_full,'Sampling ~w generated examples',[N])
         ,(   number(N)
          ->  k_list_samples(N,Es_,Es)
          ;   N == all
