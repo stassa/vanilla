@@ -4,11 +4,14 @@
                          ,koch_curve/0
                          ,sierpinski_triangle/0
                          ,abop_plant_a/0
+                         % Experiments drawing learned L-Systems
+                         % with a Python Turtle language interpreter
                          ,dragon_curve_draw/0
                          ,hilbert_curve_draw/0
                          ,koch_curve_draw/0
                          ,sierpinski_triangle_draw/0
                          ,abop_plant_a_draw/0
+                         % Multi-step experiments
                          ,algae/1
                          ,dragon_curve/1
                          ,hilbert_curve/1
@@ -16,6 +19,7 @@
                          ,sierpinski_triangle/1
                          ,abop_plant_a/1
                          ,abop_plant_a_generator/1
+                         % Experiments with zero generated examples
                          ,dragon_curve_no_generated/1
                          ,dragon_curve_no_generated_draw/0
                          ,hilbert_curve_no_generated/1
@@ -23,24 +27,32 @@
                          ,koch_curve_no_generated/1
                          ,koch_curve_no_generated_draw/0
                          ,sierpinski_triangle_no_generated/1
+                         % Experiments varying generated examples
                          ,dragon_curve_range/3
                          ,hilbert_curve_range/3
                          ,koch_curve_range/3
                          ,sierpinski_triangle_range/3
+                         ,abop_plant_a_range/3
+                         % Experiments varying unlabelled examples
                          ,dragon_to_hilbert_curve_range/3
                          ,hilbert_to_dragon_curve_range/3
                          ,koch_to_dragon_curve_range/3
                          ,koch_to_hilbert_curve_range/3
                          ,dragon_to_koch_curve_range/3
+                         % Experiments filtering unlabelled examples
                          ,hilbert_dragon_filtering/0
                          ,koch_dragon_filtering/0
                          ,hilbert_dragon_filtering/1
                          ,koch_dragon_filtering/1
+                         % Experiments testing generative accuracy
                          ,dragon_curve_generator/3
                          ,hilbert_curve_generator/3
                          ,koch_curve_generator/3
                          ,sierpinski_triangle_generator/3
+                         ,abop_plant_a_generator/3
+                         % Auxiliaries
                          ,set_configs/1
+                         % Training data.
                          ,cleanup_safe_example/0
                          ,setup_safe_example/1
                          ,background_knowledge/2
@@ -86,8 +98,10 @@
 :-debug(experiment_learned_full).
 :-debug(test_program).
 :-debug(test_labelling).
+:-debug(test_generator).
 :-debug(generate_examples).
 :-debug(generate_initial).
+:-debug(generate_test).
 :-debug(filter_by_language).
 
 
@@ -574,13 +588,15 @@ abop_plant_a(N):-
 abop_plant_a_generator(N):-
         Lang = abop_plant_a
         ,T = s/3
-        ,Sl = [abop_plant_a(20,0,6) % all is 5461
-	      ,abop_plant_a_with_vars(20,11,14) % 10
+        ,Sl = [abop_plant_a(21,0,6) % all is 5461
+	      ,abop_plant_a_with_vars(51,11,13) % 10
 	      ]
         ,Su = []
-        ,TGen = abop_plant_a(all,11,14)
         ,TPos = abop_plant_a(1000,6,10) % all is 1396736
         ,TNeg = not_abop_plant_a(1000,0,4) % Higher numbers need more stack.
+        %,TGen = abop_plant_a(all,11,14)
+        % Generator evaluation throws a hissy when tabled
+        ,TGen = abop_plant_a(0.000001,11,11,[tabling(false)])
         ,setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg,TGen).
 
 
@@ -908,6 +924,43 @@ sierpinski_triangle_range(N,S,P):-
          ;   Pl = false
          )
         ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
+
+%!      abop_plant_a_range(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying automatically generated examples.
+%
+%       Given are labelled examples of the plant L-System from Figure
+%       1.24 (a) in ABoP. No unlabelled examples are given.
+%
+abop_plant_a_range(N,S,P):-
+        Lang = abop_plant_a
+        ,T = s/3
+        % 7 increments of automatically generated examples.
+        ,Gs = 0:1500/250
+        % Six increments of labelled examples.
+        ,Sl = [abop_plant_a(1:26/5,0,6) % all is 5461
+	      ,abop_plant_a_with_vars(1:51/10,11,13) % all is 57
+	      ]
+        ,Su = []
+        ,TPos = [abop_plant_a(1000,7,10) % all is 1396736
+                ,abop_plant_a_with_vars(all,14,14) % 256
+                ]
+        ,TNeg = not_abop_plant_a(1000,0,4) % Higher numbers need more stack.
+        ,What = 'generated'
+        ,(   P == true
+         ->  Pl = plot('ABoP Plant 1.24 (a)',@(false))
+         ;   Pl = false
+         )
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
+
+                /*******************************
+                *     RANGE EXPERIMENTS 2      *
+                *******************************/
+
+% Experiments varying the number of generated and also given unlabelled
+% examples.
 
 
 %!      dragon_to_hilbert_curve_range(+N,+Stream,+Plot) is det.
@@ -1241,6 +1294,28 @@ koch_dragon_filtering(N):-
 % experiments in the Range Experiments section, varying the numbers of
 % generated or unlabelled examples.
 
+%!      dragon_curve_generator(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying tesing hypotheses as generators.
+%
+%       Given are labelled examples of the Dragon Curve L-System. No
+%       unlabelled examples are given.
+%
+%       Prints a csv of evaluation results of the hypotheses and
+%       labellings learned in each experiment set. The number of
+%       experimnet sets is determined by the range of automatically
+%       generated examples.
+%
+%       Each experiment in an experiment set is repeated N times.
+%
+%       Results are written to the given Stream. This can be
+%       "user_output" to print to terminal.
+%
+%       Plot is a boolean (true or false) that determines whether to
+%       plot experiments results from the given Stream or not. If Plot
+%       is "true" then Stream must be the path to a CSV file (not
+%       user_output) elser errors will be raised.
+%
 dragon_curve_generator(N,S,P):-
         Lang = dragon_curve
         ,T = s/3
@@ -1258,6 +1333,13 @@ dragon_curve_generator(N,S,P):-
         ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,TGen,Pl).
 
 
+%!      hilbert_curve_generator(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying tesing hypotheses as generators.
+%
+%       Given are labelled examples of the Hilbert Curve L-System. No
+%       unlabelled examples are given.
+%
 hilbert_curve_generator(N,S,P):-
         % Don't know why but this experiment sucks up all the table RAM
         Lang = hilbert_curve_no_tabling
@@ -1278,6 +1360,13 @@ hilbert_curve_generator(N,S,P):-
         ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,TGen,Pl).
 
 
+%!      koch_curve_generator(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying tesing hypotheses as generators.
+%
+%       Given are labelled examples of the Koch Curve L-System. No
+%       unlabelled examples are given.
+%
 koch_curve_generator(N,S,P):-
         Lang = koch_curve
         ,T = s/3
@@ -1301,6 +1390,13 @@ koch_curve_generator(N,S,P):-
         ,setup_call_cleanup(Sup,G,Cup).
 
 
+%!      sierpinski_triangle_generator(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying tesing hypotheses as generators.
+%
+%       Given are labelled examples of the Sierpinskin Triangle
+%       L-System. No unlabelled examples are given.
+%
 sierpinski_triangle_generator(N,S,P):-
         Lang = sierpinski_triangle
         ,T = s/3
@@ -1318,6 +1414,42 @@ sierpinski_triangle_generator(N,S,P):-
          ;   Pl = false
          )
         ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,TGen,Pl).
+
+
+%!      sierpinski_triangle_generator(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying tesing hypotheses as generators.
+%
+%       Given are labelled examples of the plant L-System from figure
+%       1.24 (a) in ABoP. No unlabelled examples are given.
+%
+%       Work in Progress. In particular, RAM-outs when generating from
+%       learned hypotheses can occur without warning.
+%
+abop_plant_a_generator(N,S,P):-
+        Lang = abop_plant_a
+        ,T = s/3
+        % 7 increments of automatically generated examples.
+        ,Gs = 0:1500/250
+        % Six increments of labelled examples.
+        ,Sl = [abop_plant_a(1:26/5,0,6) % all is 5461
+	      ,abop_plant_a_with_vars(1:51/10,11,13) % all is 57
+	      ]
+        ,Su = []
+        ,TPos = [abop_plant_a(1000,7,10) % all is 1396736
+                ,abop_plant_a_with_vars(all,14,14) % 256
+                ]
+        ,TNeg = not_abop_plant_a(1000,0,4) % Higher numbers need more stack.
+        %,TGen = abop_plant_a(all,0,6)
+        %,TGen = abop_plant_a(0.000001,11,11)
+        ,TGen = abop_plant_a_with_vars(all,11,11)
+        ,What = 'generated'
+        ,(   P == true
+         ->  Pl = plot('ABoP Plant 1.24 (a)',@(false))
+         ;   Pl = false
+         )
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,TGen,Pl).
+
 
 
                 /*******************************
