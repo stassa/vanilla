@@ -1165,7 +1165,7 @@ test_program(T,S/A,Cs,Test_Pos,Test_Neg,Counts-Res):-
              ,evaluation(hypothesis,Program_module,S,Pos,Neg,Counts,Res)
              )
         ,C = (erase_program_clauses(Rs)
-             ,poker:table_untable_predicates(table,Program_module,Cs)
+             ,poker:table_untable_predicates(untable,Program_module,Cs)
              )
         ,setup_call_cleanup(Set,G,C)
         ,Res = [Acc,_Err,TPR,TNR,_FPR,_FNR,_PRE,_REC,_FSC]
@@ -1229,7 +1229,7 @@ test_generated(_,_S,_,[],0.0):-
         !.
 test_generated(_,_S,nil,_Cs,0.0):-
         !.
-test_generated(Lang,S/A,Spec,Cs,TPR):-
+test_generated(_Lang,S/A,Spec,Cs,ACC):-
         debug(test_generator,'Testing learned program as generator for target: ~w',[S/A])
         ,debug_clauses_length(test_generator_full,'Testing ~w-clause learned program:',Cs)
         ,Spec =.. [Lang,N,J,K]
@@ -1239,11 +1239,14 @@ test_generated(Lang,S/A,Spec,Cs,TPR):-
                )
         ,G = (debug(test_generator_full,'Generating examples of learned program.',[])
              ,generate_test(M,S/A,N,J,K,Es)
+             ,debug_length(test_generator_full,'Generated ~w examples.',Es)
+             ,debug_clauses_length(test_generator_fullest,'Generated ~w examples.',Es)
              ,debug(test_generator_full,'Testing generated examples against target.',[])
-             ,accuracy(language_generation,Lang,Es,[],TPR)
+             ,accuracy(language_generation,Lang,Es,[],ACC)
+             ,debug(test_generator_full,'Measured generative accuracy: ~w.',[ACC])
              )
         ,C = (erase_program_clauses(Rs)
-             ,poker:table_untable_predicates(table,M,Cs)
+             ,poker:table_untable_predicates(untable,M,Cs)
              )
         ,setup_call_cleanup(Set,G,C).
 
@@ -1256,7 +1259,11 @@ test_generated(Lang,S/A,Spec,Cs,TPR):-
 %       locate the learned program to use as a generator.
 %
 generate_test(M,S,N,J,K,Es):-
-        debug(generate_test,'Generating ~w ~w test examples of length in [~w,~w].'
+        (   integer(N)
+        ;   N == all
+        )
+        ,!
+        ,debug(generate_test,'Generating ~w ~w test examples of length in [~w,~w].'
              ,[N,S,J,K])
         ,findall(E
                ,(between(J,K,I)
@@ -1269,6 +1276,17 @@ generate_test(M,S,N,J,K,Es):-
          ;   N == all
          ->  Es = Es_
          ).
+generate_test(M,S,N,J,K,Es):-
+        float(N)
+        ,debug(generate_initial
+              ,'Sampling ~w examples of length in [~w,~w] with probability ~w.'
+             ,[S,J,K,N])
+        ,findall(E
+                ,(between(J,K,I)
+                 ,G = generate_example_test(M,S,I,E)
+                 ,goal_partition(N,test_harness,G,true)
+                 )
+                ,Es).
 
 
 %!      generate_example_test(+Module,+Symbol,+N,-Example) is nondet.
