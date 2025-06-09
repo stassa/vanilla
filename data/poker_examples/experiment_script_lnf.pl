@@ -3,6 +3,7 @@
                          ,hilbert_curve/0
                          ,koch_curve/0
                          ,sierpinski_triangle/0
+                         ,sierpinski_arrowhead/0
                          ,abop_plant_a/0
                          % Experiments drawing learned L-Systems
                          % with a Python Turtle language interpreter
@@ -10,6 +11,7 @@
                          ,hilbert_curve_draw/0
                          ,koch_curve_draw/0
                          ,sierpinski_triangle_draw/0
+                         ,sierpinski_arrowhead_draw/0
                          ,abop_plant_a_draw/0
                          % Multi-step experiments
                          ,algae/1
@@ -268,6 +270,30 @@ sierpinski_triangle:-
         ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
 
+%!      sierpinski_arrowhead is det.
+%
+%       Run a single experiment learning an L-System grammar.
+%
+%       Given are labelled examples of the Sierpinski Arrowhead L-system
+%       and no unlabelled examples.
+%
+%       Prints the learned hypothesis and labelling of internally
+%       generated examples.
+%
+sierpinski_arrowhead:-
+% Sierpinski Arrowhead strings with variables start at length 7
+        Lang = sierpinski_arrowhead
+        ,T = s/3
+        ,Sl = [sierpinski_arrowhead(20,0,6) % all is 1093
+              ,sierpinski_arrowhead_with_vars(all,7,8) % all is 28
+              ]
+	,Su = []
+        ,TPos = sierpinski_arrowhead(1000,8,10) % all is 85575
+        ,TNeg = not_sierpinski_arrowhead(0.0002,0,5) % ~ 1871 of 9358910
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+
+
+
 %!      abop_plant_a is det.
 %
 %       Run a single experiment learning an L-System grammar.
@@ -396,6 +422,29 @@ sierpinski_triangle_draw:-
         ,TNeg = not_sierpinski_triangle(1000,0,5)
         ,PL = print_labelled(false)
         ,drawing_args(sierpinski_triangle,Args)
+        ,DL = draw_labelled(Args)
+        ,setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
+
+
+%!      sierpinski_arrowhead_draw is det.
+%
+%       Run a single experiment learning an L-System grammar.
+%
+%       Given are labelled examples of the Sierpinski Arrowhead L-system
+%       and no unlabelled examples.
+%
+sierpinski_arrowhead_draw:-
+% Sierpinski Arrowhead strings with variables start at length 7
+        Lang = sierpinski_arrowhead
+        ,T = s/3
+        ,Sl = [sierpinski_arrowhead(20,0,6) % all is 1093
+              ,sierpinski_arrowhead_with_vars(all,7,8) % all is 28
+              ]
+	,Su = []
+        ,TPos = sierpinski_arrowhead(1000,8,10) % all is 85575
+        ,TNeg = not_sierpinski_arrowhead(0.0002,0,5) % ~ 1871 of 9358910
+        ,PL = print_labelled(false)
+        ,drawing_args(sierpinski_arrowhead,Args)
         ,DL = draw_labelled(Args)
         ,setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
 
@@ -1525,6 +1574,17 @@ drawing_args(sierpinski_triangle,[generations(6)
                                  ,height(350)
                                  ,file('output/sierpinski_triangle.eps')
                                  ]).
+drawing_args(sierpinski_arrowhead,[generations(8)
+                                 ,axiom([x,f])
+                                 ,langle(60)
+                                 ,rangle(60)
+                                 ,distance(4)
+                                 ,start('bottom_left')
+                                 % Need adjustment
+                                 %,width(1800)
+                                 %,height(1800)
+                                 ,file('output/sierpinski_arrowhead.eps')
+                                 ]).
 drawing_args(abop_plant_a,[generations(5)
                           ,axiom([f])
                           ,langle(25.7)
@@ -1668,6 +1728,17 @@ set_configs(sierpinski_triangle_ng):-
 	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
 							 ,[random]).
 
+set_configs(sierpinski_arrowhead):-
+	!
+	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[5])
+	,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
+	,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
+	,poker_auxiliaries:set_poker_configuration_option(max_invented,[3])
+	,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+							 ,[random]).
+
 set_configs(hilbert_dragon):-
         !
 	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[8])
@@ -1776,6 +1847,7 @@ setup_safe_example(Lang):-
                        ,koch_curve_ng
                        ,sierpinski_triangle
                        ,sierpinski_triangle_ng
+                       ,sierpinski_arrowhead
                        ,hilbert_dragon
                        ,koch_dragon
                        ,hilbert_dragon_filter

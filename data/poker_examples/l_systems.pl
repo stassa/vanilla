@@ -11,6 +11,8 @@
                    ,sierpinski_triangle/3
                    ,not_sierpinski_triangle/3
                    ,sierpinski_arrowhead/3
+                   ,sierpinski_arrowhead_with_vars/3
+                   ,not_sierpinski_arrowhead/3
                    ,fractal_plant/3
                    ,abop_plant_a/3
                    ,not_abop_plant_a/3
@@ -447,6 +449,41 @@ sierpinski_arrowhead([y,f,+,x,f,+,y|Ss])--> x, sierpinski_arrowhead(Ss).
 sierpinski_arrowhead([x,f,-,y,f,-,x|Ss])--> y, sierpinski_arrowhead(Ss).
 sierpinski_arrowhead([]) --> [].
 
+
+%!      sierpinski_arrowhead_with_vars(?String) is nondet.
+%
+%       Generates Sierpinski Arrowhead String's with variables.
+%
+%       Sierpinski Arrowhead strings start including variable symbols
+%       after length 7. This predicate generates strings of length 7
+%       or above that contain variables, i.e. the symbols x and y.
+%
+sierpinski_arrowhead_with_vars(Ss) -->
+        sierpinski_arrowhead(Ss)
+        ,{ memberchk(x,Ss) ; memberchk(y,Ss)  }.
+
+
+%!      not_sierpinski_arrowhead(?String) is nondet.
+%
+%       Negative examples for Sierpinski_arrowhead/3.
+%
+not_sierpinski_arrowhead(Ss) -->
+        sierpinski_arrowh_string(Ss)
+        ,{  \+ phrase(sierpinski_arrowhead(Ss),_,[])
+            ,maplist(length,[Ss,Xs],[N,N])
+            ,phrase(sierpinski_arrowh_string(Xs),_)
+         }
+        ,Xs.
+
+sierpinski_arrowh_string([C]) --> sierpinski_arrowh_char(C).
+sierpinski_arrowh_string([C|Ss]) -->
+        sierpinski_arrowh_char(C), sierpinski_arrowh_string(Ss).
+
+sierpinski_arrowh_char(+) --> plus.
+sierpinski_arrowh_char(-) --> minus.
+sierpinski_arrowh_char(f) --> f.
+sierpinski_arrowh_char(x) --> x.
+sierpinski_arrowh_char(y) --> y.
 
 
                 /*******************************
