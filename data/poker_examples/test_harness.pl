@@ -1224,6 +1224,12 @@ generate_examples(Sign,Ts,S,Es):-
 %       according to Spec, then passing the generator atoms to Language
 %       to test if they are accepted.
 %
+%       TODO: The Language argument is no longer used and the semantics
+%       of the Spec argument have changed (the language name in that
+%       term is now the language to be tested against and is nothing to
+%       do with the learned program, which we only identify by Symbol.)
+%       Comments need to be updated to reflect this.
+%
 test_generated(_,_S,_,[],0.0):-
 % The empty hypothesis generates nothing.
         !.
