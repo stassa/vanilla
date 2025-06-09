@@ -12,8 +12,8 @@ font = {#'family' : 'normal',
 
 plt.rc('font', **font)
 
-plt.rc('lines',linewidth = 4.0)
-plt.rc('lines',markersize = 10)
+plt.rc('lines',linewidth = 3.0)
+plt.rc('lines',markersize = 8)
 
 plt.rc('legend',fontsize = 19)
 
@@ -21,8 +21,10 @@ style = 'seaborn-v0_8-colorblind'
 
 plt.style.use(style)
 
-fig, axs = plt.subplots(3,2,constrained_layout=True)
-fig.set_size_inches(10,8)
+#rows, cols
+fig, axs = plt.subplots(3,7,constrained_layout=True)
+# width, height
+fig.set_size_inches(25,8)
 
 # experiment: string, the name of the experiment
 # path: string, path to data csv
@@ -37,18 +39,51 @@ def plot_data(experiment,path,experiment_sets='generated',debug=False):
     generated = data['generated']
     unlabelled = data['unlabelled']
     labelled = data['labelled']
+
+    programLength = data['programLength']
+    programLengthSE = data['programLengthSE']
+    generatorAcc = data['generatorAcc']
+    generatorAccSE = data['generatorAccSE']
+
     labellingAcc = data['labellingAcc']
-    labellingAccSE = data['labellingAccSE']
+    labellingErr = data['labellingErr']
     labellingTPR = data['labellingTPR']
-    labellingTPRSE = data['labellingTPRSE']
     labellingTNR = data['labellingTNR']
+    labellingFPR = data['labellingFPR']
+    labellingFNR = data['labellingFNR']
+    labellingPRE = data['labellingPRE']
+    labellingREC = data['labellingREC']
+    labellingFSC = data['labellingFSC']
+
+    labellingAccSE = data['labellingAccSE']
+    labellingErrSE = data['labellingErrSE']
+    labellingTPRSE = data['labellingTPRSE']
     labellingTNRSE = data['labellingTNRSE']
+    labellingFPRSE = data['labellingFPRSE']
+    labellingFNRSE = data['labellingFNRSE']
+    labellingPRESE = data['labellingPRESE']
+    labellingRECSE = data['labellingRECSE']
+    labellingFSCSE = data['labellingFSCSE']
+
     programAcc = data['programAcc']
-    programAccSE = data['programAccSE']
+    programErr = data['programErr']
     programTPR = data['programTPR']
-    programTPRSE = data['programTPRSE']
     programTNR = data['programTNR']
+    programFPR = data['programFPR']
+    programFNR = data['programFNR']
+    programPRE = data['programPRE']
+    programREC = data['programREC']
+    programFSC = data['programFSC']
+
+    programAccSE = data['programAccSE']
+    programErrSE = data['programErrSE']
+    programTPRSE = data['programTPRSE']
     programTNRSE = data['programTNRSE']
+    programFPRSE = data['programFPRSE']
+    programFNRSE = data['programFNRSE']
+    programPRESE = data['programPRESE']
+    programRECSE = data['programRECSE']
+    programFSCSE = data['programFSCSE']
 
     # Data structures used to set colours, linestyles and markers for labels to be used in a custom legend.
     # Setup colour ranges. Still trying things here.
@@ -59,8 +94,8 @@ def plot_data(experiment,path,experiment_sets='generated',debug=False):
     cmap = cmr.pepper
     #cmap = cmr.bubblegum
     #cmap = cmr.gem
-    colors = cmap(np.linspace(0.3, 0.7, max_iteration))
-    #colors = cmap(np.linspace(0.1, 0.7, max_iteration))
+    #colors = cmap(np.linspace(0.3, 0.7, max_iteration))
+    colors = cmap(np.linspace(0.1, 0.7, max_iteration))
     #colors = cmap(np.linspace(0, 1, max_iteration))
     palette = itertools.cycle(colors)
     range_colors = {}
@@ -96,13 +131,33 @@ def plot_data(experiment,path,experiment_sets='generated',debug=False):
 
     axs[row,col].set_title("Labelling")
     axs[row,col+1].set_title("Hypothesis")
+    axs[row,col+2].set_title("Labelling")
+    axs[row,col+3].set_title("Hypothesis")
+    axs[row,col+4].set_title("Labelling")
+    axs[row,col+5].set_title("Hypothesis")
 
-    axs[row,col].set_ylabel("Accuracy")
-    axs[row+1,col].set_ylabel("TPR")
-    axs[row+2,col].set_ylabel("TNR")
+    axs[row,col+6].set_title("Generator")
+    axs[row+1,col+6].set_title("Hypothesis Size")
+    axs[row+2,col+6].set_title("Hypothesis Size (k > 0)")
 
-    axs[row+2,col].set_xlabel(xlabel)
-    axs[row+2,col+1].set_xlabel(xlabel)
+    #   0   2   4   6
+    # 0 Acc PRE REC Gen
+    # 1 Err TPR TNR PLn
+    # 2 FSC FPR FNR PL1
+
+    contents = {'ACC': (0,0,'Accuracy',labellingAcc,labellingAccSE,programAcc,programAccSE)
+               ,'PRE': (0,2,'Precision',labellingPRE,labellingPRESE,programPRE,programPRESE)
+               ,'REC': (0,4,'Recall',labellingREC,labellingRECSE,programREC,programRECSE)
+               ,'Gen': (0,6,'Generative Acc.',generatorAcc,generatorAccSE)
+               ,'ERR': (1,0,'Error',labellingErr,labellingErrSE,programErr,programErrSE)
+               ,'TPR': (1,2,'TPR',labellingTPR,labellingTPRSE,programTPR,programTPRSE)
+               ,'TNR': (1,4,'TNR',labellingTNR,labellingTNRSE,programTNR,programTNRSE)
+               ,'HLN': (1,6,'Hyp. Size',programLength,programLengthSE)
+               ,'FSC': (2,0,'F1-Score',labellingFSC,labellingFSCSE,programFSC,programFSCSE)
+               ,'FPR': (2,2,'FPR',labellingFPR,labellingFPRSE,programFPR,programFPRSE)
+               ,'FNR': (2,4,'FNR',labellingFNR,labellingTNRSE,programTNR,programTNRSE)
+               ,'HL1': (2,6,'Hyp. Size 1+',programLength,programLengthSE)
+               }
 
     #face_colour = 'xkcd:eggshell'
     face_colour = 'xkcd:light grey'
@@ -132,53 +187,49 @@ def plot_data(experiment,path,experiment_sets='generated',debug=False):
             range_linestyles[lab] = next(linestyles)
         linestyle = range_linestyles[lab]
 
-        # Upper left
-        plot = axs[row,col].errorbar(labelled[0:max_iteration],labellingAcc[i:j],yerr=labellingAccSE[i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
-        plots.append(plot)
-        axs[row,col].grid(visible=True, which='major', axis='both')  
-        axs[row,col].set_xticks(xticks, labels=xlabels)
+        for k,v in contents.items():
 
-        axs[row,col].set_facecolor(face_colour)
+            row = v[0]
+            col = v[1]
 
-        # Middle left
-        axs[row+1,col].errorbar(labelled[0:max_iteration],labellingTPR[i:j],yerr=labellingTPRSE[i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
-        axs[row+1,col].grid(visible=True, which='major', axis='both')  
-        axs[row+1,col].set_xticks(xticks, labels=xlabels)
+            if k not in ['Gen','HLN','HL1']:
+                axs[v[0], v[1]].set_ylabel(v[2])
 
-        axs[row+1,col].set_facecolor(face_colour)
+                plot = axs[row,col].errorbar(labelled[0:max_iteration],v[3][i:j],yerr=v[4][i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
+                axs[row,col].grid(visible=True, which='major', axis='both')
+                axs[row,col].set_xticks(xticks, labels=xlabels)
 
-        # Lower left
-        axs[row+2,col].errorbar(labelled[0:max_iteration],labellingTNR[i:j],yerr=labellingTNRSE[i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
-        axs[row+2,col].grid(visible=True, which='major', axis='both')
-        axs[row+2,col].set_xticks(xticks, labels=xlabels)
+                axs[row,col].set_facecolor(face_colour)
 
-        axs[row+2,col].set_facecolor(face_colour)
+                axs[row,col+1].errorbar(labelled[0:max_iteration],v[5][i:j],yerr=v[6][i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
+                axs[row,col+1].grid(visible=True, which='major', axis='both')
+                axs[row,col+1].set_xticks(xticks, labels=xlabels)
 
-        # Upper Right
-        axs[row,col+1].errorbar(labelled[0:max_iteration],programAcc[i:j],yerr=programAccSE[i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
-        axs[row,col+1].grid(visible=True, which='major', axis='both')
-        axs[row,col+1].set_xticks(xticks, labels=xlabels)
+                axs[row,col+1].set_facecolor(face_colour)
 
-        axs[row,col+1].set_facecolor(face_colour)
+                if k == 'ACC':
+                    plots.append(plot)
 
-        # Upper Right
-        axs[row+1,col+1].errorbar(labelled[0:max_iteration],programTPR[i:j],yerr=programTPRSE[i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
-        axs[row+1,col+1].grid(visible=True, which='major', axis='both')
-        axs[row+1,col+1].set_xticks(xticks, labels=xlabels)
+            if k in ['Gen','HLN']:
 
-        axs[row+1,col+1].set_facecolor(face_colour)
+                plot = axs[row,col].errorbar(labelled[0:max_iteration],v[3][i:j],yerr=v[4][i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
+                axs[row,col].grid(visible=True, which='major', axis='both') 
+                axs[row,col].set_xticks(xticks, labels=xlabels)
 
-        # Lower left
-        axs[row+2,col+1].errorbar(labelled[0:max_iteration],programTNR[i:j],yerr=programTNRSE[i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
-        axs[row+2,col+1].grid(visible=True, which='major', axis='both')
-        axs[row+2,col+1].set_xticks(xticks, labels=xlabels)
+                axs[row,col].set_facecolor(face_colour)
 
-        axs[row+2,col+1].set_facecolor(face_colour)
+            if k == 'HL1':
+
+                if i > 0:
+                    #axs[row+1,col+2].set_yscale('symlog')
+                    axs[row,col].errorbar(labelled[0:max_iteration],v[3][i:j],yerr=v[4][i:j],label=lab,linestyle=linestyle,marker=marker,color=color)
+                    axs[row,col].grid(visible=True, which='major', axis='both')  
+                    axs[row,col].set_xticks(xticks, labels=xlabels)
 
     fig.align_labels() 
     fig.align_titles()
 
-    #fig.supxlabel(xlabel)
+    fig.supxlabel(xlabel)
     fig.suptitle(experiment)
 
     # Get the labels added to the plot.
@@ -203,7 +254,8 @@ def plot_data(experiment,path,experiment_sets='generated',debug=False):
     elif experiment_sets == 'unlabelled':
         title = 'Unlabelled'
 
-    # Creates a custom legend.
-    fig.legend(handles=legend_elements,loc='outside right center',fontsize='small',title=f'{title}\nexamples',title_fontsize='small')
+    fig.legend(handles=legend_elements,loc='outside right center',fontsize='medium',title=f'{title}\nexamples',title_fontsize='medium')
+
+    #plt.savefig(f'output/figures/{experiment}.png')
 
     plt.show()
