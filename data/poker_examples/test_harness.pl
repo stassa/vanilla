@@ -1017,7 +1017,7 @@ experiment(Sl,S,Ls,Us,BK,MS,TPos,TNeg,TGen,[Ps,N,Pos,Neg,Rs_l,Rs_p,Rs_g]):-
         % Evaluate program as acceptor
         ,test_program(Sl,S,Ps,TPos,TNeg,Rs_p)
         % Evaluate program as generator
-        ,test_generated(Sl,S,TGen,Ps,Rs_g)
+        ,test_generated(S,TGen,Ps,Rs_g)
         % May be a better way to count program length: count literals.
         ,length(Ps,N).
 
@@ -1208,14 +1208,23 @@ generate_examples(Sign,Ts,S,Es):-
 %
 %       Measure the accuracy of a learned Program as a generator.
 %
-%       Language is the symbol, but not arity of a DCG used to test
-%       generated atoms.
-%
 %       Symbol is the predicate indicator, Symbol/Arity of a learning
 %       target.
 %
 %       Spec is a language generation term used to generate examples of
-%       Program for testing against Language.
+%       Program for testing against Language. Spec is of the form
+%       Lang(N,J,K,Ops) where:
+%       * Lang is a target language used as the ground truth to evaluate
+%       strings generated from a learned hypothesis in test_generated/4.
+%       Lang must be exported by language_geneation.pl.
+%       * N,J,K are the number, and minimum and maximum lengths, of
+%       strings to generate from a learned hypothesis, and passed to
+%       Lang to test for correctness.
+%       * Ops is a list of options for language generation. The only
+%       option currently recognised is tabling(Bool) denoting whether
+%       the learned hypothesis must be tabled (if Bool is 'true') or not
+%       (if Bool is 'false') before genration. This can be used to avoid
+%       RAM-outs when tabling a learned hypothesis.
 %
 %       Program is a learned hypothesis.
 %
@@ -1224,24 +1233,21 @@ generate_examples(Sign,Ts,S,Es):-
 %       according to Spec, then passing the generator atoms to Language
 %       to test if they are accepted.
 %
-%       TODO: The Language argument is no longer used and the semantics
-%       of the Spec argument have changed (the language name in that
-%       term is now the language to be tested against and is nothing to
-%       do with the learned program, which we only identify by Symbol.)
-%       Comments need to be updated to reflect this.
-%
-test_generated(_,_S,_,[],0.0):-
+test_generated(_S,_,[],0.0):-
 % The empty hypothesis generates nothing.
         !.
-test_generated(_,_S,nil,_Cs,0.0):-
+test_generated(_S,nil,_Cs,0.0):-
         !.
-test_generated(_Lang,S/A,Spec,Cs,ACC):-
+test_generated(S/A,Spec,Cs,ACC):-
         debug(test_generator,'Testing learned program as generator for target: ~w',[S/A])
         ,debug_clauses_length(test_generator_full,'Testing ~w-clause learned program:',Cs)
-        ,Spec =.. [Lang,N,J,K]
+        ,language_spec(Spec,Lang,N,J,K,T)
         ,M = experiment_file
         ,Set = (assert_program(M,Cs,Rs)
-               ,poker:table_untable_predicates(table,M,Cs)
+               ,(   T == true
+                ->  poker:table_untable_predicates(table,M,Cs)
+                ;   true
+                )
                )
         ,G = (debug(test_generator_full,'Generating examples of learned program.',[])
              ,generate_test(M,S/A,N,J,K,Es)
@@ -1255,6 +1261,34 @@ test_generated(_Lang,S/A,Spec,Cs,ACC):-
              ,poker:table_untable_predicates(untable,M,Cs)
              )
         ,setup_call_cleanup(Set,G,C).
+
+
+%!      language_spec(+Spec,-Lang,-N,-J,-K,-Tab) is det.
+%
+%       Extract language generation configs from Spec term.
+%
+%       Spec is a term Lang(N,J,K,Ops) where:
+%       * Lang is a target language used as the ground truth to evaluate
+%       strings generated from a learned hypothesis in test_generated/4.
+%       Lang must be exported by language_geneation.pl.
+%       * N,J,K are the number, and minimum and maximum lengths, of
+%       strings to generate from a learned hypothesis, and passed to
+%       Lang to test for correctness.
+%       * Ops is a list of options for language generation. The only
+%       option currently recognised is tabling(Bool) denoting whether
+%       the learned hypothesis must be tabled (if Bool is 'true') or not
+%       (if Bool is 'false') before genration. This is to avoid RAM-outs
+%       when tabling a hypothesis that doesn't need tabling.
+%
+language_spec(S,Lang,N,J,K,true):-
+        S =.. [Lang,N,J,K]
+        ,!.
+language_spec(S,Lang,N,J,K,T):-
+        S =.. [Lang,N,J,K,Os]
+        ,(   memberchk(tabling(T),Os)
+         ->  true
+         ;   T = true
+         ).
 
 
 %!      generate_test(+Module,+Sym,+N,+J,+K,-Examples) is det.
