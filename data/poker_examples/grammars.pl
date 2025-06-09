@@ -10,6 +10,8 @@
                    ,not_anbn_uo/2
                    ,parens/2
                    ,unbalanced_parens/2
+                   ,arith/2
+                   ,prop/2
                    ,bit_string/2
                    ,bit_string_p/2
                    ,even_bin/2
@@ -177,6 +179,35 @@ not_not([1]) --> one.
 not_not([0|Bs]) --> zero, not_not(Bs).
 not_not([1|Bs]) --> one, not_not(Bs).
 
+
+:- table(arith/2).
+
+arith --> int.
+arith --> arith, arith_op, arith.
+arith --> lp, arith, rp.
+
+int --> [0] | [1] | [2] | [3] | [4] | [5] | [6] | [7] | [8] | [9].
+
+arith_op --> [+].
+arith_op --> [-].
+arith_op --> [*].
+arith_op --> [/].
+
+
+:- table(prop/2).
+
+prop --> bool.
+prop --> neg, prop.
+prop --> prop, conj, prop.
+prop --> prop, disj, prop.
+prop --> prop, impl, prop.
+
+bool --> [1] | [0].
+
+neg --> [~].
+conj --> [/\].
+disj --> [\/].
+impl --> [->].
 
 
                 /*******************************
