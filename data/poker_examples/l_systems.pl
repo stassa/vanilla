@@ -15,6 +15,7 @@
                    ,abop_plant_a/3
                    ,not_abop_plant_a/3
                    ,abop_plant_b/3
+                   ,not_abop_plant_b/3
                    ,abop_plant_c/3
                    ,abop_plant_d/3
                    ,abop_plant_e/3
@@ -507,24 +508,24 @@ abop_plant_a([]) --> [].
 
 %!      not_abop_plant_a(?String) is semidet.
 %
-%       Not a dragon curve. Honest.
+%       Not ABoP plant from Figure 1.24(A). Honest.
 %
 not_abop_plant_a(Ss) -->
-        plant_a_string(Ss)
+        plant_abc_string(Ss)
         ,{  \+ phrase(abop_plant_a(Ss),_,[])
             ,maplist(length,[Ss,Xs],[N,N])
-            ,phrase(plant_a_string(Xs),_)
+            ,phrase(plant_abc_string(Xs),_)
          }
         ,Xs.
 
-plant_a_string([C]) --> plant_a_char(C).
-plant_a_string([C|Ss]) --> plant_a_char(C), plant_a_string(Ss).
+plant_abc_string([C]) --> plant_abc_char(C).
+plant_abc_string([C|Ss]) --> plant_abc_char(C), plant_abc_string(Ss).
 
-plant_a_char(+) --> plus.
-plant_a_char(-) --> minus.
-plant_a_char('[') --> lsb.
-plant_a_char(']') --> rsb.
-plant_a_char(f) --> f.
+plant_abc_char(+) --> plus.
+plant_abc_char(-) --> minus.
+plant_abc_char('[') --> lsb.
+plant_abc_char(']') --> rsb.
+plant_abc_char(f) --> f.
 
 
 
@@ -548,6 +549,19 @@ abop_plant_b(['['|Ss]) --> lsb,  abop_plant_b(Ss).
 abop_plant_b([']'|Ss]) --> rsb,  abop_plant_b(Ss).
 abop_plant_b([f,'[',+,f,']',f,'[',-,f,']','[',f,']'|Ss]) --> f,abop_plant_b(Ss).
 abop_plant_b([]) --> [].
+
+
+%!      not_abop_plant_b(?String) is semidet.
+%
+%       Not ABoP plant from Figure 1.24(A). Honest.
+%
+not_abop_plant_b(Ss) -->
+        plant_abc_string(Ss)
+        ,{  \+ phrase(abop_plant_b(Ss),_,[])
+            ,maplist(length,[Ss,Xs],[N,N])
+            ,phrase(plant_abc_string(Xs),_)
+         }
+        ,Xs.
 
 
 
