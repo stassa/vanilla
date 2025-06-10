@@ -166,3 +166,18 @@ reps=10
 #log="${tp}sierpinski_triangle_generator_${ts}.log"
 #swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,sierpinski_triangle_generator($reps,'$csv',false),'$log'))." -t halt &
 #sleep 2
+#
+#csv="${tp}sierpinski_arrowhead_generator_${ts}.csv"
+#log="${tp}sierpinski_arrowhead_generator_${ts}.log"
+#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,sierpinski_arrowhead_generator($reps,'$csv',false),'$log'))." -t halt &
+#sleep 2
+#
+#csv="${tp}abop_plant_a_generator_${ts}.csv"
+#log="${tp}abop_plant_a_generator_${ts}.log"
+#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,abop_plant_a_generator($reps,'$csv',false),'$log'))." -t halt &
+#sleep 2
+#
+#csv="${tp}abop_plant_b_generator_${ts}.csv"
+#log="${tp}abop_plant_b_generator_${ts}.log"
+#swipl -g "([load_headless], experiment_output:run_experiment_protocol(s/3,abop_plant_b_generator($reps,'$csv',false),'$log'))." -t halt &
+#sleep 2
