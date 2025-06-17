@@ -1613,7 +1613,8 @@ sierpinski_arrowhead_generator(N,S,P):-
 	,Su = []
         ,TPos = sierpinski_arrowhead(1000,8,10) % all is 85575
         ,TNeg = not_sierpinski_arrowhead(0.0002,0,5) % ~ 1871 of 9358910
-        ,TGen = sierpinski_arrowhead_with_vars(all,9,9) % 108
+        %,TGen = sierpinski_arrowhead_with_vars(all,9,9) % 108
+        ,TGen = sierpinski_arrowhead(all,0,6,[tabling(false)]) % 108
         ,What = 'generated'
         ,(   P == true
          ->  Pl = plot('Sierpinski Arrowhead',@(false))
@@ -1649,9 +1650,9 @@ abop_plant_a_generator(N,S,P):-
                 ,abop_plant_a_with_vars(all,14,14) % 256
                 ]
         ,TNeg = not_abop_plant_a(1000,0,4) % Higher numbers need more stack.
-        %,TGen = abop_plant_a(all,0,6)
+        ,TGen = abop_plant_a(all,0,6,[tabling(false)])
         %,TGen = abop_plant_a(0.000001,11,11)
-        ,TGen = abop_plant_a_with_vars(all,11,11)
+        %,TGen = abop_plant_a_with_vars(all,11,11)
         ,What = 'generated'
         ,(   P == true
          ->  Pl = plot('ABoP Plant 1.24 (a)',@(false))
@@ -1679,7 +1680,8 @@ abop_plant_b_generator(N,S,P):-
                 ,abop_plant_b_with_vars(20,16,16) % all is 256
                 ]
         ,TNeg = not_abop_plant_b(1000,0,4) % Higher numbers need more stack.
-        ,TGen = abop_plant_b_with_vars(all,13,14) % ??
+        %,TGen = abop_plant_b_with_vars(all,13,14) % ??
+        ,TGen = abop_plant_b(all,0,6,[tabling(false)])
         ,What = 'generated'
         ,(   P == true
          ->  Pl = plot('ABoP Plant 1.24 (b)',@(false))
