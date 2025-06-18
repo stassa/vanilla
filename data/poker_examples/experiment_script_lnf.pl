@@ -1504,7 +1504,8 @@ dragon_curve_generator(N,S,P):-
         ,Su = []
         ,TPos = dragon_curve(all,5,10)/hilbert_curve
         ,TNeg = not_dragon_curve(all,0,4)
-        ,TGen = dragon_curve(all,0,4)
+        %,TGen = dragon_curve(all,0,4)
+        ,TGen = l_system(dragon_curve,3,[f])
         ,What = 'generated'
         ,(   P == true
          ->  Pl = plot('Dragon Curve',@(false))
