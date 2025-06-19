@@ -6,9 +6,10 @@
 :-use_module(src(vanilla)).
 :-use_module(src(auxiliaries)).
 :-use_module(src(mil_problem)).
+:-use_module(lib(louise/unfolding)).
 :-use_module(lib(louise/louise_auxiliaries)).
-:-use_module(lib(louise/program_reduction/program_reduction)).
 :-use_module(lib(louise/louise_configuration)).
+:-use_module(lib(louise/program_reduction/program_reduction)).
 
 /** <module> Meta-Interpretive Learning by Top program construction and reduction.
 
@@ -65,8 +66,8 @@ learn(Pos,Neg,BK,MS,Ps):-
 	,reduced_top_program(Pos_,BK_,MS_,Ms,Rs)
 	,examples_targets(Pos,Ss)
 	,debug(learn,'Excapsulating hypothesis...',[])
-	,excapsulated_clauses(Ss,Rs,Ps).
-
+	,excapsulated_clauses(Ss,Rs,Ps_)
+	,unfold_top_program(Ps_,Pos,Ps).
 
 
 %!	top_program(+Pos,+Neg,+BK,+Metarules,-Top) is det.
@@ -755,3 +756,26 @@ reduced_top_program_(N,Ps,BK,MS,Bind):-
 reduced_top_program_(_,Rs,_BK,_MS,Rs):-
 	length(Rs, N)
 	,debug(reduction,'Final reduction: ~w',[N]).
+
+
+
+%!	unfold_top_program(+Top,+Targets,-Unfolded) is det.
+%
+%	Unfold a learned Top Program to remove invented predicates.
+%
+%	Top is the set of clauses in the learned hypothesis, i.e. the
+%	Top Program.
+%
+%	Targets is the list of target symbols of examples.
+%
+%	Unfolded is Top, unfolded to remove clauses of invented
+%	predicates.
+%
+unfold_top_program(Ps,[E|Pos],Us_s):-
+	louise_configuration:unfold_invented(W)
+	,memberchk(W,[learned,all])
+	,!
+	,examples_targets([E|Pos],Ts)
+	,unfold_invented(Ps,Ts,Us)
+	,index_and_sort(Us,Us_s).
+unfold_top_program(Ps,_Ts,Ps).
