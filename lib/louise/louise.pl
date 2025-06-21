@@ -187,6 +187,8 @@ generalise(Pos,MS,Ss_Pos):-
 	,skolem_sort(Ss_Pos_,Ss_Pos_s)
 	,debug_length(generalise,'Derived ~w sub-hypotheses (sorted)',Ss_Pos_s)
 	,debug_clauses(generalise_full,'Derived sub-hypotheses:',Ss_Pos_s)
+	,unfold_generalised(Ss_Pos_s,Pos,MS,Ss_Pos_u)
+	,debug_length(generalise,'Derived ~w sub-hypotheses (unfolded)',Ss_Pos_u)
 	,rename_all_invented(Ss_Pos_s,Ss_Pos).
 
 
@@ -779,3 +781,38 @@ unfold_top_program(Ps,[E|Pos],Us_s):-
 	,unfold_invented(Ps,Ts,Us)
 	,index_and_sort(Us,Us_s).
 unfold_top_program(Ps,_Ts,Ps).
+
+
+
+%!	unfold_generalised(+Metasubs,+Pos,+Metarules,-Unfolded) is det.
+%
+%	Unfold a set of Metasubstitutions to remove invented predicates.
+%
+%	Metasubs is a set of metasubstitutions, as returned by
+%	generalise/3.
+%
+%	Pos is the set of initial examples.
+%
+%	Metarules is duh.
+%
+%	Unfolded is the set of metasubstitutions remaining in Metasubs
+%	after they have been unfolded and sorted, to remove equivalent
+%	sub-hypotheses from the initial hypothesis.
+%
+unfold_generalised(Subs,Pos,MS,Us):-
+	louise_configuration:unfold_invented(W)
+	,memberchk(W,[generalised,all])
+	,!
+	,debug_length(unfold_generalised,'Unfolding ~w metasubs.',Subs)
+	,examples_targets(Pos,Ts)
+	,findall(I-Us_i
+		,(nth1(I,Subs,Subs_i)
+		 ,applied_metarules(Subs_i,MS,Cs_i)
+		 ,excapsulated_clauses(Ts,Cs_i,Cs_e)
+		 ,unfold_invented(Cs_e,Ts,Us_i)
+		 )
+		,Us_I)
+	,indexed_mergesort(Us_I,Us_s)
+	,unfolding:de_indexed_list(Us_s,Subs,Us)
+	,debug_length(unfold_generalised,'Keeping ~w metasubs:',Us).
+unfold_generalised(Subs,_Pos,_MS,Subs).
