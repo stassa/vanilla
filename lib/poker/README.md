@@ -20,11 +20,11 @@ Poker operates:
 
 [Self-Supervised Inductive Logic Programming](https://arxiv.org/abs/2507.16405). 
 
-See the [data/poker_examples](data/poker_examples) directory for examples of
-scripts setting up experiments with Poker.
+See the [vanilla/data/poker_examples](../../data/poker_examples) directory for
+examples of scripts setting up experiments with Poker.
 
 See
-[data/poker_examples/hello_world.pl](data/poker_examples/hello_world_poker.pl)
+[vanilla/data/poker_examples/hello_world.pl](../../data/poker_examples/hello_world_poker.pl)
 for a simple example of using Poker to learn an ancestor relation with recursion
 but no predicate invention.
 
@@ -118,12 +118,12 @@ true.
 ```
 
 See
-[data/poker_examples/experiment_script_lnf.pl](data/poker_examples/experiment_script_lnf.pl)
+[vanilla/data/poker_examples/experiment_script_lnf.pl](../../data/poker_examples/experiment_script_lnf.pl)
 for more experiments learning L-System DCGs, including experiments drawing
 learned L-Systems with a Turtle language interpreter.
 
 See
-[data/poker_examples/experiment_script_binary_cgnf.pl](data/poker_examples/experiment_script_binary_cgnf.pl)
+[vanilla/data/poker_examples/experiment_script_binary_cgnf.pl](../../data/poker_examples/experiment_script_binary_cgnf.pl)
 for experiments learning DCGs for Context-Free Languages.
 
 Poker is named not after the card game but after [Wittgenstein's
