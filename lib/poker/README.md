@@ -43,6 +43,10 @@ both a learned hypothesis and the labelling of unlabelled examples used to learn
 the hypothesis. Learned labellings are particularly useful when trying to debug
 and tweak Poker's configuration to maximise its accuracy.
 
+Poker is named not after the card game but after [Wittgenstein's
+Poker](https://en.wikipedia.org/wiki/Wittgenstein%27s_Poker); a friendly dig at
+[Popper](https://github.com/logic-and-learning-lab/Popper/).
+
 
 Examples of use
 ---------------
@@ -154,6 +158,3 @@ learned L-Systems with a Turtle language interpreter.
 See
 [vanilla/data/poker_examples/experiment_script_binary_cgnf.pl](../../data/poker_examples/experiment_script_binary_cgnf.pl)
 for experiments learning DCGs for Context-Free Languages.
-
-Poker is named not after the card game but after [Wittgenstein's
-Poker](https://en.wikipedia.org/wiki/Wittgenstein%27s_Poker).
