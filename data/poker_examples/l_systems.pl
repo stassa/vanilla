@@ -30,6 +30,7 @@
 :-use_module(lib(poker/poker_auxiliaries)).
 :-use_module(src(auxiliaries)).
 :-reexport(data(poker_examples/l_systems_long)).
+:-use_module(library(janus)).
 
 % To draw L-Systems with Python's turtle library, via Janus.
 :- py_add_lib_dir(data(poker_examples)).
