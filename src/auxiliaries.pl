@@ -1964,7 +1964,7 @@ closure([],Ps,Ps,_M,Cs,Cs):-
 	!.
 closure([F/A|Ss],Ps_Acc,Ps_Bind,M,Acc,Bind):-
 	functor(S,F,A)
-	,built_in_or_library_predicate(S)
+	,built_in_or_library_predicate(S,_)
 	,!
 	,closure(Ss,Ps_Acc,Ps_Bind,M,Acc,Bind).
 closure([S|Ss],Ps_Acc,Ps_Bind,M,Acc,Bind):-
