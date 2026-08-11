@@ -175,11 +175,11 @@ encapsulated_bk(BK,_Ss,BK):-
 	,!.
 encapsulated_bk(BK,Ts,Es):-
 	(   closure(BK, user, Ps)
-	 ->  true
-	 ;   closure(BK, experiment_file, Ps)
-	 ->  true
-	 ;   throw('Missing BK definition of predicate in':BK)
-	 )
+	->  true
+	;   closure(BK, experiment_file, Ps)
+	->  true
+	;   throw('Missing BK definition of predicate in':BK)
+	)
 	,append(BK,Ts,Ss)
 	,findall(Cs_
 	       ,(member(Cs, Ps)
@@ -187,7 +187,6 @@ encapsulated_bk(BK,Ts,Es):-
 		)
 	       ,Es_)
 	,flatten(Es_, Es).
-
 
 
 
