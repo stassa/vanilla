@@ -33,13 +33,16 @@ inv_1(A,B):-one(A,C),q0(C,B).
 true.
 ==
 
-This can't be done in a directive because it raises an error, unknown
-why.
+Setting the configs can't be done in a directive because it raises an
+error, unknown why.
 
 Warning: listening to bog deep dark slow sludge doom metal while running
 this experiment will make it take even longer to learn.
 
 */
+
+% This needs lots of stack (not table space).
+:-set_prolog_flag(stack_limit, 8_589_934_592).
 
 :- auxiliaries:set_configuration_option(fetch_clauses,[[builtins,bk,metarules]]).
 :- auxiliaries:set_configuration_option(table_meta_interpreter,[false]).

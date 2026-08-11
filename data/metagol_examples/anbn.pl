@@ -11,7 +11,7 @@
 :-use_module(project_root(configuration)).
 
 % Identify thine self.
-:- louise_configuration:experiment_file(P,M)
+:- metagol_configuration:experiment_file(P,M)
   ,format('Loading experiment file module ~w from ~w.~n',[P,M]).
 
 /** <module> Learn an a^nb^n CFG with Metagol.
