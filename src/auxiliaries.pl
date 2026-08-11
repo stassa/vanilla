@@ -34,6 +34,7 @@
 		      ,eraseall_program_clauses/1
 		       % Program auxiliaries
 		      ,built_in_or_library_predicate/1
+		      ,built_in_or_library_predicate/2
 		      ,closure/3
 		      ,program_symbols/2
 		      ,program/3
@@ -1862,6 +1863,52 @@ built_in_or_library_predicate(H):-
 	predicate_property(H, built_in)
 	,!.
 built_in_or_library_predicate(H):-
+	predicate_property(H, autoload(_)).
+
+
+
+%!	built_in_or_library_predicate(+Predicate,+Module) is det.
+%
+%	True for a built-in, autoloaded or library predicate.
+%
+%	Like built_in_or_library_predicate/1 but also recognises
+%	predicates explicitly declared by a user as being imported from
+%	a library via the configuration option library_predicate/2.
+%
+%	A user can declare a predicate as being imported from a library
+%	by declaring a fact of the form:
+%
+%	==
+%       configuration:library_predicate(H,M)
+%       ==
+%
+%	where H is the head of the predicate and M is the module where
+%	the predicate is defined.
+%
+%	library_predicate/2 is defined as multifile and dynamic in the
+%	main configuration module.
+%
+%	This mechanism is a last-resort hack to allow predicates in
+%	libraries loaded from outwith the SWI-Prolog library/ directory
+%	to be identified as being library predicates.
+%
+%	For example this is useful when a predicate is imported from a
+%	SWI-Prolog pack and the usual mechanisms to identify its
+%	definition module do not work.
+%
+built_in_or_library_predicate(H,M):-
+% Some times H comes in already module-qualified.
+% I don't understand exactly why but when that's the case H may not
+% match itself in the library_predicate/2 option. So here we strip the
+% module qualifier to avoid that kind of mismatch. Then again, if the
+% user has module-qualified H, that will again cause a mismatch.
+	strip_module(H,_,H_)
+	,configuration:library_predicate(H_,M)
+	,!.
+built_in_or_library_predicate(H,user):-
+	predicate_property(H, built_in)
+	,!.
+built_in_or_library_predicate(H,user):-
 	predicate_property(H, autoload(_)).
 
 

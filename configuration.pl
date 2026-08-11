@@ -3,6 +3,7 @@
                         ,fetch_clauses/1
                         ,invented_symbol_prefix/1
                         ,learner/2
+                        ,library_predicate/2
                         ,metarule/2
                         ,metarule_constraints/2
                         ,metarule_formatting/1
@@ -26,7 +27,8 @@
            ,metarule_constraints/2
            ,table_meta_interpreter/1
            ,untable_meta_interpreter/1
-           ,metasubstitution_atoms/1.
+           ,metasubstitution_atoms/1
+           ,library_predicate/2.
 
 %!      encapsulation_predicate(+Symbol) is semidet.
 %
@@ -191,6 +193,28 @@ learner(metagol,lib(metagol/metagol)).
 %learner(poker,lib(poker/poker)).
 %learner(louise,lib(louise/louise)).
 %learner(simpleton,lib(simpleton/simpleton)).
+
+
+%!      library_predicate(?Head,?Module) is semidet.
+%
+%       Declare that a predicate is defined in a library.
+%
+%       Used to inform the Vanilla meta-interpreter that a predicate is
+%       loaded from a module and so should not be meta-interpreted.
+%
+%	This mechanism is a last-resort hack to allow predicates in
+%	libraries loaded from outwith the SWI-Prolog library/ directory
+%	to be identified as being library predicates.
+%
+%	For example this is useful when a predicate is imported from a
+%	SWI-Prolog pack and the usual mechanisms to identify its
+%	definition module do not work.
+%
+%       Head is the head of the library predicate.
+%
+%       Module is the module where the library is defined.
+%
+:- dynamic library_predicate/2.
 
 
 %!	metarule_constraints(+Metasubstitution,+Goal) is nondet.

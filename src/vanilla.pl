@@ -349,15 +349,16 @@ clause(_Os,_L,_K,_MS,_Ss,Subs,_Acc,_Ls):-
         ,!
 	,fail.
 clause([_BK,builtins,_Hypothesis,_Metarules],L,_K,_MS,_Ss,Subs,Subs,true):-
+	debug(fetch,'Checking built-in or library literal: ~w', [L]),
 	(   predicate_property(L,foreign)
-	;    built_in_or_library_predicate(L)
+	;   auxiliaries:built_in_or_library_predicate(L,_M)
 	)
-	,debug(fetch,'Proving built-in literal: ~w', [L])
+	,debug(fetch,'Proving built-in or library literal: ~w', [L])
         ,call(L)
-	,debug(fetch,'Proved built-in clause: ~w', [L:-true]).
+	,debug(fetch,'Proved built-in or library clause: ~w', [L:-true]).
 clause([bk,_Builtins,_Hypothesis,_Metarules],L,_K,_MS,_Ss,Subs,Subs,Ls):-
 	\+ predicate_property(L,foreign)
-	,\+ built_in_or_library_predicate(L)
+	,\+ auxiliaries:built_in_or_library_predicate(L,_)
 	,debug(fetch,'Proving literal with BK: ~w', [L])
         ,clause(L,Ls)
 	,debug(fetch,'Trying BK clause: ~w', [L:-Ls]).
