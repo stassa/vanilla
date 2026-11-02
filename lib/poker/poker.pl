@@ -950,8 +950,8 @@ negated(As,Neg):-
 %	Ps is the final hypothesis, specialised by the assumed
 %	negative examples in Neg.
 %
-label(Pos,[],_MS,_K,Ps,Pos,Neg,Neg,Ps):-
-        debug_clauses(label_results,'Final hypothesis:',Ps)
+label(Pos,[],MS,_K,Ps,Pos,Neg,Neg,Ps):-
+        debug_all_metasubs(label_results,'Final hypothesis:',Ps,Pos,MS)
         ,debug_clauses(label_results,'Positive examples:',Pos)
         ,debug_clauses(label_results,'Negative examples:',Neg)
 	,!.
