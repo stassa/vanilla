@@ -359,6 +359,7 @@ write_csv_header(S):-
                                ,'LabFSCM'
                                 % Labelling SEs
                                ,'LabAccSE'
+                               ,'LabErrSE'
                                ,'LabTPRSE'
                                ,'LabTNRSE'
                                ,'LabFPRSE'
@@ -368,6 +369,7 @@ write_csv_header(S):-
                                ,'LabFSCSE'
                                 % Program means
                                ,'ProgAccM'
+                               ,'ProgErrM'
                                ,'ProgTPRM'
                                ,'ProgTNRM'
                                ,'ProgFPRM'
@@ -377,6 +379,7 @@ write_csv_header(S):-
                                ,'ProgFSCM'
                                 % Program SEs
                                ,'ProgAccSE'
+                               ,'ProgErrSE'
                                ,'ProgTPRSE'
                                ,'ProgTNRSE'
                                ,'ProgFPRSE'

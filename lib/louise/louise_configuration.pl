@@ -9,6 +9,8 @@
                                ,resolutions/1
                                ,respecialise/1
                                ,tautology/1
+                               ,unfolding_depth_limit/1
+                               ,unfold_invented/1
                               ]).
 
 :-use_module(load_experiment_file).
@@ -29,7 +31,9 @@
           ,recursive_reduction/1
           ,reduction/1
           ,resolutions/1
-          ,respecialise/1.
+          ,respecialise/1
+          ,unfolding_depth_limit/1
+          ,unfold_invented/1.
 
 
 %!      clause_limit(?Limit) is semidet.
@@ -325,6 +329,42 @@ tautology(H:-B):-
         ,clause_literals(C_,Ls)
         ,numbervars(Ls)
         ,sort(Ls,[_]).
+
+
+%!      unfold_invented(?Limit) is semidet.
+%
+%       Recursion depth limit for unfolding.
+%
+unfolding_depth_limit(500).
+
+
+%!      unfold_invented(?What) is semidet.
+%
+%       Whether to unfold hypotheses to remove invented predicates.
+%
+%       What is one of:
+%       * none: no unfolding will be performed.
+%       * learned: the learned hypothesis will be unfolded at the end of
+%         learning.
+%       * generalised: initial hypothesers will be unfoled at the end of
+%         the genrealisation step (in generalise/3).
+%       * all: combines the effects of "generalised" and "learned".
+%
+%       Setting this option to "hypothesis" can drasticaly reduce the
+%       redundancy in hypotheses returned at the end of a learning run.
+%
+%       Setting this option to "generalised" can drasticaly reduce the
+%       number of initial hypotheses derived at the start of learning.
+%       This will _also_ reduce the number of hypotheses returned at the
+%       end.
+%
+%       @tbd Currently only "learned" has any effect. And "none" of
+%       course.
+%
+unfold_invented(none).
+%unfold_invented(all).
+%unfold_invented(learned).
+%unfold_invented(generalised).
 
 
 %!      metasubstitution_atoms(?What) is semidet.

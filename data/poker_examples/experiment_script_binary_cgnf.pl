@@ -220,7 +220,21 @@ binary_palindrome:-
 % random samples of labelled, unlabelled examples and generated negative
 % examples.
 
-%!      binary_anbn_uo is det.
+%!      binary_anbn(+N) is det.
+%
+%       Run N experiments and print the aggregate evaluation results.
+%
+binary_anbn(N):-
+        Lang = anbn_bin
+        ,T = s/2
+        ,Sl = anbn_bin(all,0,6) % 3
+        ,Su = []
+        ,TPos = anbn_bin(all,8,60) % 27
+        ,TNeg = not_anbn_bin(all,0,5) % 60
+        ,setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
+
+
+%!      binary_anbn_uo(+N) is det.
 %
 %       Run N experiments and print the aggregate evaluation results.
 %

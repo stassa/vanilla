@@ -255,55 +255,12 @@ experiment_filtering(T,Sl,Su,TPosL,TNegL,TGenL,TPosU,TNegU,TGenU,Res_l,Res_u):-
 %       iteration, G is the number of internally generated examples, L
 %       and U are the numbers of labelled and unlabelled examples
 %       respectively and Rs is a list-of-lists of results lists as
-%       returned by experiments/7.
+%       returned by experiments/[7,8]. See that predicate for details of
+%       the composition of Results.
 %
-%       Example query [TODO: needs update]:
-%       ==
-%       test_harness:experiments_ranges(
-%       s/2
-%       ,10
-%       ,0:5/1
-%       ,anbn(1:5/1,0,12)
-%       ,[]
-%       ,anbn(all,13,18)
-%       ,not_anbn(all,0,3)
-%       ,_Rs
-%       )
-%       , maplist(writeln,_Rs).
-%       ==
-%
-%       The query above runs an experiment with anbn as the target
-%       language, used to generate labelled examples, and no unlabelled
-%       examples, iterating over the number of internally generated,
-%       and labelled examples. Parameters are as follows:
-%
-%       * s/2: The symbol and arity of a learning target defined in the
-%       current experiment file.
-%
-%       * 10: The number of experiments to run in each iteration.
-%
-%       * 0:5/1: The range of values for internally generated examples.
-%       Defines the range of integers in [0,5] increasing by 1.
-%
-%       * anbn(1:5/1,0,12): Language generation specification for
-%       labelled examples. 1:5/1 defines the numbers of examples of anbn
-%       that will be generated in successive iterations: from 1 to 5,
-%       increasing by 1, therefore for 5 total iterations. 0 and 12 are
-%       the maximum and minimum lengths of strings in examples.
-%
-%       * []: No unlabelled examples will be generated.
-%
-%       * anbn(all,13,18): language generation specification for
-%       positive testing examples. All examples of anbn of length
-%       between 13 and 18 will be generated and used to test the
-%       hypothesis learned at each iteration.
-%
-%       * not_anbn(all,0,3): language generation specification term for
-%       negative testing examples. All exampls of anbm of length between
-%       0 and 3 will be generated and used to test the hypothesis
-%       learned at each iteration.
-%
-%       * _Rs: List of results.
+%       experiment_ranges/[9,10] queries can get pretty complicated. See
+%       experiment scripts in data/poker_experiments for examples of
+%       such queries.
 %
 %       @tbd: this predicate really needs some error checking to make
 %       sure we're not giving as arguments totally bogus ranges, or ones
@@ -725,37 +682,30 @@ range_helper(I:J/K,N):-
 %       Alternatively, TestGen can be the atom 'nil', in which case
 %       generation accuracy will not be tested.
 %
-%       Results is a list [Length, Labelling, Program, Generation], with
-%       the same meaning as in experiments/6. Copying from that
-%       predicate's documentation:
+%       Results is a list [Ps,N,Pos,Neg,Rs_L,Rs_R,Rs_G], where:
 %
-%       Results is a list of four sub-lists [Ms_L, SEs_L, Ms_P, SEs_P],
-%       each of which is a list [Acc,TPR,TNR], where Acc is the
-%       accuracy, TPR true positive rate and TNR true negative rate of
-%       the N labellings returned, or hypotheses learned from the sets
-%       of N examples generated in the N steps of the experiment. The
-%       values of the three metrics in the four sub-lists are as
-%       follows:
+%       * Ps is the learned hypothesis
+%       * N is the length of Ps
+%       * Pos is the list of positive examples identified
+%       * Neg is the list of negative examples identified
+%       * Rs_L is the list of labelling results
+%       * Rs_P is the list of program results.
+%       * Rs_G is the accuracy of Ps executed as a geneator.
 %
-%       * Ms_L: [Acc,TPR,TNR] are the means of accuracy, TPR and TNR
-%         over all N labellings.
-%       * SEs_L: [Acc,TPR,TNR] are the standard errors of accuracy, TPR,
-%         and TNR over all N labellings, according to the means in MS_L.
-%       * Ms_P: [Acc,TPR,TNR] are the means of accuracy, TPR, and TNR,
-%         over all N programs learned.
-%       * SEs_P: [Acc,TPR,TNR] are the standard errors of accuracy, TPR,
-%         and TNR over all N programs learned.
+%       Each of Rs_L and Rs_R [Acc,Err,TPR,TNR,FPR,FNR,PRE,REC,FSC] with
+%       elements as follows:
 %
-%       Example query:
-%       ==
-%       _T = s/2
-%       , _Sl = anbn(all,0,6)
-%       , _Su = [anbm(all,0,8),anbn(all,7,18)]
-%       , _TPos = anbn(all,19,40)
-%       , _TNeg = [anbm(all,0,4),not_anbn(all,4,8)]
-%       , experiment(_T,_Sl,_Su,_TPos,_TNeg,[_Ps,_Pos,_Neg,LabellingMeans,ProgramMeans])
-%       , maplist(print_clauses,['Hypothesis:','Positives:','Negatives:'],[_Ps,_Pos,_Neg]).
-%       ==
+%       Acc: Accuracy
+%       Err: Error
+%       TPR: True Positive Rate
+%       TNR: True Negative Rate
+%       FPR: False Positive Rate
+%       FNR: Fale Negative Rate
+%       PRE: Precision
+%       REC: Recall (TPR)
+%       FSC: F1 Score
+%
+%       Acc, Err, etc are floating point numbers.
 %
 experiments(T,N,Sl,Su,TPos,TNeg,Res):-
         experiments(T,N,Sl,Su,TPos,TNeg,nil,Res).
@@ -791,6 +741,11 @@ experiments(T,N,Sl,Su,TPos,TNeg,TestGen,[Ms_h,SE_h,Ms_l,SEs_l,Ms_p,SEs_p,Ms_g,SE
 results_parts(Rs,Hs,Rs_l,Rs_p,Rs_g):-
         results_parts(Rs,Hs,[],Rs_l,[],Rs_p,[],Rs_g,[]).
 
+%!      results_parts(+Rs,-Hs,+HsAcc,-RsL,+RsLAcc,-RsP,+RsPAcc,-RsG,+RsGAcc)
+%!      is det.
+%
+%       Business end of results_parts/5.
+%
 results_parts([],Hs,Hs,Rs_l,Rs_l,Rs_p,Rs_p,Rs_g,Rs_g):-
         !.
 results_parts([[H,L,P,G]|Rs],[H|AccHs],Hs,[L|AccL],Rs_l,[P|AccP],Rs_p,[G|AccG],Rs_g):-
@@ -801,21 +756,19 @@ results_parts([[H,L,P,G]|Rs],[H|AccHs],Hs,[L|AccL],Rs_l,[P|AccP],Rs_p,[G|AccG],R
 %
 %       Calculate the standard error of metrics in Results.
 %
-%       Results is a list of lists [Acc,TPR,TNR], where Acc, TPR and TNR
-%       are numbers representing the Accuracy, True Positive Rate and
-%       True Negative Rate calculated of each of a number of
-%       experiments, in experiments/6.
+%       Results is a list of lists [Acc,TPR,TNR,FPR,FNR,PRE,REC,FSC],
+%       of numbers, the labelling or hypothesis evaluation metrics
+%       calculated for each of a number of experiments, in
+%       experiments/6.
 %
-%       Means is a list of numbers: [M_Acc,M_TPR,M_TNR], the means of
-%       Acc, TPR, and TNR, respectively, in the list Results, as
-%       returned by result_means/2.
+%       Means is a list of numbers, the means of each evaluation result
+%       in the list Results.
 %
-%       StandardErrors is a list of numbers [Acc_SE,TPR_SE,TNR_SE], the
-%       standard error of Acc, TPR and TNR in Results, calculated with
-%       respect to Means.
+%       StandardErrors is a list of numbers, the standard error of each
+%       sublist in Results, calculated with respect to Means.
 %
 result_SEs(Rs,Ms,SEs):-
-        % Ouch.
+        % Gulp.
         transpose(Rs,Rs_T)
         ,maplist(standard_deviation,Rs_T,Ms,SDs)
         ,maplist(standard_error,Rs_T,SDs,SEs_)
@@ -827,13 +780,12 @@ result_SEs(Rs,Ms,SEs):-
 %
 %       Calculate the means of a list of metrics in Results.
 %
-%       Results is a list of lists [Acc,TPR,TNR], where Acc, TPR and TNR
-%       are numbers representing the Accuracy, True Positive Rate and
-%       True Negative Rate calculated of each of a number of
-%       experiments, in experiments/6.
+%       Results is a list of lists [Acc,TPR,TNR,FPR,FNR,PRE,REC,FSC],
+%       of labelling or learned program evaluation results calculated of
+%       each of a number of experiments, in experiments/6.
 %
-%       Means is a list of numbers: [M_Acc,M_TPR,M_TNR], the means of
-%       Acc, TPR, and TNR, respectively, in the list Results.
+%       Means is a list of numbers, the means of each evaluation result
+%       in the list Results.
 %
 result_means(Res,Ms):-
         %writeln(Res)
@@ -850,10 +802,11 @@ result_means(Res,Ms):-
 %
 %       Business end of result_means/2.
 %
-%       Results is a list of lists [Acc,TPR,TNR], received from
-%       result_means/2.
+%       Results is a list of lists [Acc,TPR,TNR,FPR,FNR,PRE,REC,FSC],
+%       received from result_means/2.
 %
-%       Acc is the accumulator of means, initially a list [0,0,0].
+%       Acc is the accumulator of means, initially a list of 0's of
+%       length 9 (one for each metric in Results).
 %
 %       Means is the list in Acc with means of the three metrics updated
 %       according to the contents of Results.
@@ -892,7 +845,7 @@ sum(A,B,C):-
 
 
 
-%!      experiment(+Target,+Labelled,+Unlabelled,+TestPos,+TestNeg,-Results)
+%!      experiment(+Trgt,+Labelled,+Unlabelled,+TestPos,+TestNeg,-Results)
 %!      is det.
 %!      experiment(+Trgt,+Labelled,+Unlabelled,+TestPos,+TestNeg,TestGen,-Results)
 %!      is det.
@@ -946,8 +899,7 @@ sum(A,B,C):-
 %       be a list, i.e. it is not currently possible to compose two
 %       grammars to create a set of labelled examples.
 %
-%       Results is as in experiment/5, a list
-%       [Ps,N,Pos,Neg,Rs_L,Rs_R,Rs_G], where:
+%       Results is a list [Ps,N,Pos,Neg,Rs_L,Rs_R,Rs_G], where:
 %
 %       * Ps is the learned hypothesis
 %       * N is the length of Ps
@@ -957,18 +909,30 @@ sum(A,B,C):-
 %       * Rs_R is the list of program results.
 %       * Rs_G is the accuracy of Ps executed as a geneator.
 %
-%       Each of Rs_L and Rs_R is a list [Acc,TPR,TNR], where:
+%       Each of Rs_L and Rs_R is a pair Counts-Results, where:
 %
-%       In Ms_L
-%       * Acc is the accuracy of the labelling of atoms in Pos and Neg.
-%       * TPR is the True Positive Rate of the labelling in Pos and Neg.
-%       * TNR is the True Negative Rate of the labelling in Pos and Neg.
+%       Counts is a list: [TP,TN,FP,FN], with elements as follows:
+%       TP: number of true positives.
+%       TN: number of true negatives.
+%       FP: number of false positives.
+%       FN: number of false negatives.
 %
-%       In Ms_P
-%       * Acc is the accuracy of the program learned from N examples
-%         measured against the ground truth of Language.
-%       * TPR is the True Positive Rate of the program.
-%       * TNR is the True Negative Rate of the program.
+%       Results is a list [Acc,Err,TPR,TNR,FPR,FNR,PRE,REC,FSC] with
+%       elements as follows:
+%       Acc: Accuracy
+%       Err: Error
+%       TPR: True Positive Rate
+%       TNR: True Negative Rate
+%       FPR: False Positive Rate
+%       FNR: Fale Negative Rate
+%       PRE: Precision
+%       REC: Recall (TPR)
+%       FSC: F1 Score
+%
+%       Results in Rs_L are the results of evaluation of Poker's
+%       labelling and results in Ps_R are the results of evaluation of
+%       the program learned by Poker. See test_labelling/4 and
+%       test_program/6 for details of these evaluations.
 %
 experiment(T,Sl,Su,TPos,TNeg,Res):-
         experiment(T,Sl,Su,TPos,TNeg,nil,Res).
@@ -1038,7 +1002,8 @@ experiment(T,Sl,Su,TPos,TNeg,TGen,Res):-
 %       terms and it's more convenient to pass sets of examples.
 %
 experiment(Sl,S,Ls,Us,BK,MS,TPos,TNeg,TGen,[Ps,N,Pos,Neg,Rs_l,Rs_p,Rs_g]):-
-        debug_length(experiment_initial,'Got ~w labelled examples.',Ls)
+        abolish_all_tables
+        ,debug_length(experiment_initial,'Got ~w labelled examples.',Ls)
         ,debug_clauses_length(experiment_initial_full,'Got ~w labelled examples:',Ls)
         ,debug_length(experiment_initial,'Got ~w unlabelled examples.',Us)
         ,debug_clauses_length(experiment_initial_full,'Got ~w unlabelled examples:',Us)
@@ -1053,7 +1018,7 @@ experiment(Sl,S,Ls,Us,BK,MS,TPos,TNeg,TGen,[Ps,N,Pos,Neg,Rs_l,Rs_p,Rs_g]):-
         % Evaluate program as acceptor
         ,test_program(Sl,S,Ps,TPos,TNeg,Rs_p)
         % Evaluate program as generator
-        ,test_generated(Sl,S,TGen,Ps,Rs_g)
+        ,test_generated(S,TGen,Ps,Rs_g)
         % May be a better way to count program length: count literals.
         ,length(Ps,N).
 
@@ -1100,10 +1065,29 @@ test_target(T,F):-
 %       identified by a program learned by Poker from some initial
 %       observations.
 %
-%       Results is a list [Acc,TPR,TNR], the accuracy, True Positive
-%       Rate and True Negative Rate of the labelling of the positive and
-%       negative examples in Pos and Neg, compared to the true labelling
-%       by Language.
+%       Results is a pair Counts-Results, where:
+%
+%       Counts is a list: [TP,TN,FP,FN], with elements as follows:
+%       TP: number of true positives.
+%       TN: number of true negatives.
+%       FP: number of false positives.
+%       FN: number of false negatives.
+%
+%       Results is a list [Acc,Err,TPR,TNR,FPR,FNR,PRE,REC,FSC] with
+%       elements as follows:
+%       Acc: Accuracy
+%       Err: Error
+%       TPR: True Positive Rate
+%       TNR: True Negative Rate
+%       FPR: False Positive Rate
+%       FNR: Fale Negative Rate
+%       PRE: Precision
+%       REC: Recall (TPR)
+%       FSC: F1 Score
+%
+%       Counts and Results are calculated over the labelling of Pos and
+%       Neg, by Poker and with respect to the ground theory provided by
+%       Language.
 %
 test_labelling(S,Pos,Neg,Cs-Res):-
         debug(test_labelling,'Testing labelling for target: ~w',[S])
@@ -1135,15 +1119,34 @@ test_labelling(S,Pos,Neg,Cs-Res):-
 %       the generation of the positive and negative testing examples,
 %       respectively.
 %
-%       Results is a list [Acc, TPR, TNR], the accuracy, True Positive
-%       Rate and True Negative Rate, respectively, of the Program's
-%       labelling of examples generated by Language.
+%       Results is a pair Counts-Results, where:
 %
-test_program(_,_,[],Test_Pos,Test_Neg,[0,FN,0,TN]-[0.5,0.5,0.0,1.0,0.0,1.0,0.0,0.0,0.0]):-
-                                  % TP,FN,FP,TN Acc Err TPR TNR FPR FNR PRE REC FSC
-% The empty hypothesis rejects all.
+%       Counts is a list: [TP,TN,FP,FN], with elements as follows:
+%       TP: number of true positives.
+%       TN: number of true negatives.
+%       FP: number of false positives.
+%       FN: number of false negatives.
+%
+%       Results is a list [Acc,Err,TPR,TNR,FPR,FNR,PRE,REC,FSC] with
+%       elements as follows:
+%       Acc: Accuracy
+%       Err: Error
+%       TPR: True Positive Rate
+%       TNR: True Negative Rate
+%       FPR: False Positive Rate
+%       FNR: Fale Negative Rate
+%       PRE: Precision
+%       REC: Recall (TPR)
+%       FSC: F1 Score
+%
+%       Counts and Results are calculated over the labelling of the
+%       ground truth examples in Pos and Neg by Program.
+%
+test_program(_T,S,[],Test_Pos,Test_Neg,[0,FN,0,TN]-[0.5,0.5,0.0,1.0,0.0,1.0,0.0,0.0,0.0]):-
+% The empty hypothesis rejects all.  % TP,FN,FP,TN Acc Err TPR TNR FPR FNR PRE REC FSC
         !
-        ,maplist(length,[Test_Pos,Test_Neg],[FN,TN]).
+        ,count_initial(Test_Pos,S,FN)
+        ,count_initial(Test_Neg,S,TN).
 test_program(T/_,S,Cs,TPs,TNs,Res):-
 % Allow the target to be a predicate indicator.
 % TODO: wait, why?
@@ -1163,7 +1166,7 @@ test_program(T,S/A,Cs,Test_Pos,Test_Neg,Counts-Res):-
              ,evaluation(hypothesis,Program_module,S,Pos,Neg,Counts,Res)
              )
         ,C = (erase_program_clauses(Rs)
-             ,poker:table_untable_predicates(table,Program_module,Cs)
+             ,poker:table_untable_predicates(untable,Program_module,Cs)
              )
         ,setup_call_cleanup(Set,G,C)
         ,Res = [Acc,_Err,TPR,TNR,_FPR,_FNR,_PRE,_REC,_FSC]
@@ -1206,14 +1209,36 @@ generate_examples(Sign,Ts,S,Es):-
 %
 %       Measure the accuracy of a learned Program as a generator.
 %
-%       Language is the symbol, but not arity of a DCG used to test
-%       generated atoms.
-%
 %       Symbol is the predicate indicator, Symbol/Arity of a learning
 %       target.
 %
-%       Spec is a language generation term used to generate examples of
-%       Program for testing against Language.
+%       Spec can be one of two things:
+%       * A language generation term,
+%       * An L-System generation term.
+%
+%       If Spec is a language generation term, it is used to generate
+%       examples of Program for testing against Language. In that
+%       case, Spec is of the form Lang(N,J,K,Ops) where:
+%       * Lang is a target language used as the ground truth to evaluate
+%       strings generated from a learned hypothesis in test_generated/4.
+%       Lang must be exported by language_geneation.pl.
+%       * N,J,K are the number, and minimum and maximum lengths, of
+%       strings to generate from a learned hypothesis, and passed to
+%       Lang to test for correctness.
+%       * Ops is a list of options for language generation. The only
+%       option currently recognised is tabling(Bool) denoting whether
+%       the learned hypothesis must be tabled (if Bool is 'true') or not
+%       (if Bool is 'false') before genration. This can be used to avoid
+%       RAM-outs when tabling a learned hypothesis.
+%
+%       If Spec is an L-System generation term, it is used to generate
+%       L-System strings from both a target language and a learned
+%       program. IN that case, Spec is of the form l_system(Lang,N,Ax)
+%       where:
+%       * Lang is the symbol, but not arity, of the target language.
+%       * N is the maximum number of L-System generations to perform.
+%       * Ax is the axiom, a list of symbols beginning generation by the
+%       tested program and Language.
 %
 %       Program is a learned hypothesis.
 %
@@ -1222,24 +1247,125 @@ generate_examples(Sign,Ts,S,Es):-
 %       according to Spec, then passing the generator atoms to Language
 %       to test if they are accepted.
 %
-test_generated(_,_S,_,[],0.0):-
+test_generated(_S,_,[],0.0):-
 % The empty hypothesis generates nothing.
         !.
-test_generated(_,_S,nil,_Cs,0.0):-
+test_generated(_S,nil,_Cs,0.0):-
         !.
-test_generated(Lang,S/A,Spec,Cs,TPR):-
-        Spec =.. [Lang,N,J,K]
+test_generated(S/_A,l_system(Lang,N,Ax),Cs,ACC):-
+        !
+        ,debug(test_generator,'Testing learned program as generator for L-System: ~w'
+              ,[Lang])
+        ,debug_clauses_length(test_generator_full,'Testing ~w-clause learned program:',Cs)
         ,M = experiment_file
-        ,Set = (assert_program(M,Cs,Rs)
-               ,poker:table_untable_predicates(table,M,Cs)
+        ,Set = ( assert_program(M,Cs,Rs)
+                %TODO: add switch.
+                %,poker:table_untable_predicates(table,M,Cs)
                )
-        ,G = (generate_test(M,S/A,N,J,K,Es)
-             ,accuracy(language_generation,Lang,Es,[],TPR)
-             )
-        ,C = (erase_program_clauses(Rs)
-             ,poker:table_untable_predicates(table,M,Cs)
+        ,G = l_system_acc(M-S,l_systems-Lang,N,Ax,ACC)
+        ,C = ( erase_program_clauses(Rs)
+              %,poker:table_untable_predicates(untable,M,Cs)
              )
         ,setup_call_cleanup(Set,G,C).
+test_generated(S/A,Spec,Cs,ACC):-
+        debug(test_generator,'Testing learned program as generator for target: ~w',[S/A])
+        ,debug_clauses_length(test_generator_full,'Testing ~w-clause learned program:',Cs)
+        ,language_spec(Spec,Lang,N,J,K,T)
+        ,M = experiment_file
+        ,Set = (assert_program(M,Cs,Rs)
+               ,(   T == true
+                ->  poker:table_untable_predicates(table,M,Cs)
+                ;   true
+                )
+               )
+        ,G = (debug(test_generator_full,'Generating examples of learned program.',[])
+             ,generate_test(M,S/A,N,J,K,Es)
+             ,debug_length(test_generator_full,'Generated ~w examples.',Es)
+             ,debug_clauses_length(test_generator_fullest,'Generated ~w examples.',Es)
+             ,debug(test_generator_full,'Testing generated examples against target.',[])
+             ,accuracy(language_generation,Lang,Es,[],ACC)
+             ,debug(test_generator_full,'Measured generative accuracy: ~w.',[ACC])
+             )
+        ,C = (erase_program_clauses(Rs)
+             ,poker:table_untable_predicates(untable,M,Cs)
+             )
+        ,setup_call_cleanup(Set,G,C).
+
+
+%!      l_system_acc(+Hypothesis,+Target,+Generations,+Axiom,-Accuracy)
+%!      is det.
+%
+%       Measure generative accuracy of learned L-System grammars.
+%
+%       Hypothesis and Target are key-value pairs M-S, where M is the
+%       name of a module where an L-System grammar is defined, and S is
+%       the symbol, but not arity, of the grammar. For Hypothesis, S is
+%       the learned hypothesis. For Target, is is a ground-truth
+%       learning target.
+%
+%       Generations is an integer, the number of times the output of an
+%       L-System is fed back to itself.
+%
+%       Axiom is the starting set of symbols, the axiom of an L-System.
+%
+%       Accuracy is a floating point number, K / N, where K is the
+%       number of strings generated over all Generations by the learning
+%       Target that are also generated by the learned Hypothesis in the
+%       same generation.
+%
+l_system_acc(Mh-H,Mt-T,N,Ax,ACC):-
+        l_system_acc(Mh-H,Mt-T,N,Ax,0,Acc)
+        ,ACC is Acc / N.
+
+%!      l_system_acc(+Hypothesis,+Target,+Gen,+In,+Acc,-Result) is det.
+%
+%       Business end of l_system_acc/5.
+%
+l_system_acc(_Mh_H,_Mt_T,0,_Is,Acc,Acc):-
+        !.
+l_system_acc(Mh-H,Mt-T,N,Is,Acc,Bind):-
+        Gh =.. [H,Ss]
+        ,Gt =.. [T,Ss]
+        ,debug(l_system_acc_full
+              ,'Testing ~w generation ~w with input string: ~w',[T,N,Is])
+        ,phrase(Mh:Gh,Is)
+        ,phrase(Mt:Gt,Is)
+        ,!
+        ,debug(l_system_acc_full,'Succeeded with output ~w.',[Ss])
+        ,N_ is N - 1
+        ,succ(Acc,Acc_)
+        ,l_system_acc(Mh-H,Mt-T,N_,Ss,Acc_,Bind).
+l_system_acc(_Mh_H,_Mt-T,N,Is,Acc,Acc):-
+        debug(l_system_acc_full,'Failed at ~w generation ~w with input ~w.'
+             ,[T,N,Is]).
+
+
+%!      language_spec(+Spec,-Lang,-N,-J,-K,-Tab) is det.
+%
+%       Extract language generation configs from Spec term.
+%
+%       Spec is a term Lang(N,J,K,Ops) where:
+%       * Lang is a target language used as the ground truth to evaluate
+%       strings generated from a learned hypothesis in test_generated/4.
+%       Lang must be exported by language_geneation.pl.
+%       * N,J,K are the number, and minimum and maximum lengths, of
+%       strings to generate from a learned hypothesis, and passed to
+%       Lang to test for correctness.
+%       * Ops is a list of options for language generation. The only
+%       option currently recognised is tabling(Bool) denoting whether
+%       the learned hypothesis must be tabled (if Bool is 'true') or not
+%       (if Bool is 'false') before genration. This is to avoid RAM-outs
+%       when tabling a hypothesis that doesn't need tabling.
+%
+language_spec(S,Lang,N,J,K,true):-
+        S =.. [Lang,N,J,K]
+        ,!.
+language_spec(S,Lang,N,J,K,T):-
+        S =.. [Lang,N,J,K,Os]
+        ,(   memberchk(tabling(T),Os)
+         ->  true
+         ;   T = true
+         ).
 
 
 %!      generate_test(+Module,+Sym,+N,+J,+K,-Examples) is det.
@@ -1250,18 +1376,34 @@ test_generated(Lang,S/A,Spec,Cs,TPR):-
 %       locate the learned program to use as a generator.
 %
 generate_test(M,S,N,J,K,Es):-
-        debug(generate_test,'Generating ~w ~w test examples of length in [~w,~w].'
+        (   integer(N)
+        ;   N == all
+        )
+        ,!
+        ,debug(generate_test,'Generating ~w ~w test examples of length in [~w,~w].'
              ,[N,S,J,K])
         ,findall(E
                ,(between(J,K,I)
                 ,generate_example_test(M,S,I,E)
                 )
                ,Es_)
+        ,debug(generate_test_full,'Sampling ~w generated examples',[N])
         ,(   number(N)
          ->  k_list_samples(N,Es_,Es)
          ;   N == all
          ->  Es = Es_
          ).
+generate_test(M,S,N,J,K,Es):-
+        float(N)
+        ,debug(generate_initial
+              ,'Sampling ~w examples of length in [~w,~w] with probability ~w.'
+             ,[S,J,K,N])
+        ,findall(E
+                ,(between(J,K,I)
+                 ,G = generate_example_test(M,S,I,E)
+                 ,goal_partition(N,test_harness,G,true)
+                 )
+                ,Es).
 
 
 %!      generate_example_test(+Module,+Symbol,+N,-Example) is nondet.

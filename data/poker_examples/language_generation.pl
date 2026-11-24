@@ -198,9 +198,16 @@ filter_by_language(L,S/A,Es,Es_f):-
 %       Symbol is the predicate indicator, Functor/Arity, of the Atoms
 %       to generate.
 %
-%       N is either a number or the atom all. If N is a number, it's the
-%       number of atoms to generate. If it is "all", then all atoms with
-%       strings of length between Min and Max will be generated.
+%       N denotes the number of atoms to generate, expressed in one of
+%       three ways:
+%       * The atom 'all': all atoms with strings of length between Min
+%       and Max will be generated.
+%       * An integer: exactly that many strings of length between Min
+%       and Max will be generated. Raises error if there are not enough
+%       strings of that length.
+%       * A float: examples will be sampled with probability N using
+%       Bernoulli Sampling. There is no guarantee on the number of
+%       examples generated this way.
 %
 %       Min and Max are the upper and lower bounds on the length of
 %       strings, represented as definite clause grammars input lists, in
@@ -208,13 +215,41 @@ filter_by_language(L,S/A,Es,Es_f):-
 %
 %       Atoms is the list of generated atoms.
 %
-%       When N is a number this predicate first generates _all_ atoms
+%       Sampling trade-offs
+%       -------------------
+%
+%       When N is an integer, this predicate first generates _all_ atoms
 %       with input lists of length between Min and Max, and then samples
-%       N of those atoms, with a call to k_list_samples/3. The sampled
-%       atoms are returned in Atoms.
+%       N of those atoms, with a call to k_list_samples/3. If N atoms
+%       cannot be generated this way, k_list_samples/3 raises a type
+%       error. Sampled atoms are added to the output list, Atoms.
+%
+%       When N is a float, a Bernoulli trial with probability N is
+%       carried out for each generated atom and only atoms that pass the
+%       trial are added to the output list, Atoms.
+%
+%       The tradeoff is that k_list_samples/3 guarantees that exactly N
+%       Atoms will be returned, if N atoms can be generated, but must
+%       first generate the entire set and then sample from it, thus
+%       having to keep _two_ large lists in memory simultaneously.
+%       Very large lists need a large stack limit and even larger ones
+%       can easily blow past your puny student laptop RAM (or mine).
+%
+%       By contrast, Bernoulli sampling only needs to build the list of
+%       Atoms to return, so it can handle larger lists with less memory.
+%       On the other hand, because atoms are sampled from a generating
+%       program, rather than a fixed-length list, the number of atoms
+%       that can be generated cannot be known in advance and therefore
+%       the number of Atoms returned can also not be know with
+%       certainty. In other words, Bernoulli sampling does not guarantee
+%       the number of examples returned in Atoms.
 %
 generate_initial(L,S,N,J,K,Es):-
-        debug(generate_initial,'Generating ~w ~w examples of length in [~w,~w].'
+        (   integer(N)
+        ;   N == all
+        )
+        ,!
+        ,debug(generate_initial,'Generating ~w ~w examples of length in [~w,~w].'
              ,[N,L,J,K])
         ,findall(E
                ,(between(J,K,I)
@@ -226,6 +261,17 @@ generate_initial(L,S,N,J,K,Es):-
          ;   N == all
          ->  Es = Es_
          ).
+generate_initial(L,S,N,J,K,Es):-
+        float(N)
+        ,debug(generate_initial
+              ,'Sampling ~w examples of length in [~w,~w] with probability ~w.'
+             ,[L,J,K,N])
+        ,findall(E
+                ,(between(J,K,I)
+                 ,G = generate_example(L,S,I,E)
+                 ,goal_partition(N,language_generation,G,true)
+                 )
+                ,Es).
 
 
 %!      generate_example(+Target,+Symbol,+Length,-Atom) is nondet.
@@ -236,16 +282,18 @@ generate_initial(L,S,N,J,K,Es):-
 %
 generate_example(L,S/2,N,E_):-
         !
+        ,abolish_all_tables
+        ,debug(generate_example,'Generating ~w length example of ~w:',[N,L])
         ,length(Xs,N)
         ,E =.. [L,Xs,[]]
         ,call(E)
         ,E_ =.. [S,Xs,[]].
 generate_example(L,S/3,N,E_):-
-        length(Is,N)
+        abolish_all_tables
+        ,length(Is,N)
         ,E =.. [L,Is,Os,[]]
         ,call(E)
         ,E_ =.. [S,Is,Os,[]].
-
 
 
 %!      count_initial(+Spec,+Symbol,-Count) is det.

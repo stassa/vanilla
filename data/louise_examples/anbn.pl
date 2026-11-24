@@ -23,11 +23,8 @@ necessary configuration options:
 true.
 
 ?- louise:learn(s/2).
-s(A,B):-inv_1_3(A,C),b(C,B).
-s(A,B):-a(A,C),inv_1_4(C,B).
+s(A,B):-a(A,C),s(C,D),b(D,B).
 s(A,B):-a(A,C),b(C,B).
-inv_1_4(A,B):-s(A,C),b(C,B).
-inv_1_3(A,B):-a(A,C),s(C,B).
 true.
 ==
 
@@ -38,7 +35,8 @@ it raises an error, unknown why.
 
 set_configs:-
         louise_auxiliaries:set_louise_configuration_option(clause_limit,[3])
-        ,louise_auxiliaries:set_louise_configuration_option(max_invented,[1]).
+        ,louise_auxiliaries:set_louise_configuration_option(max_invented,[1])
+	,louise_auxiliaries:set_louise_configuration_option(unfold_invented,[all]).
 
 % Constraints to avoid unnecessary left-recursions.
 configuration:metarule_constraints(m(identity,P0,P1),fail):-

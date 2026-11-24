@@ -3,15 +3,27 @@
                          ,hilbert_curve/0
                          ,koch_curve/0
                          ,sierpinski_triangle/0
+                         ,sierpinski_arrowhead/0
+                         ,abop_plant_a/0
+                         ,abop_plant_b/0
+                         % Experiments drawing learned L-Systems
+                         % with a Python Turtle language interpreter
                          ,dragon_curve_draw/0
                          ,hilbert_curve_draw/0
                          ,koch_curve_draw/0
                          ,sierpinski_triangle_draw/0
+                         ,sierpinski_arrowhead_draw/0
+                         ,abop_plant_a_draw/0
+                         ,abop_plant_b_draw/0
+                         % Multi-step experiments
                          ,algae/1
                          ,dragon_curve/1
                          ,hilbert_curve/1
                          ,koch_curve/1
                          ,sierpinski_triangle/1
+                         ,abop_plant_a/1
+                         ,abop_plant_a_generator/1
+                         % Experiments with zero generated examples
                          ,dragon_curve_no_generated/1
                          ,dragon_curve_no_generated_draw/0
                          ,hilbert_curve_no_generated/1
@@ -19,24 +31,36 @@
                          ,koch_curve_no_generated/1
                          ,koch_curve_no_generated_draw/0
                          ,sierpinski_triangle_no_generated/1
+                         % Experiments varying generated examples
                          ,dragon_curve_range/3
                          ,hilbert_curve_range/3
                          ,koch_curve_range/3
                          ,sierpinski_triangle_range/3
+                         ,sierpinski_arrowhead_range/3
+                         ,abop_plant_a_range/3
+                         ,abop_plant_b_range/3
+                         % Experiments varying unlabelled examples
                          ,dragon_to_hilbert_curve_range/3
                          ,hilbert_to_dragon_curve_range/3
                          ,koch_to_dragon_curve_range/3
                          ,koch_to_hilbert_curve_range/3
                          ,dragon_to_koch_curve_range/3
+                         % Experiments filtering unlabelled examples
                          ,hilbert_dragon_filtering/0
                          ,koch_dragon_filtering/0
                          ,hilbert_dragon_filtering/1
                          ,koch_dragon_filtering/1
+                         % Experiments testing generative accuracy
                          ,dragon_curve_generator/3
                          ,hilbert_curve_generator/3
                          ,koch_curve_generator/3
                          ,sierpinski_triangle_generator/3
+                         ,sierpinski_arrowhead_generator/3
+                         ,abop_plant_a_generator/3
+                         ,abop_plant_b_generator/3
+                         % Auxiliaries
                          ,set_configs/1
+                         % Training data.
                          ,cleanup_safe_example/0
                          ,setup_safe_example/1
                          ,background_knowledge/2
@@ -52,6 +76,8 @@
                          ,plus/2
                          ,minus/2
                          ,empty/2
+                         ,lsb/2
+                         ,rsb/2
                          ]).
 
 :-use_module(project_root(configuration)).
@@ -80,8 +106,10 @@
 :-debug(experiment_learned_full).
 :-debug(test_program).
 :-debug(test_labelling).
+:-debug(test_generator).
 :-debug(generate_examples).
 :-debug(generate_initial).
+:-debug(generate_test).
 :-debug(filter_by_language).
 
 
@@ -248,6 +276,77 @@ sierpinski_triangle:-
         ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
 
 
+%!      sierpinski_arrowhead is det.
+%
+%       Run a single experiment learning an L-System grammar.
+%
+%       Given are labelled examples of the Sierpinski Arrowhead L-system
+%       and no unlabelled examples.
+%
+%       Prints the learned hypothesis and labelling of internally
+%       generated examples.
+%
+sierpinski_arrowhead:-
+% Sierpinski Arrowhead strings with variables start at length 7
+        Lang = sierpinski_arrowhead
+        ,T = s/3
+        ,Sl = [sierpinski_arrowhead(20,0,6) % all is 1093
+              ,sierpinski_arrowhead_with_vars(all,7,8) % all is 28
+              ]
+	,Su = []
+        ,TPos = sierpinski_arrowhead(1000,8,10) % all is 85575
+        ,TNeg = not_sierpinski_arrowhead(0.0002,0,5) % ~ 1871 of 9358910
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+
+
+
+%!      abop_plant_a is det.
+%
+%       Run a single experiment learning an L-System grammar.
+%
+%       Given are labelled examples of a plant from figure 1.24 (a) in
+%       ABOP, and no unlabelled examples.
+%
+%       Prints the learned hypothesis and labelling of internally
+%       generated examples.
+%
+abop_plant_a:-
+        Lang = abop_plant_a
+        ,T = s/3
+        ,Sl = [abop_plant_a(20,0,6) % all is 5461
+	      ,abop_plant_a_with_vars(all,11,13)
+	      ]
+	,Su = []
+        ,TPos = [abop_plant_a(1000,7,10) % all is 1396736
+                ,abop_plant_a_with_vars(20,13,14)
+                ]
+        ,TNeg = not_abop_plant_a(1000,0,4) % Higher numbers need more stack.
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+
+
+%!      abop_plant_b is det.
+%
+%       Run a single experiment learning an L-System grammar.
+%
+%       Given are labelled examples of a plant from figure 1.24 (b) in
+%       ABOP, and no unlabelled examples.
+%
+abop_plant_b:-
+% ABoP plant b variables start at length 13.
+        Lang = abop_plant_b
+        ,T = s/3
+        ,Sl = [abop_plant_b(20,0,6) % all is 5461 (like plant a!)
+              ,abop_plant_b_with_vars(20,13,15) % all is 57
+              ]
+        ,Su = []
+        ,TPos = [abop_plant_b(1000,7,10) % all is 1392640
+                ,abop_plant_b_with_vars(20,15,16) % all is 304
+                ]
+        ,TNeg = not_abop_plant_b(1000,0,4) % Higher numbers need more stack.
+        ,setup_experiment(Lang,T,Sl,Su,TPos,TNeg,print_examples(false)).
+
+
+
                 /*******************************
                 *      TURTLE EXPERIMENTS      *
                 *******************************/
@@ -351,6 +450,78 @@ sierpinski_triangle_draw:-
         ,TNeg = not_sierpinski_triangle(1000,0,5)
         ,PL = print_labelled(false)
         ,drawing_args(sierpinski_triangle,Args)
+        ,DL = draw_labelled(Args)
+        ,setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
+
+
+%!      sierpinski_arrowhead_draw is det.
+%
+%       Run a single experiment learning an L-System grammar.
+%
+%       Given are labelled examples of the Sierpinski Arrowhead L-system
+%       and no unlabelled examples.
+%
+sierpinski_arrowhead_draw:-
+% Sierpinski Arrowhead strings with variables start at length 7
+        Lang = sierpinski_arrowhead
+        ,T = s/3
+        ,Sl = [sierpinski_arrowhead(20,0,6) % all is 1093
+              ,sierpinski_arrowhead_with_vars(all,7,8) % all is 28
+              ]
+	,Su = []
+        ,TPos = sierpinski_arrowhead(1000,8,10) % all is 85575
+        ,TNeg = not_sierpinski_arrowhead(0.0002,0,5) % ~ 1871 of 9358910
+        ,PL = print_labelled(false)
+        ,drawing_args(sierpinski_arrowhead,Args)
+        ,DL = draw_labelled(Args)
+        ,setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
+
+
+%!      abop_plant_a_draw is det.
+%
+%       Run a single experiment learning an L-System grammar.
+%
+%       Given are labelled examples of a plant from figure 1.24 (a) in
+%       ABOP, and no unlabelled examples.
+%
+abop_plant_a_draw:-
+        Lang = abop_plant_a
+        ,T = s/3
+        ,Sl = [abop_plant_a(20,0,6) % all is 5461
+	      ,abop_plant_a_with_vars(all,11,13)
+	      ]
+	,Su = []
+        ,TPos = [abop_plant_a(1000,7,10) % all is 1396736
+                ,abop_plant_a_with_vars(20,13,14)
+                ]
+        ,TNeg = not_abop_plant_a(1000,0,4) % Higher numbers need more stack.
+        ,PL = print_labelled(false)
+        ,drawing_args(abop_plant_a,Args)
+        ,DL = draw_labelled(Args)
+        ,setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
+
+
+%!      abop_plant_b_draw is det.
+%
+%       Run a single experiment learning an L-System grammar.
+%
+%       Given are labelled examples of a plant from figure 1.24 (b) in
+%       ABOP, and no unlabelled examples.
+%
+abop_plant_b_draw:-
+% ABoP plant b variables start at length 13.
+        Lang = abop_plant_b
+        ,T = s/3
+        ,Sl = [abop_plant_b(20,0,6) % all is 5461 (like plant a!)
+              ,abop_plant_b_with_vars(20,13,15) % all is 57
+              ]
+        ,Su = []
+        ,TPos = [abop_plant_b(1000,7,10) % all is 1392640
+                ,abop_plant_b_with_vars(20,15,16) % all is 304
+                ]
+        ,TNeg = not_abop_plant_b(1000,0,4) % Higher numbers need more stack.
+        ,PL = print_labelled(false)
+        ,drawing_args(abop_plant_b,Args)
         ,DL = draw_labelled(Args)
         ,setup_experiment_draw(Lang,T,Sl,Su,TPos,TNeg,[PL,DL]).
 
@@ -483,6 +654,73 @@ sierpinski_triangle(N):-
 	,Su = []
         ,TPos = sierpinski_triangle(1000,0,14)
         ,TNeg = not_sierpinski_triangle(1000,0,5)
+        ,setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
+
+
+%!      sierpinski_triangle(+N) is det.
+%
+%       Run N experiments learning an L-System grammar.
+%
+%       Given are labelled examples of a plant from figure 1.24 (a) in
+%       ABOP, and no unlabelled examples.
+%
+abop_plant_a(N):-
+        Lang = abop_plant_a
+        ,T = s/3
+        ,Sl = [abop_plant_a(20,0,6) % all is 5461
+	      ,abop_plant_a_with_vars(all,11,13)
+	      ]
+        ,Su = []
+        ,TPos = [abop_plant_a(1000,7,10) % all is 1396736
+                ,abop_plant_a_with_vars(all,14,14) % 256
+                ]
+        ,TNeg = not_abop_plant_a(1000,0,4) % Higher numbers need more stack.
+        ,setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
+
+
+%!      sierpinski_triangle(+N) is det.
+%
+%       Run N experiments learning an L-System grammar.
+%
+%       Given are labelled examples of a plant from figure 1.24 (a) in
+%       ABOP, and no unlabelled examples.
+%
+%       The learned hypothesis is tested as a generator.
+%
+abop_plant_a_generator(N):-
+        Lang = abop_plant_a
+        ,T = s/3
+        ,Sl = [abop_plant_a(21,0,6) % all is 5461
+	      ,abop_plant_a_with_vars(51,11,13) % 10
+	      ]
+        ,Su = []
+        ,TPos = abop_plant_a(1000,6,10) % all is 1396736
+        ,TNeg = not_abop_plant_a(1000,0,4) % Higher numbers need more stack.
+        %,TGen = abop_plant_a(all,11,14)
+        % Generator evaluation throws a hissy when tabled
+        ,TGen = abop_plant_a(0.000001,11,11,[tabling(false)])
+        ,setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg,TGen).
+
+
+%!      abop_plant_b(+N) is det.
+%
+%       Run N experiments learning an L-System grammar.
+%
+%       Given are labelled examples of a plant from figure 1.24 (b) in
+%       ABOP, and no unlabelled examples.
+%
+abop_plant_b(N):-
+% ABoP plant b variables start at length 13.
+        Lang = abop_plant_b
+        ,T = s/3
+        ,Sl = [abop_plant_b(20,0,6) % all is 5461 (like plant a!)
+              ,abop_plant_b_with_vars(20,13,15) % all is 57
+              ]
+        ,Su = []
+        ,TPos = [abop_plant_b(1000,7,10) % all is 1392640
+                ,abop_plant_b_with_vars(20,15,16) % all is 304
+                ]
+        ,TNeg = not_abop_plant_b(1000,0,4) % Higher numbers need more stack.
         ,setup_experiments(Lang,T,N,Sl,Su,TPos,TNeg).
 
 
@@ -810,6 +1048,99 @@ sierpinski_triangle_range(N,S,P):-
          ;   Pl = false
          )
         ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
+
+%!      sierpinski_arrowhead_range(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying automatically generated examples.
+%
+%       Given are labelled examples of the L-System for the Sierpinski
+%       Arrowhead.
+%
+sierpinski_arrowhead_range(N,S,P):-
+% Sierpinski Arrowhead strings with variables start at length 7
+        Lang = sierpinski_arrowhead
+        ,T = s/3
+        ,Gs = 0:1500/250
+        ,Sl = [sierpinski_arrowhead(1:26/5,0,6) % all is 1093
+              ,sierpinski_arrowhead_with_vars(1:26/5,7,8) % all is 28
+              ]
+	,Su = []
+        ,TPos = sierpinski_arrowhead(1000,8,10) % all is 85575
+        ,TNeg = not_sierpinski_arrowhead(0.0002,0,5) % ~ 1871 of 9358910
+        ,What = 'generated'
+        ,(   P == true
+         ->  Pl = plot('Sierpinski Arrowhead',@(false))
+         ;   Pl = false
+         )
+        ,Sup = set_table_space(8_589_934_592,TS)
+        ,G = setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl)
+        ,Cup = set_table_space(TS,_)
+        ,setup_call_cleanup(Sup,G,Cup).
+
+
+%!      abop_plant_a_range(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying automatically generated examples.
+%
+%       Given are labelled examples of the plant L-System from Figure
+%       1.24 (a) in ABoP. No unlabelled examples are given.
+%
+abop_plant_a_range(N,S,P):-
+        Lang = abop_plant_a
+        ,T = s/3
+        % 7 increments of automatically generated examples.
+        ,Gs = 0:1500/250
+        % Six increments of labelled examples.
+        ,Sl = [abop_plant_a(1:26/5,0,6) % all is 5461
+	      ,abop_plant_a_with_vars(1:51/10,11,13) % all is 57
+	      ]
+        ,Su = []
+        ,TPos = [abop_plant_a(1000,7,10) % all is 1396736
+                ,abop_plant_a_with_vars(all,14,14) % 256
+                ]
+        ,TNeg = not_abop_plant_a(1000,0,4) % Higher numbers need more stack.
+        ,What = 'generated'
+        ,(   P == true
+         ->  Pl = plot('ABoP Plant 1.24 (a)',@(false))
+         ;   Pl = false
+         )
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
+
+%!      abop_plant_b_range(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying automatically generated examples.
+%
+%       Given are labelled examples of the plant L-System from Figure
+%       1.24 (b) in ABoP. No unlabelled examples are given.
+%
+abop_plant_b_range(N,S,P):-
+        Lang = abop_plant_b
+        ,T = s/3
+        ,Gs = 0:1500/250
+        ,Sl = [abop_plant_b(1:21/5,0,6) % all is 5461 (like plant a!)
+              ,abop_plant_b_with_vars(1:21/5,13,15) % all is 57
+              ]
+        ,Su = []
+        ,TPos = [abop_plant_b(1000,7,10) % all is 1392640
+                ,abop_plant_b_with_vars(20,16,16) % all is 256
+                ]
+        ,TNeg = not_abop_plant_b(1000,0,4) % Higher numbers need more stack.
+        ,What = 'generated'
+        ,(   P == true
+         ->  Pl = plot('ABoP Plant 1.24 (b)',@(false))
+         ;   Pl = false
+         )
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,Pl).
+
+
+                /*******************************
+                *     RANGE EXPERIMENTS 2      *
+                *******************************/
+
+% Experiments varying the number of generated and also given unlabelled
+% examples.
 
 
 %!      dragon_to_hilbert_curve_range(+N,+Stream,+Plot) is det.
@@ -1143,6 +1474,28 @@ koch_dragon_filtering(N):-
 % experiments in the Range Experiments section, varying the numbers of
 % generated or unlabelled examples.
 
+%!      dragon_curve_generator(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying tesing hypotheses as generators.
+%
+%       Given are labelled examples of the Dragon Curve L-System. No
+%       unlabelled examples are given.
+%
+%       Prints a csv of evaluation results of the hypotheses and
+%       labellings learned in each experiment set. The number of
+%       experimnet sets is determined by the range of automatically
+%       generated examples.
+%
+%       Each experiment in an experiment set is repeated N times.
+%
+%       Results are written to the given Stream. This can be
+%       "user_output" to print to terminal.
+%
+%       Plot is a boolean (true or false) that determines whether to
+%       plot experiments results from the given Stream or not. If Plot
+%       is "true" then Stream must be the path to a CSV file (not
+%       user_output) elser errors will be raised.
+%
 dragon_curve_generator(N,S,P):-
         Lang = dragon_curve
         ,T = s/3
@@ -1151,7 +1504,8 @@ dragon_curve_generator(N,S,P):-
         ,Su = []
         ,TPos = dragon_curve(all,5,10)/hilbert_curve
         ,TNeg = not_dragon_curve(all,0,4)
-        ,TGen = dragon_curve(all,0,4)
+        %,TGen = dragon_curve(all,0,4)
+        ,TGen = l_system(dragon_curve,3,[f])
         ,What = 'generated'
         ,(   P == true
          ->  Pl = plot('Dragon Curve',@(false))
@@ -1160,6 +1514,13 @@ dragon_curve_generator(N,S,P):-
         ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,TGen,Pl).
 
 
+%!      hilbert_curve_generator(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying tesing hypotheses as generators.
+%
+%       Given are labelled examples of the Hilbert Curve L-System. No
+%       unlabelled examples are given.
+%
 hilbert_curve_generator(N,S,P):-
         % Don't know why but this experiment sucks up all the table RAM
         Lang = hilbert_curve_no_tabling
@@ -1180,6 +1541,13 @@ hilbert_curve_generator(N,S,P):-
         ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,TGen,Pl).
 
 
+%!      koch_curve_generator(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying tesing hypotheses as generators.
+%
+%       Given are labelled examples of the Koch Curve L-System. No
+%       unlabelled examples are given.
+%
 koch_curve_generator(N,S,P):-
         Lang = koch_curve
         ,T = s/3
@@ -1203,6 +1571,13 @@ koch_curve_generator(N,S,P):-
         ,setup_call_cleanup(Sup,G,Cup).
 
 
+%!      sierpinski_triangle_generator(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying tesing hypotheses as generators.
+%
+%       Given are labelled examples of the Sierpinskin Triangle
+%       L-System. No unlabelled examples are given.
+%
 sierpinski_triangle_generator(N,S,P):-
         Lang = sierpinski_triangle
         ,T = s/3
@@ -1221,6 +1596,101 @@ sierpinski_triangle_generator(N,S,P):-
          )
         ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,TGen,Pl).
 
+
+%!      sierpinski_triangle_generator(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying tesing hypotheses as generators.
+%
+%       Given are labelled examples of the Sierpinsk Arrowhead L-System.
+%
+sierpinski_arrowhead_generator(N,S,P):-
+% Sierpinski Arrowhead strings with variables start at length 7
+        Lang = sierpinski_arrowhead
+        ,T = s/3
+        ,Gs = 0:1500/250
+        ,Sl = [sierpinski_arrowhead(1:26/5,0,6) % all is 1093
+              ,sierpinski_arrowhead_with_vars(1:26/5,7,8) % all is 28
+              ]
+	,Su = []
+        ,TPos = sierpinski_arrowhead(1000,8,10) % all is 85575
+        ,TNeg = not_sierpinski_arrowhead(0.0002,0,5) % ~ 1871 of 9358910
+        %,TGen = sierpinski_arrowhead_with_vars(all,9,9) % 108
+        %,TGen = sierpinski_arrowhead(all,0,6,[tabling(false)]) % 1093
+        ,TGen = sierpinski_arrowhead(all,7,8,[tabling(false)]) % 8762
+        ,What = 'generated'
+        ,(   P == true
+         ->  Pl = plot('Sierpinski Arrowhead',@(false))
+         ;   Pl = false
+         )
+        ,Sup = set_table_space(8_589_934_592,TS)
+        ,G = setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,TGen,Pl)
+        ,Cup = set_table_space(TS,_)
+        ,setup_call_cleanup(Sup,G,Cup).
+
+
+%!      abop_plant_a_generator(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying tesing hypotheses as generators.
+%
+%       Given are labelled examples of the plant L-System from figure
+%       1.24 (a) in ABoP. No unlabelled examples are given.
+%
+%       Work in Progress. In particular, RAM-outs when generating from
+%       learned hypotheses can occur without warning.
+%
+abop_plant_a_generator(N,S,P):-
+        Lang = abop_plant_a
+        ,T = s/3
+        % 7 increments of automatically generated examples.
+        ,Gs = 0:1500/250
+        % Six increments of labelled examples.
+        ,Sl = [abop_plant_a(1:26/5,0,6) % all is 5461
+	      ,abop_plant_a_with_vars(1:51/10,11,13) % all is 57
+	      ]
+        ,Su = []
+        ,TPos = [abop_plant_a(1000,7,10) % all is 1396736
+                ,abop_plant_a_with_vars(all,14,14) % 256
+                ]
+        ,TNeg = not_abop_plant_a(1000,0,4) % Higher numbers need more stack.
+        %,TGen = abop_plant_a(all,0,6,[tabling(false)])
+        %,TGen = abop_plant_a(0.000001,11,11)
+        %,TGen = abop_plant_a_with_vars(all,11,11)
+        ,TGen = abop_plant_a(all,11,13,[tabling(false)])
+        ,What = 'generated'
+        ,(   P == true
+         ->  Pl = plot('ABoP Plant 1.24 (a)',@(false))
+         ;   Pl = false
+         )
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,TGen,Pl).
+
+
+%!      abop_plant_a_generator(+N,+Stream,+Plot) is det.
+%
+%       Run N experiments varying tesing hypotheses as generators.
+%
+%       Given are labelled examples of the plant L-System from figure
+%       1.24 (b) in ABoP. No unlabelled examples are given.
+%
+abop_plant_b_generator(N,S,P):-
+        Lang = abop_plant_b
+        ,T = s/3
+        ,Gs = 0:1500/250
+        ,Sl = [abop_plant_b(1:21/5,0,6) % all is 5461 (like plant a!)
+              ,abop_plant_b_with_vars(1:21/5,13,15) % all is 57
+              ]
+        ,Su = []
+        ,TPos = [abop_plant_b(1000,7,10) % all is 1392640
+                ,abop_plant_b_with_vars(20,16,16) % all is 256
+                ]
+        ,TNeg = not_abop_plant_b(1000,0,4) % Higher numbers need more stack.
+        %,TGen = abop_plant_b_with_vars(all,13,14) % ??
+        ,TGen = abop_plant_b(all,0,6,[tabling(false)])
+        ,What = 'generated'
+        ,(   P == true
+         ->  Pl = plot('ABoP Plant 1.24 (b)',@(false))
+         ;   Pl = false
+         )
+        ,setup_range_experiments(S,Lang,What,T,N,Gs,Sl,Su,TPos,TNeg,TGen,Pl).
 
 
                 /*******************************
@@ -1296,7 +1766,39 @@ drawing_args(sierpinski_triangle,[generations(6)
                                  ,height(350)
                                  ,file('output/sierpinski_triangle.eps')
                                  ]).
-
+drawing_args(sierpinski_arrowhead,[generations(8)
+                                 ,axiom([x,f])
+                                 ,langle(60)
+                                 ,rangle(60)
+                                 ,distance(4)
+                                 ,start('bottom_left')
+                                 % Need adjustment
+                                 %,width(1800)
+                                 %,height(1800)
+                                 ,file('output/sierpinski_arrowhead.eps')
+                                 ]).
+drawing_args(abop_plant_a,[generations(5)
+                          ,axiom([f])
+                          ,langle(25.7)
+                          ,rangle(-25.7)
+                          ,distance(4)
+                          ,tilt(90)
+                          ,start('bottom_center')
+                          ,width(1200)
+                          ,height(960)
+                          ,file('output/abop_plant_a.eps')
+                          ]).
+drawing_args(abop_plant_b,[generations(5)
+                          ,axiom([f])
+                          ,langle(20)
+                          ,rangle(-20)
+                          ,distance(6)
+                          ,tilt(90)
+                          ,start('bottom_center')
+                          ,width(960)
+                          ,height(1200)
+                          ,file('output/abop_plant_b.eps')
+                          ]).
 
 
                 /*******************************
@@ -1429,6 +1931,17 @@ set_configs(sierpinski_triangle_ng):-
 	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
 							 ,[random]).
 
+set_configs(sierpinski_arrowhead):-
+	!
+	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[5])
+	,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
+	,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
+	,poker_auxiliaries:set_poker_configuration_option(max_invented,[3])
+	,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[100])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+							 ,[random]).
+
 set_configs(hilbert_dragon):-
         !
 	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[8])
@@ -1464,6 +1977,32 @@ set_configs(hilbert_dragon_filter):-
         ,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
 						  ,[random]).
 
+set_configs(abop_plant_a):-
+	!
+	,poker_auxiliaries:set_configuration_option(fetch_clauses,[[builtins,bk,metarules]])
+	,poker_auxiliaries:set_configuration_option(table_meta_interpreter, [false])
+	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[7])
+	,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
+	,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
+	,poker_auxiliaries:set_poker_configuration_option(max_invented,[6])
+	,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[500])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+							 ,[random]).
+
+set_configs(abop_plant_b):-
+	!
+	,poker_auxiliaries:set_configuration_option(fetch_clauses,[[builtins,bk,metarules]])
+	,poker_auxiliaries:set_configuration_option(table_meta_interpreter, [false])
+	,poker_auxiliaries:set_poker_configuration_option(clause_limit,[8])
+	,poker_auxiliaries:set_poker_configuration_option(gestalt,[false])
+	,poker_auxiliaries:set_poker_configuration_option(flatten_prove_all,[true])
+	,poker_auxiliaries:set_poker_configuration_option(max_invented,[6])
+	,poker_auxiliaries:set_poker_configuration_option(unfold_invented,[all])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples,[500])
+	,poker_auxiliaries:set_poker_configuration_option(unlabelled_examples_order
+							 ,[random]).
+
 
 set_configs(Unknown):-
         throw('Unknown language':Unknown).
@@ -1492,6 +2031,8 @@ lnf:preterminal(x).
 lnf:preterminal(y).
 lnf:preterminal(plus).
 lnf:preterminal(minus).
+lnf:preterminal(lsb).
+lnf:preterminal(rsb).
 lnf:preterminal(empty).
 
 
@@ -1522,15 +2063,19 @@ setup_safe_example(Lang):-
                        ,koch_curve_ng
                        ,sierpinski_triangle
                        ,sierpinski_triangle_ng
+                       ,sierpinski_arrowhead
                        ,hilbert_dragon
                        ,koch_dragon
-                       ,hilbert_dragon_filter]
+                       ,hilbert_dragon_filter
+                       ,abop_plant_a
+                       ,abop_plant_b
+                       ]
                       )
                 ,Lang
                 )
         ,cleanup_safe_example
         ,G = (poker_configuration:safe_example(m(s,Is,Os,[])):-
-	     K = 8
+	     K = 11
 	     ,between(0,K,I)
 	     ,length(Is,I)
 	     ,between(0,K,J)
@@ -1546,7 +2091,10 @@ background_knowledge(s/3,[a/2
 			 ,y/2
 			 ,plus/2
 			 ,minus/2
-			 ,empty/2]).
+			 ,empty/2
+                         ,lsb/2
+                         ,rsb/2
+                         ]).
 
 metarules(s/3,[ls_constant,ls_variable,ls_base,chain,tri_chain]).
 
@@ -1562,4 +2110,6 @@ x --> [x].
 y --> [y].
 plus --> [+].
 minus --> [-].
+lsb --> ['['].
+rsb --> [']'].
 empty --> [].
