@@ -204,29 +204,29 @@ top_program(_Ls,_Us,_BK,_MS,[],[],[]):-
 label(Ls,Us,MS,K,Pos,Neg,Ps):-
 	poker_configuration:greedy_generalisation(false)
 	,poker_configuration:unlabelled_examples(N)
-	,debug_clauses(label,'Initial Examples:',Ls)
+	,debug_clauses(label_examples_initial,'Initial Examples:',Ls)
 	,generalise(Ls,MS,Subs_)
 	,respecialise(Subs_,Ls,MS,Subs)
-	,debug_length(label,'Constructed ~w initial sub-hypotheses.',Subs)
-	,debug_all_metasubs(label_full,'Initial hypothesis:',Subs,Ls,MS)
+	,debug_length(label_count,'Constructed ~w initial sub-hypotheses.',Subs)
+	,debug_all_metasubs(label_full_initial,'Initial hypothesis:',Subs,Ls,MS)
 	,generate(N,Ls,K,MS,Subs,Gs)
 	,combined_unlabelled(Gs,Us,Us_Gs)
 	,label(Ls,Us_Gs,MS,K,Subs,Pos,[],Neg,Ps)
 	,debug_length(label,'Kept ~w final sub-hypotheses.',Ps)
-	,debug_all_metasubs(label_full,'Final hypothesis:',Ps,Ls,MS).
+	,debug_all_metasubs(label_full_final,'Final hypothesis:',Ps,Ls,MS).
 label(Ls,Us,MS,K,Pos,Neg,Ps):-
         poker_configuration:greedy_generalisation(true)
 	,poker_configuration:unlabelled_examples(N)
-	,debug_clauses(label,'Initial Examples:',Ls)
+	,debug_clauses(label_examples,'Initial Examples:',Ls)
 	,generalise_greedy(Ls,Ls,K,MS,Subs_)
 	,respecialise(Subs_,Ls,MS,Subs)
-	,debug_length(label,'Constructed ~w initial sub-hypotheses.',Subs)
-	,debug_clauses(label_full,'Initial hypothesis:',Subs)
+	,debug_length(label_count,'Constructed ~w initial sub-hypotheses.',Subs)
+	,debug_clauses(label_full_initial,'Initial hypothesis:',Subs)
 	,generate(N,Ls,K,MS,Subs,Gs)
 	,combined_unlabelled(Gs,Us,Us_Gs)
 	,label(Ls,Us_Gs,MS,K,Subs,Pos,[],Neg,Ps)
-	,debug_length(label,'Kept ~w final sub-hypotheses.',Ps)
-	,debug_clauses(label_full,'Final hypothesis:',Ps).
+	,debug_length(label_count,'Kept ~w final sub-hypotheses.',Ps)
+	,debug_clauses(label_full_final,'Final hypothesis:',Ps).
 
 
 %!	combined_unlabelled(+Generated,+Unlabelled,-Combined) is det.
@@ -956,24 +956,24 @@ label(Pos,[],MS,_K,Ps,Pos,Neg,Neg,Ps):-
         ,debug_clauses(label_results,'Negative examples:',Neg)
 	,!.
 label(Pos,[En|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
-        debug_length(label,'Specialising ~w sub-hypotheses.',Subs)
+        debug_length(label_count,'Specialising ~w sub-hypotheses.',Subs)
 	,debug_all_metasubs(label_full,'Specialising hypothesis:',Subs,Pos,MS)
-	,debug(label,'With negative example: ~w',[En])
+	,debug(label_examples,'With negative example: ~w',[En])
 	,specialise(Subs,MS,[En],Subs_S)
 	,maplist(length,[Subs,Subs_S],[M,N])
 	,(   M > N
 	 ->  prove_all(Pos,K,MS,[],Subs_S)
 	 ;   true
 	 )
-	,debug_length(label,'Remaining sub-hypotheses: ~w',Subs_S)
+	,debug_length(label_count,'Remaining sub-hypotheses: ~w',Subs_S)
 	,debug_all_metasubs(label_full,'Remaining sub-hypotheses:',Subs_S,Pos,MS)
 	,!
-        ,debug(label,'Keeping negative example: ~w',[En])
+        ,debug(label_examples,'Keeping negative example: ~w',[En])
         ,label(Pos,Neg,MS,K,Subs_S,Pos_Bind,[En|Neg_Acc],Neg_Bind,Ps).
 label(Pos,[:-Ep|Neg],MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps):-
         debug_all_metasubs(label_full,'Keeping hypothesis:',Subs,Pos,MS)
-        ,debug_length(label,'Keeping ~w sub-hypotheses:',Subs)
-        ,debug(label,'Keeping as positive example: ~w',[Ep])
+        ,debug_length(label_count,'Keeping ~w sub-hypotheses:',Subs)
+        ,debug(label_examples,'Keeping as positive example: ~w',[Ep])
 	,label([Ep|Pos],Neg,MS,K,Subs,Pos_Bind,Neg_Acc,Neg_Bind,Ps).
 
 
@@ -1383,13 +1383,13 @@ verify_program(Cs,W,Es):-
 	     )
 	,(   poker_configuration:multithreading(W)
 	->   G = (concurrent_forall(member(E,Es)
-				  ,(debug(examples,'Verifying Example: ~w', [E])
+				  ,(debug(verify_examples,'Verifying Example: ~w', [E])
 				   ,call(PM:E)
 				   )
 				  )
 		 )
 	 ;   G = forall(member(E,Es)
-		       ,(debug(examples,'Verifying Example: ~w', [E])
+		       ,(debug(verify_examples,'Verifying Example: ~w', [E])
 			,call(PM:E)
 			)
 		       )
