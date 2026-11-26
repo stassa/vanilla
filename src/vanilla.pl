@@ -16,7 +16,13 @@
 % Tabling of prove/7 may be overriden by configuration options at
 % runtime. See refresh_tables/1.
 %
-:-table(prove/7).
+% Only proofs of single literals are tabled (prove_lit/7). Every
+% recursion passes through a literal, so this suffices to avoid
+% infinite left-recursion, while avoiding tables for conjunctions and
+% for 'true', which are rarely reused and account for over 40% of the
+% tables.
+%
+:-table(prove_lit/7).
 
 
 %!	refresh_tables(+Action) is det.
@@ -88,8 +94,8 @@
 refresh_tables(table):-
 	configuration:table_meta_interpreter(true)
 	,!
-	,table(prove/7)
-	,debug(tabling,'Tabled prove/7',[]).
+	,table(prove_lit/7)
+	,debug(tabling,'Tabled prove_lit/7',[]).
 refresh_tables(table):-
 	configuration:table_meta_interpreter(false)
 	,!
@@ -100,8 +106,8 @@ refresh_tables(untable):-
 	,debug(tabling,'Not un-tabling prove/7',[]).
 refresh_tables(untable):-
 	configuration:untable_meta_interpreter(true)
-	,untable(prove/7)
-	,debug(tabling,'Un-tabled prove/7',[]).
+	,untable(prove_lit/7)
+	,debug(tabling,'Un-tabled prove_lit/7',[]).
 
 
 
@@ -287,7 +293,10 @@ prove((L,Ls),K,MS,Ss,Os,Subs,Acc):-
 prove((L),K,MS,Ss,Os,Subs,Acc):-
         L \= (_,_)
 	,L \= true
-        ,debug(prove_steps,'Proving literal: ~w.',[L])
+	,prove_lit(L,K,MS,Ss,Os,Subs,Acc).
+
+prove_lit((L),K,MS,Ss,Os,Subs,Acc):-
+        debug(prove_steps,'Proving literal: ~w.',[L])
 	,clause(Os,L,K,MS,Ss,Subs,Subs_,Ls)
 	,debug(prove_metasubs,'New Metasubs: ~w',[Subs_])
         ,debug(prove_steps,'Proving body literals of clause: ~w',[L:-Ls])
